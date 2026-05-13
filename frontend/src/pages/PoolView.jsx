@@ -644,6 +644,116 @@ function Hero({ pool }) {
   )
 }
 
+// --- Pool hero widget strip --------------------------------------------
+// Mirrors the field-strength / forecast / what-wins-here cards from the
+// tournament page hero, plus a preview link. Stacks horizontally below the
+// pool hero so users get the data without leaving the page.
+
+function PoolHeroWidgets({ tournament, leaderboard = [], weather = [] }) {
+  if (!tournament) return null
+  const courseDna = tournament.course?.dna || null
+
+  // Field strength: count OWGR-tier players
+  const total = leaderboard.length
+  const top25 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 25).length
+  const top50 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 50).length
+  const top100 = leaderboard.filter(p => p.owgrRank && p.owgrRank <= 100).length
+
+  const dnaCategories = courseDna ? [
+    { label: 'Driving', value: courseDna.driving },
+    { label: 'Approach', value: courseDna.approach },
+    { label: 'Short Game', value: courseDna.shortGame },
+    { label: 'Putting', value: courseDna.putting },
+  ].filter(c => c.value != null) : []
+  const dnaLabel = (val) => {
+    if (val == null) return null
+    if (val >= 0.32) return { text: 'Premium', color: 'text-crown' }
+    if (val >= 0.27) return { text: 'High', color: 'text-field' }
+    if (val >= 0.22) return { text: 'Average', color: 'text-text-2' }
+    return { text: 'Low', color: 'text-text-2/70' }
+  }
+  const wmoIcon = (cond) => {
+    const c = (cond || '').toLowerCase()
+    if (c.includes('storm') || c.includes('thunder')) return '⛈'
+    if (c.includes('rain') || c.includes('shower')) return '🌧'
+    if (c.includes('cloud') || c.includes('overcast')) return '☁️'
+    if (c.includes('clear') || c.includes('sunny')) return '☀️'
+    if (c.includes('partly')) return '⛅'
+    return '🌤'
+  }
+
+  return (
+    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* Field strength */}
+      {total > 0 && (
+        <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-2 mb-2">Field strength</div>
+          <div className="flex items-baseline gap-1.5 mb-3">
+            <span className="font-mono font-bold text-2xl text-text-primary">{total}</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-text-2">players</span>
+          </div>
+          <div className="flex h-2 rounded-full overflow-hidden mb-2 bg-text-2/10">
+            {top25 > 0 && <div className="bg-crown" style={{ width: `${(top25 / total) * 100}%` }} />}
+            {top50 > top25 && <div className="bg-field" style={{ width: `${((top50 - top25) / total) * 100}%` }} />}
+            {top100 > top50 && <div className="bg-text-2/40" style={{ width: `${((top100 - top50) / total) * 100}%` }} />}
+          </div>
+          <div className="flex items-center justify-between gap-3 text-[11px] font-mono">
+            <span><span className="inline-block w-2 h-2 rounded-sm bg-crown mr-1.5 align-middle" /><span className="text-text-2">T25</span> <span className="font-bold text-text-primary">{top25}</span></span>
+            <span><span className="inline-block w-2 h-2 rounded-sm bg-field mr-1.5 align-middle" /><span className="text-text-2">T50</span> <span className="font-bold text-text-primary">{top50}</span></span>
+            <span><span className="inline-block w-2 h-2 rounded-sm bg-text-2/40 mr-1.5 align-middle" /><span className="text-text-2">T100</span> <span className="font-bold text-text-primary">{top100}</span></span>
+          </div>
+        </div>
+      )}
+
+      {/* Forecast */}
+      {weather.length > 0 && (
+        <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-2 mb-2">Forecast</div>
+          <div className="space-y-1.5">
+            {weather.slice(0, 4).map(w => (
+              <div key={w.round} className="flex items-center justify-between text-xs">
+                <span className="font-mono text-text-2 w-7">R{w.round}</span>
+                <span className="text-base leading-none">{wmoIcon(w.conditions)}</span>
+                <span className="font-mono font-bold text-text-primary">
+                  {w.temperature != null ? `${Math.round(w.temperature)}°` : '—'}
+                </span>
+                <span className="font-mono text-text-2">
+                  {w.windSpeed != null ? `${Math.round(w.windSpeed)}mph` : '—'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* What Wins Here */}
+      {dnaCategories.length > 0 && (
+        <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-4">
+          <div className="flex items-baseline justify-between mb-2">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-2">What wins here</div>
+            {tournament.course?.id && (
+              <Link to={`/courses/${tournament.course.id}`} className="font-mono text-[9px] uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold">
+                Profile →
+              </Link>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            {dnaCategories.map(cat => {
+              const l = dnaLabel(cat.value)
+              return (
+                <div key={cat.label} className="flex items-center justify-between">
+                  <span className="text-[11px] text-text-2">{cat.label}</span>
+                  {l && <span className={`font-mono text-[10px] font-bold uppercase tracking-wider ${l.color}`}>{l.text}</span>}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}
+
 // --- Live tracking experience ------------------------------------------
 // Tabbed view for entered users (and viewers on LOCKED/COMPLETED pools).
 // Tab 1: Live Scoring (tournament leaderboard). Tab 2: Teams (pool standings).
@@ -816,7 +926,7 @@ function PoolLiveExperience({
               </aside>
             </div>
           ) : (
-            // Pre-tournament — pool standings strip on top + full TournamentPreview (field analysis + insights + weather sidebar)
+            // Pre-tournament — hero stats strip + pool standings (horizontal) + TournamentPreview full width
             <div className="space-y-5">
               <section className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-5 text-center">
                 <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-2">Tournament hasn't started</div>
@@ -827,30 +937,44 @@ function PoolLiveExperience({
                 </h3>
               </section>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className="lg:col-span-2">
-                  {tournamentLeaderboard && tournamentLeaderboard.length > 0 ? (
-                    <TournamentPreview
-                      tournament={pool.tournament}
-                      leaderboard={tournamentLeaderboard}
-                      weather={weather || []}
-                      myPlayerIds={myEntry?.picks?.map(p => p.player?.id).filter(Boolean) || []}
-                    />
-                  ) : (
-                    <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-12 text-center text-text-2">
-                      Field syncing…
-                    </div>
-                  )}
+              <PoolHeroWidgets
+                tournament={pool.tournament}
+                leaderboard={tournamentLeaderboard || []}
+                weather={weather || []}
+              />
+
+              <PoolStandingsCard
+                entries={entries}
+                yourEntryIds={yourEntryIds}
+                onOpenEntry={onOpenEntry}
+                onSwitchToTeams={() => setActiveTab('teams')}
+                layout="horizontal"
+              />
+
+              {/* Tournament preview link */}
+              {pool.tournamentId && (
+                <div className="flex justify-end">
+                  <Link
+                    to={`/tournaments/${pool.tournamentId}/preview`}
+                    className="font-mono text-[11px] uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold"
+                  >
+                    Full tournament preview →
+                  </Link>
                 </div>
-                <aside className="space-y-5">
-                  <PoolStandingsCard
-                    entries={entries}
-                    yourEntryIds={yourEntryIds}
-                    onOpenEntry={onOpenEntry}
-                    onSwitchToTeams={() => setActiveTab('teams')}
-                  />
-                </aside>
-              </div>
+              )}
+
+              {tournamentLeaderboard && tournamentLeaderboard.length > 0 ? (
+                <TournamentPreview
+                  tournament={pool.tournament}
+                  leaderboard={tournamentLeaderboard}
+                  weather={weather || []}
+                  myPlayerIds={myEntry?.picks?.map(p => p.player?.id).filter(Boolean) || []}
+                />
+              ) : (
+                <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-12 text-center text-text-2">
+                  Field syncing…
+                </div>
+              )}
             </div>
           )}
         </>
@@ -924,8 +1048,52 @@ function PoolLiveExperience({
   )
 }
 
-function PoolStandingsCard({ entries, yourEntryIds, onOpenEntry, onSwitchToTeams }) {
+function PoolStandingsCard({ entries, yourEntryIds, onOpenEntry, onSwitchToTeams, layout = 'vertical' }) {
   if (!entries || entries.length === 0) return null
+
+  if (layout === 'horizontal') {
+    // Horizontal top-of-page strip: top 5 entries side-by-side.
+    return (
+      <section className="rounded-2xl border border-text-2/15 bg-[var(--surface)] shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-text-2/10 flex items-baseline justify-between">
+          <h3 className="font-display font-bold text-text-primary text-sm">Pool standings</h3>
+          <button
+            type="button"
+            onClick={onSwitchToTeams}
+            className="font-mono text-[10px] uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold"
+          >
+            All teams →
+          </button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-text-2/10">
+          {entries.slice(0, 5).map((e, i) => {
+            const isYou = yourEntryIds.has(e.id)
+            return (
+              <button
+                key={e.id}
+                type="button"
+                onClick={() => onOpenEntry(e.id)}
+                className={`text-left px-4 py-3 hover:bg-bg transition-colors ${isYou ? 'bg-blaze/[0.04]' : ''} relative`}
+              >
+                {isYou && <span className="absolute left-0 top-0 bottom-0 w-1 bg-blaze" />}
+                <div className="flex items-baseline gap-2 mb-0.5">
+                  <span className="font-mono text-xs text-text-2">{i + 1}</span>
+                  {isYou && <span className="font-mono text-[9px] uppercase tracking-wider text-blaze">you</span>}
+                </div>
+                <div className="text-sm font-display font-bold text-text-primary truncate">{e.teamName}</div>
+                <div className="font-mono font-bold text-text-primary text-lg mt-1">
+                  {e.totalFantasyPoints != null ? e.totalFantasyPoints.toFixed(1) : '—'}
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-2 ml-1">pts</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+    )
+  }
+
+  // Default vertical (sidebar) layout.
   return (
     <section className="rounded-2xl border border-text-2/15 bg-[var(--surface)] overflow-hidden">
       <div className="px-4 py-3 border-b border-text-2/10 flex items-baseline justify-between">
