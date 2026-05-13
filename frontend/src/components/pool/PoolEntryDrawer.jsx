@@ -60,6 +60,21 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
           )}
         </div>
 
+        {/* Picks hidden until tournament starts */}
+        {entry.picksHidden && (
+          <div className="px-5 py-8 text-center border-b border-text-2/10">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blaze/10 mb-3">
+              <svg className="w-7 h-7 text-blaze" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <div className="font-display font-bold text-text-primary text-base mb-1">Picks revealed at tee time</div>
+            <p className="font-editorial italic text-sm text-text-2 max-w-[260px] mx-auto">
+              Everyone's roster locks in together — no peeking at what your buddies picked until Round 1 starts.
+            </p>
+          </div>
+        )}
+
         {/* Picks list */}
         <div className="divide-y divide-text-2/10">
           {entry.picks?.map((pick) => {

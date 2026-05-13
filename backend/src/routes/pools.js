@@ -110,15 +110,19 @@ router.get('/:slug', async (req, res, next) => {
 })
 
 // ─── PUBLIC: GET leaderboard ───────────────────────────────────────────────
-router.get('/:slug/leaderboard', async (req, res, next) => {
+// Picks visibility rule: until the tournament starts (status !== UPCOMING),
+// other entrants' picks are hidden so people can't copy from those who
+// entered earlier. Each user always sees their own picks. Commissioners
+// see everything through the /:slug/admin route (this one is for all viewers).
+router.get('/:slug/leaderboard', optionalAuth, async (req, res, next) => {
   try {
     const pool = await prisma.pool.findUnique({
       where: { slug: req.params.slug },
-      select: { id: true, status: true, tournamentId: true },
+      select: { id: true, status: true, tournamentId: true, commissionerUserId: true },
     })
     if (!pool) return res.status(404).json({ error: 'Pool not found' })
 
-    const [entries, winner] = await Promise.all([
+    const [entries, winner, tournament] = await Promise.all([
       prisma.poolEntry.findMany({
         where: { poolId: pool.id },
         include: {
@@ -136,14 +140,30 @@ router.get('/:slug/leaderboard', async (req, res, next) => {
         orderBy: [{ position: 'asc' }],
         select: { totalToPar: true },
       }),
+      prisma.tournament.findUnique({
+        where: { id: pool.tournamentId },
+        select: { status: true },
+      }),
     ])
     const actualWinningScore = winner?.totalToPar ?? null
 
+    const picksHidden = tournament?.status === 'UPCOMING'
+    const viewerId = req.user?.id || null
+    const isCommissioner = viewerId && pool.commissionerUserId === viewerId
+
     const ranked = entries
-      .map(e => ({
-        ...e,
-        tiebreakerDiff: actualWinningScore == null ? null : Math.abs((e.tiebreakerScore ?? 0) - actualWinningScore),
-      }))
+      .map(e => {
+        const isOwnEntry = viewerId && e.userId === viewerId
+        // Hide picks while tournament is upcoming, except for entrant viewing
+        // their own entry, or the commissioner viewing the public leaderboard.
+        const showPicks = !picksHidden || isOwnEntry || isCommissioner
+        return {
+          ...e,
+          picks: showPicks ? e.picks : [],
+          picksHidden: !showPicks,
+          tiebreakerDiff: actualWinningScore == null ? null : Math.abs((e.tiebreakerScore ?? 0) - actualWinningScore),
+        }
+      })
       .sort((a, b) => {
         if (a.totalFantasyPoints !== b.totalFantasyPoints) return b.totalFantasyPoints - a.totalFantasyPoints
         if (a.tiebreakerDiff != null && b.tiebreakerDiff != null && a.tiebreakerDiff !== b.tiebreakerDiff) {
@@ -152,7 +172,13 @@ router.get('/:slug/leaderboard', async (req, res, next) => {
         return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
       })
 
-    res.json({ leaderboard: ranked, status: pool.status, actualWinningScore })
+    res.json({
+      leaderboard: ranked,
+      status: pool.status,
+      tournamentStatus: tournament?.status || null,
+      picksHidden,
+      actualWinningScore,
+    })
   } catch (e) { next(e) }
 })
 
