@@ -3,11 +3,15 @@ import { useNavigate, Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
-// Build a sensible 3-tier default from a tournament field.
-// Tier 1 (Stars):       top of OWGR, 2 picks
-// Tier 2 (Contenders):  middle band, 2 picks
-// Tier 3 (Sleepers):    everyone else, 2 picks
-// Unranked players sort to the back.
+// Build a 6-tier default from the tournament field, 1 pick per tier
+// (EasyOfficePools-style). Tier sizes scale with field size:
+//   T1 Stars         top  ~5% (min 5)
+//   T2 Studs         next ~8% (min 8)
+//   T3 Contenders    next ~13% (min 12)
+//   T4 Solid plays   next ~20% (min 18)
+//   T5 Long shots    next ~24% (min 22)
+//   T6 Lottery       everyone else
+// Unranked players sort to the back so they land in Lottery.
 function buildDefaultTiers(field) {
   if (!field || field.length === 0) return null
 
@@ -18,22 +22,36 @@ function buildDefaultTiers(field) {
   })
 
   const n = sorted.length
-  // Stars: ~13% of field, min 15, max 30
-  const starsCount = Math.min(30, Math.max(15, Math.round(n * 0.13)))
-  // Contenders: ~33% of field, min 30, max 50
-  const contendersCount = Math.min(50, Math.max(30, Math.round(n * 0.33)))
-  // Sleepers: the rest
-  const sleepersStart = starsCount + contendersCount
-
-  const stars = sorted.slice(0, starsCount)
-  const contenders = sorted.slice(starsCount, sleepersStart)
-  const sleepers = sorted.slice(sleepersStart)
-
-  return [
-    { tierNumber: 1, label: 'Stars',      picksRequired: 2, playerIds: stars.map(p => p.playerId) },
-    { tierNumber: 2, label: 'Contenders', picksRequired: 2, playerIds: contenders.map(p => p.playerId) },
-    { tierNumber: 3, label: 'Sleepers',   picksRequired: 2, playerIds: sleepers.map(p => p.playerId) },
+  const sizes = [
+    Math.max(5,  Math.round(n * 0.05)), // T1
+    Math.max(8,  Math.round(n * 0.08)), // T2
+    Math.max(12, Math.round(n * 0.13)), // T3
+    Math.max(18, Math.round(n * 0.20)), // T4
+    Math.max(22, Math.round(n * 0.24)), // T5
   ]
+  const labels = ['Stars', 'Studs', 'Contenders', 'Solid plays', 'Long shots', 'Lottery']
+
+  let cursor = 0
+  const tiers = []
+  for (let i = 0; i < 5; i++) {
+    const slice = sorted.slice(cursor, cursor + sizes[i])
+    tiers.push({
+      tierNumber: i + 1,
+      label: labels[i],
+      picksRequired: 1,
+      playerIds: slice.map(p => p.playerId),
+    })
+    cursor += sizes[i]
+  }
+  // T6 Lottery — rest of the field (always at least includes leftovers)
+  tiers.push({
+    tierNumber: 6,
+    label: labels[5],
+    picksRequired: 1,
+    playerIds: sorted.slice(cursor).map(p => p.playerId),
+  })
+
+  return tiers
 }
 
 export default function PoolCreate() {
@@ -265,14 +283,19 @@ export default function PoolCreate() {
                   {form.tiers.length} tiers · {totalPicks} picks per entry
                 </div>
                 <div className="font-editorial italic text-sm text-text-2 mt-0.5">
-                  Built from the field's world ranking.
+                  Built from the field's world ranking. Tap +/− to bump picks per tier.
                 </div>
               </div>
             </div>
             <div className="divide-y divide-text-2/10">
-              {form.tiers.map((tier) => {
+              {form.tiers.map((tier, idx) => {
                 const players = tier.playerIds.map(id => fieldById.get(id)).filter(Boolean)
                 const preview = players.slice(0, 3).map(p => p.playerName).join(' · ')
+                const maxPicks = Math.min(3, tier.playerIds.length)
+                const bump = (delta) => {
+                  const next = Math.max(1, Math.min(maxPicks, tier.picksRequired + delta))
+                  if (next !== tier.picksRequired) updateTier(idx, { picksRequired: next })
+                }
                 return (
                   <div key={tier.tierNumber} className="px-5 py-3.5 flex items-center gap-4">
                     <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-blaze/10 text-blaze font-mono text-sm font-bold shrink-0">
@@ -283,9 +306,34 @@ export default function PoolCreate() {
                         {tier.label || `Tier ${tier.tierNumber}`}
                       </div>
                       <div className="font-mono text-[11px] uppercase tracking-wider text-text-2 mt-0.5 truncate">
-                        {tier.playerIds.length} players · pick {tier.picksRequired}
+                        {tier.playerIds.length} players
                         {preview && <span className="normal-case tracking-normal text-text-2/70"> · {preview}{players.length > 3 ? '…' : ''}</span>}
                       </div>
+                    </div>
+                    {/* Picks-per-tier stepper (1-3) */}
+                    <div className="shrink-0 inline-flex items-center gap-2 rounded-lg border border-text-2/20 bg-bg px-1 py-1">
+                      <button
+                        type="button"
+                        onClick={() => bump(-1)}
+                        disabled={tier.picksRequired <= 1}
+                        aria-label={`Decrease picks for tier ${tier.tierNumber}`}
+                        className="w-7 h-7 rounded-md flex items-center justify-center font-mono text-lg font-bold text-text-2 hover:bg-blaze/10 hover:text-blaze disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-2 transition-colors"
+                      >
+                        −
+                      </button>
+                      <div className="text-center min-w-[3.5rem] leading-tight">
+                        <div className="font-mono font-bold text-text-primary text-base">{tier.picksRequired}</div>
+                        <div className="font-mono text-[9px] uppercase tracking-wider text-text-2">pick{tier.picksRequired !== 1 ? 's' : ''}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => bump(1)}
+                        disabled={tier.picksRequired >= maxPicks}
+                        aria-label={`Increase picks for tier ${tier.tierNumber}`}
+                        className="w-7 h-7 rounded-md flex items-center justify-center font-mono text-lg font-bold text-text-2 hover:bg-blaze/10 hover:text-blaze disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-text-2 transition-colors"
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 )
