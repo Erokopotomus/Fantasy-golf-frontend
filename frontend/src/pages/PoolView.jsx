@@ -6,6 +6,7 @@ import PlayerDrawer from '../components/players/PlayerDrawer'
 import PoolEntryDrawer from '../components/pool/PoolEntryDrawer'
 import WeatherStrip from '../components/tournament/WeatherStrip'
 import TournamentPreview from '../components/tournament/TournamentPreview'
+import { flattenEntry } from '../hooks/useTournamentScoring'
 
 // --- Helper components ----------------------------------------------------
 
@@ -142,7 +143,11 @@ export default function PoolView() {
             api.getTournamentLeaderboard(p.pool.tournamentId).catch(() => null),
             api.getTournamentWeather(p.pool.tournamentId).catch(() => null),
           ])
-          if (tlb) setTournamentLeaderboard(tlb.leaderboard || tlb)
+          if (tlb) {
+            const raw = tlb.leaderboard || tlb
+            // Flatten nested player.* → top-level so TournamentPreview / our row renderers can read p.name etc.
+            setTournamentLeaderboard(Array.isArray(raw) ? raw.map(flattenEntry) : raw)
+          }
           if (w) setWeather(w.weather || w)
         }
       } finally { setLoading(false) }
@@ -156,7 +161,10 @@ export default function PoolView() {
       api.getPoolLeaderboard(slug).then(setLeaderboard).catch(() => {})
       if (pool.tournamentId) {
         api.getTournamentLeaderboard(pool.tournamentId)
-          .then(tlb => setTournamentLeaderboard(tlb.leaderboard || tlb))
+          .then(tlb => {
+            const raw = tlb.leaderboard || tlb
+            setTournamentLeaderboard(Array.isArray(raw) ? raw.map(flattenEntry) : raw)
+          })
           .catch(() => {})
       }
     }, 60000)
@@ -164,16 +172,16 @@ export default function PoolView() {
   }, [pool, slug])
 
   // Build playerId → live performance map (totalToPar, today, thru, position, status)
+  // (tournamentLeaderboard is the flattened shape from flattenEntry — fields are top-level.)
   const liveByPlayer = useMemo(() => {
     const m = new Map()
     if (!tournamentLeaderboard) return m
     for (const row of tournamentLeaderboard) {
-      const pid = row.player?.id || row.playerId
+      const pid = row.id
       if (!pid) continue
       m.set(pid, {
         position: row.position,
-        positionTied: row.positionTied,
-        totalToPar: row.totalToPar,
+        totalToPar: row.score,
         today: row.today,
         thru: row.thru,
         status: row.status,
@@ -761,8 +769,10 @@ function PoolLiveExperience({
                   </div>
                   <div className="divide-y divide-text-2/10">
                     {tournamentLeaderboard.slice(0, 20).map((row) => {
-                      const pid = row.player?.id || row.playerId
+                      const pid = row.id
                       const isMyPick = myEntry?.picks?.some(p => p.player?.id === pid)
+                      // flattenEntry returns score (= totalToPar) and position as "T1"/"1" string
+                      const totalToPar = row.score
                       return (
                         <button
                           key={pid}
@@ -770,20 +780,18 @@ function PoolLiveExperience({
                           onClick={() => onOpenPlayer(pid)}
                           className={`w-full text-left px-5 py-2.5 flex items-center gap-3 hover:bg-bg transition-colors ${isMyPick ? 'bg-blaze/[0.04] border-l-2 border-blaze' : ''}`}
                         >
-                          <span className="font-mono text-xs text-text-2 w-8 shrink-0">
-                            {row.positionTied ? 'T' : ''}{row.position || '—'}
-                          </span>
-                          <span className="text-sm leading-none" aria-hidden="true">{row.player?.countryFlag || ''}</span>
+                          <span className="font-mono text-xs text-text-2 w-8 shrink-0">{row.position || '—'}</span>
+                          <span className="text-sm leading-none" aria-hidden="true">{row.countryFlag || ''}</span>
                           <span className="flex-1 min-w-0 font-medium text-text-primary truncate flex items-center gap-2">
-                            {row.player?.name}
+                            {row.name}
                             {isMyPick && <span className="font-mono text-[9px] uppercase tracking-wider text-blaze bg-blaze/10 px-1.5 py-0.5 rounded">yours</span>}
                           </span>
                           <span className={`font-mono font-bold text-sm shrink-0 ${
-                            row.totalToPar == null ? 'text-text-2' :
-                            row.totalToPar < 0 ? 'text-field' :
-                            row.totalToPar > 0 ? 'text-live-red' : 'text-text-primary'
+                            totalToPar == null ? 'text-text-2' :
+                            totalToPar < 0 ? 'text-field' :
+                            totalToPar > 0 ? 'text-live-red' : 'text-text-primary'
                           }`}>
-                            {row.totalToPar == null ? '—' : row.totalToPar === 0 ? 'E' : row.totalToPar > 0 ? `+${row.totalToPar}` : `${row.totalToPar}`}
+                            {totalToPar == null ? '—' : totalToPar === 0 ? 'E' : totalToPar > 0 ? `+${totalToPar}` : `${totalToPar}`}
                           </span>
                           <span className="font-mono text-[10px] text-text-2/70 shrink-0 w-12 text-right">
                             {row.status === 'CUT' || row.thru === 'CUT' ? 'CUT' : row.thru === 'F' || row.thru === 18 ? 'F' : row.thru ? `Thru ${row.thru}` : '—'}
