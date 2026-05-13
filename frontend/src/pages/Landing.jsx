@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import Footer from '../components/layout/Footer'
 import ClutchLogo from '../components/common/ClutchLogo'
-import ClutchRatingGauge from '../components/common/ClutchRatingGauge'
 import Button from '../components/common/Button'
 
 // ─── Brand Colors ────────────────────────────────────────────
@@ -12,37 +11,23 @@ const FD = '#0D9668', FD_B = '#14B880'
 const CR = '#D4930D', CR_B = '#F0B429'
 const LV = '#E83838', INK = '#131118'
 
-// ─── Mock Data ──────────────────────────────────────────────
-
-const mockLeaderboard = [
-  { rank: 1, name: 'ChaseTheTrophy', rating: 94, record: '147-31', accuracy: '82.6%', trend: 'up' },
-  { rank: 2, name: 'GridironGuru', rating: 91, record: '139-34', accuracy: '80.3%', trend: 'stable' },
-  { rank: 3, name: 'StatSurgeon', rating: 88, record: '128-29', accuracy: '81.5%', trend: 'up' },
-  { rank: 4, name: 'ClutchCallKing', rating: 85, record: '122-33', accuracy: '78.7%', trend: 'down' },
-  { rank: 5, name: 'BoldPickBrian', rating: 83, record: '118-36', accuracy: '76.6%', trend: 'up' },
-  { rank: 6, name: 'AceAnalyst', rating: 80, record: '110-30', accuracy: '78.6%', trend: 'stable' },
-  { rank: 7, name: 'FantasyPhenom', rating: 78, record: '105-35', accuracy: '75.0%', trend: 'up' },
-]
-
+// Mock data still used by the Two Sports section's dashboard preview
 const mockLeagues = [
   { id: 1, name: 'Weekend Warriors', rank: 2, members: 10, format: 'Full League', color: 'bg-[#D4930D]' },
   { id: 2, name: 'Masters Mania', rank: 1, members: 8, format: 'Head-to-Head', color: 'bg-[#F06820]' },
 ]
-
 const mockStandings = [
   { rank: 1, name: 'TigerFanatic', points: 2450, avatar: 'TF' },
   { rank: 2, name: 'You', points: 2380, avatar: 'ME', isUser: true },
   { rank: 3, name: 'BirdieKing', points: 2290, avatar: 'BK' },
   { rank: 4, name: 'GolfPro99', points: 2150, avatar: 'GP' },
 ]
-
 const mockActivity = [
   { type: 'trade', text: 'Trade accepted: Rory for Hovland', time: '2h ago' },
   { type: 'pick', text: 'Waiver claim: Added Cam Young', time: '5h ago' },
   { type: 'score', text: 'Scottie Scheffler: -6 (R2)', time: '1d ago' },
 ]
 
-// ─── Decorative Ring ────────────────────────────────────────
 const DecorativeRing = ({ size, top, right, bottom, left, color, opacity, speed, reverse }) => (
   <div
     className="absolute rounded-full pointer-events-none"
@@ -57,11 +42,445 @@ const DecorativeRing = ({ size, top, right, bottom, left, color, opacity, speed,
   />
 )
 
-// ─── Section Label (spec: 20px line + JetBrains Mono) ────────
 const SectionLabel = ({ children, color = SL_L }) => (
   <div className="flex items-center gap-2.5 mb-4">
     <span className="w-5 h-[2px] rounded-sm" style={{ background: color }} />
     <span className="text-[11px] font-mono font-semibold uppercase tracking-[0.15em]" style={{ color }}>{children}</span>
+  </div>
+)
+
+// ─── Feature pill (used in hero) ────────────────────────────
+const FeaturePill = ({ icon, label, color }) => (
+  <span
+    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-all bg-[var(--surface)] hover:-translate-y-0.5"
+    style={{
+      border: '1px solid var(--card-border)',
+      fontFamily: "'JetBrains Mono', monospace",
+      fontSize: 11,
+      fontWeight: 600,
+      letterSpacing: '0.04em',
+      color: 'var(--text-2)',
+    }}
+  >
+    <span style={{ color }} className="inline-flex">{icon}</span>
+    {label}
+  </span>
+)
+
+// ─── Hero pool card player row ──────────────────────────────
+const PlayerRow = ({ initials, headshotGradient, name, flag, tour, owgr, statLabel, cpiValue, cpiPercent, cpiSide, picked }) => {
+  const isLight = useTheme().theme === 'light'
+  return (
+    <div
+      className="flex items-center gap-3 py-2.5"
+      style={{
+        background: picked ? (isLight ? 'rgba(240,104,32,0.04)' : 'rgba(240,104,32,0.08)') : 'transparent',
+        borderBottom: `1px solid var(--card-border)`,
+        borderLeft: picked ? `3px solid ${BZ}` : '3px solid transparent',
+        paddingLeft: picked ? 15 : 18,
+        paddingRight: 18,
+      }}
+    >
+      <div
+        className="w-[38px] h-[38px] rounded-full flex items-center justify-center text-white font-display font-bold text-[12px] shrink-0"
+        style={{ background: headshotGradient }}
+      >
+        {initials}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div
+          className="text-sm font-semibold truncate"
+          style={{ color: picked ? BZ_D : 'var(--text-1)' }}
+        >
+          {name}
+        </div>
+        <div className="font-mono text-[10px] tracking-[0.04em] mt-0.5 truncate" style={{ color: 'var(--text-3)' }}>
+          <span>{flag} </span>
+          <span>{tour}</span>
+          <span> · </span>
+          <span style={{ color: 'var(--text-2)' }}>#{owgr}</span>
+          <span> · {statLabel}</span>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1 shrink-0">
+        <div className="relative w-9 h-1 rounded-sm overflow-hidden" style={{ background: 'var(--surface-2)' }}>
+          <div className="absolute top-0 bottom-0 w-px" style={{ left: '50%', background: 'var(--card-border)' }} />
+          <div
+            className="absolute top-0 bottom-0"
+            style={{
+              [cpiSide === 'right' ? 'left' : 'right']: '50%',
+              width: `${cpiPercent}%`,
+              background: cpiSide === 'right' ? FD : 'rgba(232,56,56,0.45)',
+            }}
+          />
+        </div>
+        <span className="font-mono text-[10px] font-bold" style={{ color: cpiSide === 'right' ? FD : 'var(--text-3)' }}>
+          {cpiValue}
+        </span>
+      </div>
+      <span
+        className="font-mono text-[11px] font-bold px-2.5 py-1.5 rounded-md tracking-[0.05em] shrink-0"
+        style={{
+          background: picked ? BZ : 'var(--surface-2)',
+          color: picked ? '#fff' : 'var(--text-2)',
+        }}
+      >
+        {picked ? '✓ PICKED' : '+ Pick'}
+      </span>
+    </div>
+  )
+}
+
+// ─── Hero Pool Entry Card ───────────────────────────────────
+const PoolEntryCard = () => {
+  const isLight = useTheme().theme === 'light'
+  return (
+    <div
+      className="w-full max-w-[460px] rounded-[20px] overflow-hidden"
+      style={{
+        background: 'var(--surface)',
+        border: '1px solid var(--card-border)',
+        boxShadow: isLight ? '0 24px 70px rgba(30,42,58,0.15)' : '0 24px 70px rgba(0,0,0,0.5)',
+        animation: 'float 6s ease-in-out infinite',
+      }}
+    >
+      {/* Hero strip */}
+      <div
+        className="relative px-5 py-4 text-white"
+        style={{
+          minHeight: 130,
+          background: `
+            linear-gradient(180deg, rgba(30,42,58,0.35) 0%, rgba(30,42,58,0.92) 100%),
+            linear-gradient(135deg, #4F6F52 0%, #88AA70 40%, #5A7842 70%, #3C5A2E 100%)
+          `,
+        }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-mono text-[9px] uppercase tracking-[0.18em] opacity-70">Buckeye PGA Championship</div>
+            <div className="font-display font-extrabold text-[24px] tracking-[-0.02em] mt-1.5 leading-tight">PGA Championship</div>
+            <div className="font-editorial italic text-[13px] opacity-85 mt-0.5">Aronimink · Newtown Sq, PA</div>
+          </div>
+          <div className="flex flex-col gap-1.5 items-end shrink-0">
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono text-[10px] uppercase tracking-[0.1em] font-semibold text-white"
+              style={{ background: 'rgba(232,56,56,0.85)', border: '1px solid rgba(232,56,56,0.4)' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white" style={{ animation: 'pulse-dot 2s ease-in-out infinite' }} />
+              Accepting entries
+            </div>
+            <div
+              className="inline-flex items-center px-2.5 py-1 rounded-md font-mono text-[10px] uppercase tracking-[0.1em] font-semibold text-white"
+              style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.18)' }}
+            >
+              Locks 1d 13h
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tier 1 header */}
+      <div
+        className="px-[18px] py-2.5 flex justify-between items-center"
+        style={{ background: 'var(--surface-2)', borderBottom: '1px solid var(--card-border)' }}
+      >
+        <span
+          className="font-mono text-[10px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-md text-white"
+          style={{ background: BZ }}
+        >
+          T1
+        </span>
+        <span className="font-mono text-[11px]" style={{ color: 'var(--text-2)' }}>
+          <span style={{ color: FD, fontWeight: 700 }}>1</span> / 10 picked · pick 1
+        </span>
+      </div>
+
+      {/* Player rows */}
+      <PlayerRow
+        initials="SS" headshotGradient="linear-gradient(135deg, #C49C7A, #8B6B4A)"
+        name="Scottie Scheffler" flag="🇺🇸" tour="PGA" owgr="1" statLabel="SG +2.9"
+        cpiValue="+2.0" cpiPercent={30} cpiSide="right" picked
+      />
+      <PlayerRow
+        initials="JR" headshotGradient="linear-gradient(135deg, #B85450, #8B3530)"
+        name="Jon Rahm" flag="🇪🇸" tour="LIV" owgr="20" statLabel="Form 100"
+        cpiValue="+0.8" cpiPercent={12} cpiSide="right"
+      />
+      <PlayerRow
+        initials="RM" headshotGradient="linear-gradient(135deg, #D49060, #A56830)"
+        name="Rory McIlroy" flag="🇬🇧" tour="PGA" owgr="2" statLabel="SG +1.4"
+        cpiValue="+1.5" cpiPercent={22} cpiSide="right"
+      />
+      <PlayerRow
+        initials="CY" headshotGradient="linear-gradient(135deg, #6E8DB8, #4A6C92)"
+        name="Cameron Young" flag="🇺🇸" tour="PGA" owgr="3" statLabel="Form 88"
+        cpiValue="−0.4" cpiPercent={8} cpiSide="left"
+      />
+
+      {/* Footer strip */}
+      <div
+        className="px-[18px] py-2.5 flex justify-between items-center font-mono text-[11px]"
+        style={{ background: 'var(--surface-2)', borderTop: '1px solid var(--card-border)', color: 'var(--text-2)' }}
+      >
+        <span>+ 6 more · 5 tiers below</span>
+        <span><span style={{ color: BZ_D, fontWeight: 700 }}>1</span> of 6 picked</span>
+      </div>
+
+      {/* CTA */}
+      <Link
+        to="/pools/t6c9h2"
+        className="block text-center py-3 px-4 font-display font-bold text-[14px] tracking-[0.02em] text-white transition-colors"
+        style={{ background: BZ }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = BZ_H }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = BZ }}
+      >
+        Lock in your picks →
+      </Link>
+    </div>
+  )
+}
+
+// ─── Mini-mockup: Player Drawer ─────────────────────────────
+const MiniPlayerDrawer = () => (
+  <div className="p-4">
+    <div className="flex items-center gap-3 pb-3 mb-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
+      <div className="w-9 h-9 rounded-full" style={{ background: 'linear-gradient(135deg, #C49C7A, #8B6B4A)' }} />
+      <div className="min-w-0">
+        <div className="font-display font-bold text-sm" style={{ color: 'var(--text-1)' }}>Scottie Scheffler</div>
+        <div className="font-mono text-[10px]" style={{ color: 'var(--text-3)' }}>#1 OWGR · PGA · 🇺🇸</div>
+      </div>
+    </div>
+    <div className="grid grid-cols-4 gap-2 mb-3">
+      {[
+        { v: '+2.9', l: 'SG Total' },
+        { v: '#1', l: 'OWGR' },
+        { v: '8', l: 'Avg Fin' },
+        { v: '12', l: 'Events' },
+      ].map((s, i) => (
+        <div key={i} className="text-center p-1.5 rounded-md" style={{ background: 'var(--surface-2)' }}>
+          <div className="font-mono font-bold text-[13px]" style={{ color: FD }}>{s.v}</div>
+          <div className="font-mono text-[8px] uppercase tracking-wider mt-0.5" style={{ color: 'var(--text-3)' }}>{s.l}</div>
+        </div>
+      ))}
+    </div>
+    {[
+      { l: 'Drv', w: 82, v: '+0.82' },
+      { l: 'App', w: 95, v: '+1.08' },
+      { l: 'ARG', w: 42, v: '+0.42' },
+      { l: 'Putt', w: 55, v: '+0.55' },
+    ].map((b, i) => (
+      <div key={i} className="flex items-center gap-2 mb-1.5">
+        <span className="font-mono text-[9px] w-7" style={{ color: 'var(--text-2)' }}>{b.l}</span>
+        <div className="flex-1 h-1.5 rounded overflow-hidden" style={{ background: 'var(--surface-2)' }}>
+          <div className="h-full rounded" style={{ width: `${b.w}%`, background: FD }} />
+        </div>
+        <span className="font-mono text-[9px] font-bold w-10 text-right" style={{ color: FD }}>{b.v}</span>
+      </div>
+    ))}
+  </div>
+)
+
+// ─── Mini-mockup: Live Scoring ──────────────────────────────
+const MiniLiveScoring = () => (
+  <div className="p-4">
+    <div className="flex justify-between items-center mb-3">
+      <span className="font-display font-bold text-[13px]" style={{ color: 'var(--text-1)' }}>Truist Championship · R4</span>
+      <span
+        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-mono text-[9px] font-bold text-white tracking-[0.05em]"
+        style={{ background: LV }}
+      >
+        <span className="w-1 h-1 rounded-full bg-white" style={{ animation: 'pulse-dot 2s ease-in-out infinite' }} />
+        LIVE
+      </span>
+    </div>
+    {[
+      { p: '1', n: 'Justin Rose', t: 'F', s: '-13' },
+      { p: '2', n: 'Scottie Scheffler', t: 'F', s: '-12' },
+      { p: 'T3', n: 'Akshay Bhatia', t: 'F', s: '-9' },
+      { p: 'T3', n: 'Sam Stevens', t: '17', s: '-9' },
+      { p: '5', n: 'Keegan Bradley', t: '15', s: '-7' },
+    ].map((r, i) => (
+      <div
+        key={i}
+        className="flex items-center gap-2 py-1.5 text-[12px]"
+        style={{ borderBottom: i < 4 ? '1px solid var(--card-border)' : 'none' }}
+      >
+        <span className="font-mono font-bold w-7" style={{ color: 'var(--text-2)' }}>{r.p}</span>
+        <span className="flex-1 truncate" style={{ color: 'var(--text-1)' }}>{r.n}</span>
+        <span className="font-mono w-7 text-right" style={{ color: 'var(--text-3)' }}>{r.t}</span>
+        <span className="font-mono font-bold w-9 text-right" style={{ color: FD }}>{r.s}</span>
+      </div>
+    ))}
+  </div>
+)
+
+// ─── Mini-mockup: Draft Recap radar ─────────────────────────
+const MiniDraftRecap = () => (
+  <div className="p-3">
+    <div className="flex items-center gap-2 mb-1">
+      <span
+        className="inline-flex items-center px-2 py-0.5 rounded-md font-mono text-[10px] font-bold text-white"
+        style={{ background: FD }}
+      >
+        A−
+      </span>
+      <span className="text-[11px]" style={{ color: 'var(--text-2)' }}>
+        <strong style={{ color: 'var(--text-1)' }}>Your draft</strong> vs. <span style={{ color: SL_L }}>league avg</span>
+      </span>
+    </div>
+    <svg className="w-full" viewBox="-95 -68 190 142" style={{ maxHeight: 140 }}>
+      <polygon points="0,-50 47.6,-15.5 29.4,40.5 -29.4,40.5 -47.6,-15.5" fill="none" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6" />
+      <polygon points="0,-33.3 31.7,-10.3 19.6,27 -19.6,27 -31.7,-10.3" fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth="0.6" />
+      <polygon points="0,-16.7 15.9,-5.2 9.8,13.5 -9.8,13.5 -15.9,-5.2" fill="none" stroke="rgba(0,0,0,0.05)" strokeWidth="0.6" />
+      <line x1="0" y1="0" x2="0" y2="-50" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6" />
+      <line x1="0" y1="0" x2="47.6" y2="-15.5" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6" />
+      <line x1="0" y1="0" x2="29.4" y2="40.5" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6" />
+      <line x1="0" y1="0" x2="-29.4" y2="40.5" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6" />
+      <line x1="0" y1="0" x2="-47.6" y2="-15.5" stroke="rgba(0,0,0,0.08)" strokeWidth="0.6" />
+      <polygon points="0,-30 28,-9 17,23.4 -22,30.2 -30,-9.8" fill="rgba(61,81,102,0.12)" stroke="#3D5166" strokeWidth="1.5" strokeDasharray="3 2" />
+      <polygon points="0,-44 40,-13 23,32 -22,30 -34,-11" fill="rgba(240,104,32,0.35)" stroke="#F06820" strokeWidth="2" />
+      <circle cx="0" cy="-44" r="2.8" fill="#F06820" stroke="white" strokeWidth="1" />
+      <circle cx="40" cy="-13" r="2.8" fill="#F06820" stroke="white" strokeWidth="1" />
+      <circle cx="23" cy="32" r="2.8" fill="#F06820" stroke="white" strokeWidth="1" />
+      <circle cx="-22" cy="30" r="2.8" fill="#F06820" stroke="white" strokeWidth="1" />
+      <circle cx="-34" cy="-11" r="2.8" fill="#F06820" stroke="white" strokeWidth="1" />
+      <text x="0" y="-58" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7" fontWeight="700" fill="#6B6862" letterSpacing="0.06em">OFF TEE</text>
+      <text x="55" y="-13" textAnchor="start" fontFamily="JetBrains Mono, monospace" fontSize="7" fontWeight="700" fill="#6B6862" letterSpacing="0.06em">APPROACH</text>
+      <text x="36" y="51" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7" fontWeight="700" fill="#6B6862" letterSpacing="0.06em">SHORT GAME</text>
+      <text x="-36" y="51" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="7" fontWeight="700" fill="#6B6862" letterSpacing="0.06em">PUTTING</text>
+      <text x="-55" y="-13" textAnchor="end" fontFamily="JetBrains Mono, monospace" fontSize="7" fontWeight="700" fill="#6B6862" letterSpacing="0.06em">FORM</text>
+    </svg>
+    <div className="flex items-center gap-3 justify-center text-[10px] mt-1">
+      <span className="inline-flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded-sm" style={{ background: BZ }} />
+        <span style={{ color: BZ_D, fontWeight: 700 }}>Your draft</span>
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(61,81,102,0.5)', border: '1px dashed #3D5166' }} />
+        <span style={{ color: SL_L }}>League avg</span>
+      </span>
+    </div>
+  </div>
+)
+
+// ─── Mini-mockup: Pool Entry ───────────────────────────────
+const MiniPoolEntry = () => (
+  <div className="p-4 space-y-1.5">
+    {[
+      { l: 'Tier 1', pick: '🇺🇸 Scheffler' },
+      { l: 'Tier 2', pick: '🇬🇧 Rose' },
+      { l: 'Tier 3', pick: '🇦🇺 Scott' },
+      { l: 'Tier 4', pick: '🇺🇸 Bhatia' },
+      { l: 'Tiebreaker', pick: '−12', crown: true },
+    ].map((r, i) => (
+      <div
+        key={i}
+        className="flex items-center justify-between px-3 py-2 rounded-lg"
+        style={{ background: 'var(--surface-2)' }}
+      >
+        <span className="font-mono text-[10px] uppercase tracking-[0.08em]" style={{ color: 'var(--text-3)' }}>{r.l}</span>
+        <span
+          className="text-[13px] font-semibold"
+          style={{ color: r.crown ? CR : 'var(--text-1)' }}
+        >
+          {r.pick}
+        </span>
+      </div>
+    ))}
+  </div>
+)
+
+// ─── Mini-mockup: Vault Reveal ─────────────────────────────
+const MiniVaultReveal = () => (
+  <div className="p-4" style={{ background: 'linear-gradient(135deg, #F7E9B8, #FAF2D3)', height: '100%' }}>
+    <div className="text-center font-mono text-[9px] tracking-[0.2em] mb-2" style={{ color: CR }}>
+      ◆ ◆ ◆ Vault unlocked ◆ ◆ ◆
+    </div>
+    <div className="text-center font-display font-bold text-[13px] mb-3" style={{ color: SL }}>
+      The Sunday Crew · 12 years
+    </div>
+    <div className="rounded-lg overflow-hidden" style={{ background: 'rgba(30,42,58,0.92)' }}>
+      {[
+        { r: '1', n: 'Mike B', p: '142 W · 4 chips', first: true },
+        { r: '2', n: 'Sam D', p: '131 W · 3 chips' },
+        { r: '3', n: 'Chris P', p: '125 W · 2 chips' },
+        { r: '4', n: 'Jen K', p: '119 W · 1 chip' },
+      ].map((row, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-2 px-3 py-1.5 text-[11px]"
+          style={{
+            borderBottom: i < 3 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+            background: row.first ? 'rgba(212,147,13,0.15)' : 'transparent',
+          }}
+        >
+          <span className="font-mono font-bold w-3" style={{ color: row.first ? CR_B : 'rgba(255,255,255,0.5)' }}>{row.r}</span>
+          <span className="flex-1" style={{ color: row.first ? CR_B : 'rgba(255,255,255,0.85)' }}>{row.n}</span>
+          <span className="font-mono text-[10px]" style={{ color: 'rgba(255,255,255,0.55)' }}>{row.p}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+)
+
+// ─── Mini-mockup: Coach Briefing ───────────────────────────
+const MiniCoachBriefing = () => (
+  <div className="p-4">
+    <div className="flex items-center gap-2.5 mb-3">
+      <svg width="36" height="36" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="14" fill="none" stroke={BZ} strokeWidth="1" opacity="0.3" />
+        <circle cx="20" cy="6" r="2" fill={BZ} />
+        <circle cx="34" cy="20" r="2" fill={BZ} opacity="0.7" />
+        <circle cx="20" cy="34" r="2" fill={BZ} />
+        <circle cx="6" cy="20" r="2" fill={BZ} opacity="0.7" />
+        <circle cx="29" cy="11" r="1.5" fill={BZ} opacity="0.5" />
+        <circle cx="11" cy="29" r="1.5" fill={BZ} opacity="0.5" />
+        <line x1="20" y1="6" x2="34" y2="20" stroke={BZ} strokeWidth="0.5" opacity="0.4" />
+        <line x1="34" y1="20" x2="20" y2="34" stroke={BZ} strokeWidth="0.5" opacity="0.4" />
+        <line x1="20" y1="34" x2="6" y2="20" stroke={BZ} strokeWidth="0.5" opacity="0.4" />
+        <line x1="6" y1="20" x2="20" y2="6" stroke={BZ} strokeWidth="0.5" opacity="0.4" />
+      </svg>
+      <div>
+        <div className="font-mono text-[10px] tracking-[0.1em]" style={{ color: BZ }}>YOUR COACH</div>
+        <div className="font-bold text-[14px]" style={{ color: 'var(--text-1)' }}>Friday morning briefing</div>
+      </div>
+    </div>
+    <p className="font-editorial italic text-[12px] leading-[1.55]" style={{ color: 'var(--text-2)' }}>
+      "Scheffler tees off at 8:14 from the back nine. Course is firm — that helps Bhatia and Justin Rose more than Bradley. You're picked low on Rose in the pool, decent leverage if he repeats Truist."
+    </p>
+    <div className="flex gap-1.5 mt-2 flex-wrap">
+      <span className="font-mono text-[10px] px-2 py-0.5 rounded-md" style={{ background: 'rgba(240,104,32,0.1)', color: BZ_D }}>Roster check</span>
+      <span className="font-mono text-[10px] px-2 py-0.5 rounded-md" style={{ background: 'rgba(13,150,104,0.1)', color: FD }}>Pool leverage</span>
+    </div>
+  </div>
+)
+
+// ─── Gallery card wrapper ───────────────────────────────────
+const GalleryCard = ({ annotation, preview, label, title, desc, previewBg }) => (
+  <div
+    className="rounded-[16px] overflow-hidden relative transition-all"
+    style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--card-border)',
+      boxShadow: 'var(--card-shadow)',
+    }}
+    onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--card-shadow-hover, 0 12px 40px rgba(0,0,0,0.08))' }}
+    onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--card-shadow)' }}
+  >
+    <div className="relative" style={{ minHeight: 200, background: previewBg || 'var(--surface-2)' }}>
+      <span
+        className="absolute top-2.5 right-2.5 font-mono text-[10px] uppercase tracking-[0.12em] px-2 py-0.5 rounded font-semibold"
+        style={{ background: 'rgba(255,255,255,0.92)', color: 'var(--text-3)', border: '1px solid var(--card-border)' }}
+      >
+        {annotation}
+      </span>
+      {preview}
+    </div>
+    <div className="p-4">
+      <div className="font-mono text-[10px] uppercase tracking-[0.12em] mb-1.5" style={{ color: BZ }}>{label}</div>
+      <div className="font-display text-base font-bold mb-1" style={{ color: 'var(--text-1)' }}>{title}</div>
+      <div className="text-[13px] leading-[1.5]" style={{ color: 'var(--text-2)' }}>{desc}</div>
+    </div>
   </div>
 )
 
@@ -74,7 +493,7 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
 
-      {/* ══════════ HERO — Gradient mesh background ══════════ */}
+      {/* ══════════ HERO ══════════ */}
       <section
         className="relative pt-20 sm:pt-28 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
         style={{
@@ -86,167 +505,218 @@ const Landing = () => {
           `,
         }}
       >
-        {/* Decorative spinning rings */}
         <DecorativeRing size={320} top="5%" right="3%" color={BZ} opacity={0.05} speed={45} />
         <DecorativeRing size={200} bottom="15%" left="2%" color={FD} opacity={0.04} speed={35} reverse />
         <DecorativeRing size={140} top="55%" right="18%" color={CR} opacity={0.03} speed={50} />
 
         <div className="max-w-7xl mx-auto relative z-[1]">
-          <div className="flex flex-col lg:flex-row items-center lg:items-center gap-12 lg:gap-14">
-            {/* Left: Copy + CTAs */}
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-14">
+            {/* Left: Copy */}
             <div className="flex-1 text-center lg:text-left lg:flex-[1.15]">
+              {/* Live eyebrow pill */}
               <div
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full mb-6"
                 style={{
-                  background: `${FD}${isLight ? '0C' : '15'}`,
-                  border: `1px solid ${FD}${isLight ? '20' : '30'}`,
+                  background: 'rgba(232,56,56,0.08)',
+                  border: '1px solid rgba(232,56,56,0.2)',
                 }}
               >
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: FD_B, animation: 'pulse-dot 2s ease-in-out infinite' }} />
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-wider" style={{ color: FD_B }}>2026 PGA Tour is Live</span>
+                <span className="w-1.5 h-1.5 rounded-full" style={{ background: LV, animation: 'pulse-dot 2s ease-in-out infinite' }} />
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: LV }}>
+                  Pools open — PGA Championship · Locks Thu
+                </span>
               </div>
 
               <h1
                 className="font-display font-extrabold leading-[1.02] mb-6 text-[var(--text-1)]"
-                style={{ fontSize: 'clamp(42px, 5.5vw, 70px)', letterSpacing: '-0.035em' }}
+                style={{ fontSize: 'clamp(44px, 5.5vw, 72px)', letterSpacing: '-0.035em' }}
               >
-                Prove You<br />Know{' '}
-                <span className="font-editorial italic" style={{ color: BZ, fontSize: '1.05em' }}>Sports.</span>
+                The fantasy platform<br />that{' '}
+                <span className="font-editorial italic font-normal" style={{ color: BZ, fontSize: '1.05em' }}>
+                  knows your league.
+                </span>
               </h1>
 
-              <p className="text-lg text-[var(--text-2)] max-w-[460px] mb-2.5 leading-[1.7] mx-auto lg:mx-0">
-                Track your predictions. Prove your accuracy.{' '}
-                <strong className="text-[var(--text-1)] font-semibold">The platform where sports knowledge meets accountability.</strong>
-              </p>
-              <p className="font-mono text-xs text-[var(--text-3)] mb-8 mx-auto lg:mx-0">
-                Fantasy leagues · AI coach · Prediction tracking · League vault
+              <p className="text-lg text-[var(--text-2)] max-w-[460px] mb-8 leading-[1.6] mx-auto lg:mx-0">
+                Twelve years of league memory. Real strokes-gained analytics. An AI coach that remembers what your buddy drafted in 2018.{' '}
+                <strong className="text-[var(--text-1)] font-semibold">Built for leagues that take it seriously.</strong>
               </p>
 
+              {/* Feature pills */}
+              <div className="flex flex-wrap gap-2 mb-8 justify-center lg:justify-start">
+                <FeaturePill
+                  color={BZ}
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 17l6-6 4 4 8-8" /><path d="M14 7h7v7" /></svg>}
+                  label="Deeper analytics"
+                />
+                <FeaturePill
+                  color={FD}
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3" /><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24" /></svg>}
+                  label="AI coach"
+                />
+                <FeaturePill
+                  color={CR}
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M8 4v16M16 4v16M3 12h18" /></svg>}
+                  label="League vault"
+                />
+                <FeaturePill
+                  color={LV}
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>}
+                  label="Live scoring"
+                />
+                <FeaturePill
+                  color={SL_L}
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polygon points="12 7 14 11 18 12 14 13 12 17 10 13 6 12 10 11 12 7" /></svg>}
+                  label="Pools"
+                />
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
-                <Link to="/signup">
+                <Link to="/pools/new">
                   <Button size="lg" fullWidth className="sm:w-auto">
-                    Get Started — Free
+                    Run a Pool — Free
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/pools">
                   <Button variant="secondary" size="lg" fullWidth className="sm:w-auto">
-                    Fantasy Football
+                    Browse Pools
                   </Button>
                 </Link>
               </div>
             </div>
 
-            {/* Right: Floating Bold Rating Card */}
-            <div className="flex-1 flex justify-center">
+            {/* Right: Sport strip + Pool entry card */}
+            <div className="flex-1 flex flex-col items-center gap-4 w-full">
+              {/* Sport strip */}
               <div
-                className="relative w-[340px] p-8 rounded-3xl text-center"
+                className="flex gap-2 px-3 py-2 rounded-[14px] w-full max-w-[460px]"
                 style={{
-                  animation: 'float 6s ease-in-out infinite',
-                  background: isLight
-                    ? `linear-gradient(160deg, ${SL}, ${SL_M})`
-                    : 'linear-gradient(160deg, #1E1B16, #252018)',
-                  border: isLight ? '1px solid transparent' : '1px solid rgba(212,147,13,0.08)',
-                  boxShadow: isLight
-                    ? '0 24px 80px rgba(30,42,58,0.25)'
-                    : `0 24px 80px rgba(0,0,0,0.4), 0 0 60px ${CR}08`,
+                  background: 'var(--surface)',
+                  border: '1px solid var(--card-border)',
+                  boxShadow: isLight ? '0 8px 24px rgba(30,42,58,0.1)' : '0 8px 24px rgba(0,0,0,0.3)',
                 }}
               >
-                {/* Rainbow top border */}
-                <div className="absolute -top-px -left-px -right-px h-[3px] rounded-t-3xl" style={{ background: `linear-gradient(90deg, ${BZ}, ${CR_B}, ${FD})` }} />
-                {/* Internal glow */}
-                <div className="absolute top-[5%] right-[5%] w-[200px] h-[200px] rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${CR}${isLight ? '12' : '18'}, transparent 60%)` }} />
-                <div className="absolute bottom-[10%] left-[10%] w-[150px] h-[150px] rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${BZ}${isLight ? '08' : '10'}, transparent 60%)` }} />
-
-                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: CR_B }}>Your Clutch Rating</p>
-                <div className="relative z-[1]">
-                  <ClutchRatingGauge rating={84} tier="expert" size="lg" animated darkBg />
-                </div>
-                {/* Tier label rendered by ClutchRatingGauge showTier */}
-
-                {/* Stat grid */}
-                <div className="grid grid-cols-2 gap-2 relative z-[1]">
-                  {[
-                    { label: 'Accuracy', value: '82' },
-                    { label: 'Calls', value: '76' },
-                    { label: 'Consistency', value: '88' },
-                    { label: 'Bold Calls', value: '65' },
-                  ].map((s, i) => (
-                    <div key={i} className="p-2.5 rounded-[10px]" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                      <p className="font-mono text-[9px] uppercase tracking-wider mb-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{s.label}</p>
-                      <p className="font-mono text-lg font-bold" style={{ color: '#F0EBE0' }}>{s.value}<span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>%</span></p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Floating Golf pill */}
                 <div
-                  className="absolute top-3.5 -right-5"
-                  style={{
-                    padding: '8px 14px', borderRadius: 10,
-                    background: 'linear-gradient(135deg, #0B1F15, #142E20)',
-                    border: `1px solid ${FD}35`,
-                    boxShadow: `0 6px 20px rgba(13,150,104,0.15), inset 0 1px 0 rgba(255,255,255,0.03)`,
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600,
-                    display: 'flex', alignItems: 'center', gap: 7,
-                    color: '#E8F0EC',
-                    animation: 'float 5s ease-in-out infinite', animationDelay: '-1.5s',
-                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] font-mono text-[11px] font-bold uppercase tracking-[0.08em]"
+                  style={{ background: 'rgba(13,150,104,0.08)', color: FD }}
                 >
-                  <span>⛳</span> <span style={{ color: FD_B }}>Golf</span>
                   <span className="w-1.5 h-1.5 rounded-full" style={{ background: FD_B, animation: 'pulse-dot 2s ease-in-out infinite' }} />
+                  Golf · Live now
                 </div>
-
-                {/* Floating NFL pill */}
                 <div
-                  className="absolute bottom-[30px] -right-6"
-                  style={{
-                    padding: '8px 14px', borderRadius: 10,
-                    background: isLight
-                      ? `linear-gradient(135deg, ${SL}, ${SL_M})`
-                      : 'linear-gradient(135deg, #1F1812, #2A2018)',
-                    border: isLight ? '1px solid rgba(255,255,255,0.08)' : `1px solid ${BZ}25`,
-                    boxShadow: isLight ? '0 6px 20px rgba(30,42,58,0.25)' : `0 6px 20px rgba(240,104,32,0.1)`,
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 11, fontWeight: 600,
-                    display: 'flex', alignItems: 'center', gap: 7,
-                    color: isLight ? 'rgba(255,255,255,0.8)' : '#E8E0D6',
-                    animation: 'float 5s ease-in-out infinite', animationDelay: '-3.5s',
-                  }}
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-[10px] font-mono text-[11px] font-bold uppercase tracking-[0.08em]"
+                  style={{ color: 'var(--text-2)' }}
                 >
-                  <span>🏈</span> <span style={{ color: isLight ? '#fff' : BZ_H }}>NFL</span>
-                  <span className="font-mono text-[8px] font-bold uppercase tracking-wider" style={{ color: BZ_H }}>FALL '26</span>
+                  NFL
+                  <span className="font-medium text-[9px] tracking-[0.05em]" style={{ opacity: 0.6 }}>FALL '26</span>
                 </div>
               </div>
+
+              <PoolEntryCard />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════ EDITORIAL — Dark in both modes ══════════ */}
+      {/* ══════════ EDITORIAL ══════════ */}
       <section
         className="relative py-16 sm:py-[72px] px-4 sm:px-6 lg:px-8 text-center overflow-hidden"
-        style={{
-          background: isLight ? SL : `linear-gradient(135deg, #18140E, #1E1810)`,
-        }}
+        style={{ background: isLight ? SL : `linear-gradient(135deg, #18140E, #1E1810)` }}
       >
-        {/* Radial glow */}
         <div className="absolute top-[-30%] left-[15%] w-[70%] h-[160%] pointer-events-none" style={{ background: `radial-gradient(ellipse, ${BZ}${isLight ? '12' : '18'}, transparent 55%)` }} />
-        {/* Subtle accent lines */}
         <div className="absolute top-[50%] left-0 right-0 h-px pointer-events-none" style={{ background: `linear-gradient(90deg, transparent, ${CR}${isLight ? '15' : '20'}, transparent)` }} />
         <div className="absolute top-[30%] left-0 right-0 h-px pointer-events-none" style={{ background: `linear-gradient(90deg, transparent, ${BZ}08, transparent)` }} />
         <div className="absolute top-[70%] left-0 right-0 h-px pointer-events-none" style={{ background: `linear-gradient(90deg, transparent, ${FD}06, transparent)` }} />
 
         <div className="relative z-[1] max-w-[680px] mx-auto">
           <h2 className="font-editorial italic leading-[1.15] text-[#F0EBE0] mb-4" style={{ fontSize: 'clamp(30px, 4.5vw, 52px)' }}>
-            Everyone's got <span style={{ color: BZ_H }}>opinions.</span><br />
-            We've got <span style={{ color: CR_B }}>receipts.</span>
+            Send the <span style={{ color: BZ_H }}>link.</span><br />
+            Everyone's <span style={{ color: CR_B }}>in.</span>
           </h2>
           <p className="font-mono text-[11px] uppercase tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.55)' }}>
-            Clutch Rating — one number for everything you know
+            Five minutes from idea to invites out · No app to download
           </p>
         </div>
       </section>
 
-      {/* ══════════ WHY CLUTCH — Tinted feature cards ══════════ */}
+      {/* ══════════ PRODUCT SURFACE GALLERY ══════════ */}
+      <section
+        className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8"
+        style={{
+          background: `
+            radial-gradient(ellipse 40% 30% at 80% 55%, ${BZ}${isLight ? '04' : '06'}, transparent),
+            radial-gradient(ellipse 30% 25% at 15% 30%, ${FD}${isLight ? '04' : '06'}, transparent),
+            linear-gradient(180deg, var(--bg) 0%, var(--bg-alt) 100%)
+          `,
+        }}
+      >
+        <div className="max-w-[1180px] mx-auto">
+          <SectionLabel color={BZ}>See the platform</SectionLabel>
+          <h2
+            className="font-display font-extrabold leading-[1.1] mb-3 text-[var(--text-1)]"
+            style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em' }}
+          >
+            Built for{' '}
+            <span className="font-editorial italic font-normal" style={{ color: CR, fontSize: '1.05em' }}>how you actually watch sports.</span>
+          </h2>
+          <p className="text-base text-[var(--text-2)] leading-relaxed max-w-[600px] mb-10">
+            Strokes Gained vs course DNA. Hole-by-hole scorecards. League vaults with 14 years of history. The kind of fantasy app you've been waiting for.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <GalleryCard
+              annotation="PlayerDrawer"
+              preview={<MiniPlayerDrawer />}
+              previewBg="var(--surface-2)"
+              label="Player Intel"
+              title="Strokes Gained vs course DNA"
+              desc="Tap any player. See their SG profile matched against the week's course. Recent results, season ranks, course history — all one tap deep."
+            />
+            <GalleryCard
+              annotation="LiveScoringWidget"
+              preview={<MiniLiveScoring />}
+              previewBg={isLight ? 'rgba(232,56,56,0.05)' : 'rgba(232,56,56,0.08)'}
+              label="Live Scoring"
+              title="Hole-by-hole, every Sunday."
+              desc="Real-time scorecards from ESPN's feed. Watch your roster move. Tap a player to see their card hole-by-hole as they play it."
+            />
+            <GalleryCard
+              annotation="DraftRecap"
+              preview={<MiniDraftRecap />}
+              previewBg={isLight ? 'linear-gradient(180deg, #F7F3EA 0%, #FAFAF6 100%)' : 'linear-gradient(180deg, #1A1612 0%, #221C16 100%)'}
+              label="Draft Recap"
+              title="Letter grades. Stacked side-by-side."
+              desc="Every draft auto-graded. Five SG dimensions rendered as a radar — your team vs. the league average. AI coach drops a paragraph on what you nailed and what's thin."
+            />
+            <GalleryCard
+              annotation="PoolEntryDrawer"
+              preview={<MiniPoolEntry />}
+              previewBg={isLight ? 'rgba(240,104,32,0.04)' : 'rgba(240,104,32,0.08)'}
+              label="Pools"
+              title="Tier picks. Tiebreaker. Done."
+              desc="Six tiers, one pick per tier, a tiebreaker for the winner's score. Locks Thursday morning. Live scoring kicks in automatically."
+            />
+            <GalleryCard
+              annotation="VaultReveal"
+              preview={<MiniVaultReveal />}
+              previewBg="linear-gradient(135deg, #F7E9B8, #FAF2D3)"
+              label="League Vault"
+              title="Every season. Forever logged."
+              desc="Import from ESPN, Yahoo, Sleeper, Fantrax, MFL. Owner aliases. Draft history. Championship rolls. Your league's story, always live."
+            />
+            <GalleryCard
+              annotation="CoachBriefing"
+              preview={<MiniCoachBriefing />}
+              previewBg={isLight ? 'rgba(240,104,32,0.03)' : 'rgba(240,104,32,0.06)'}
+              label="AI Coach"
+              title="Knows your team. And the field."
+              desc="A coach that's read every box score, watched every tournament, and remembers what you drafted three years ago. Writes you a brief every morning."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ WHY CLUTCH ══════════ */}
       <section
         className="py-16 sm:py-[72px] px-4 sm:px-6 lg:px-8"
         style={{
@@ -260,24 +730,21 @@ const Landing = () => {
         <div className="max-w-[1120px] mx-auto">
           <SectionLabel color={SL_L}>Why Clutch</SectionLabel>
           <h2
-            className="font-display font-extrabold leading-[1.1] mb-3 text-[var(--text-1)]"
+            className="font-display font-extrabold leading-[1.1] mb-10 text-[var(--text-1)]"
             style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em' }}
           >
-            One number for everything<br />you{' '}
-            <span className="font-editorial italic" style={{ color: CR, fontSize: '1.05em' }}>know.</span>
+            Everything you need.<br />
+            <span className="font-editorial italic font-normal" style={{ color: CR, fontSize: '1.05em' }}>Nothing you don't.</span>
           </h2>
-          <p className="text-base text-[var(--text-2)] leading-[1.7] max-w-[500px] mb-10">
-            Your Clutch Rating captures league performance, prediction accuracy, draft intelligence, and consistency.
-          </p>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
             {[
-              { icon: '🎯', title: 'Prove It Predictions', desc: 'Make calls before kickoff. Your accuracy is tracked, rated, and public. No hiding.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
-              { icon: '🧠', title: 'AI Coach', desc: 'Your personal analyst. Surfaces trends, flags biases, and gets smarter the more you play.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
-              { icon: '🏆', title: 'Fantasy Leagues', desc: 'Auction or snake drafts, FAAB waivers, H2H matchups. Golf and NFL live.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
-              { icon: '📊', title: 'Clutch Rating', desc: 'One score for everything you know. Predictions, league results, draft IQ — all measured.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
-              { icon: '📚', title: 'League Vault', desc: 'Import your league history from ESPN, Yahoo, Sleeper, or Fantrax. Every season preserved.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
-              { icon: '⚡', title: 'Live Scoring', desc: 'Real-time fantasy scoring during PGA events and NFL game days. Shot by shot, play by play.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
+              { icon: '🎯', title: 'Pools', badge: 'NEW', desc: 'Tier picks for any tournament. 5-minute setup. Send a link. Auto-locks Thursday morning. Live scoring built in.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
+              { icon: '🏆', title: 'Fantasy Leagues', desc: 'Auction or snake drafts. FAAB waivers. H2H or roto. Trades, chat, playoffs. Golf live, NFL launching Fall \'26.', c: FD, ltTint: '#D6F0E5', dkTint: `${FD}0A` },
+              { icon: '⚡', title: 'Live Scoring', desc: 'Shot-by-shot during PGA events, play-by-play for NFL. Hole-by-hole scorecards. Pool standings update live.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
+              { icon: '📊', title: 'Predictions', desc: 'Winner, top 5, top 10, make/miss cut, R1 leader, H2H matchups. Auto-resolves Monday. Track your accuracy over time.', c: BZ, ltTint: '#FDEBD8', dkTint: `${BZ}0A` },
+              { icon: '🧠', title: 'AI Coach', desc: 'Reads your draft, your roster, your league. Surfaces leverage, flags bias, writes a Friday-morning briefing.', c: SL_L, ltTint: '#DFE3EC', dkTint: 'rgba(61,81,102,0.12)' },
+              { icon: '📚', title: 'League Vault', desc: 'Import from ESPN, Yahoo, Sleeper, Fantrax, MFL. 14 years of league history, owner aliases, draft archives.', c: CR, ltTint: '#F5EACC', dkTint: `${CR}0A` },
             ].map((f, i) => (
               <div
                 key={i}
@@ -295,7 +762,6 @@ const Landing = () => {
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = isLight ? '0 12px 40px rgba(0,0,0,0.07)' : '0 12px 40px rgba(0,0,0,0.3)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--card-shadow)' }}
               >
-                {/* Dark mode tint overlay */}
                 {!isLight && <div className="absolute inset-0 pointer-events-none" style={{ background: f.dkTint }} />}
                 <div className="relative z-[1]">
                   <div
@@ -304,119 +770,43 @@ const Landing = () => {
                   >
                     {f.icon}
                   </div>
-                  <h3 className="font-display text-[15px] font-bold text-[var(--text-1)] mb-1.5">{f.title}</h3>
+                  <h3 className="font-display text-[15px] font-bold text-[var(--text-1)] mb-1.5 flex items-center gap-2">
+                    {f.title}
+                    {f.badge && (
+                      <span
+                        className="font-mono text-[9px] uppercase tracking-[0.08em] px-1.5 py-0.5 rounded text-white"
+                        style={{ background: BZ }}
+                      >
+                        {f.badge}
+                      </span>
+                    )}
+                  </h3>
                   <p className="text-[13px] text-[var(--text-2)] leading-[1.65]">{f.desc}</p>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ══════════ THE CLUTCH RATING ══════════ */}
-      <section
-        className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
-        style={{
-          background: `
-            radial-gradient(ellipse 40% 28% at 25% 15%, ${CR}${isLight ? '06' : '0A'}, transparent),
-            radial-gradient(ellipse 30% 20% at 80% 70%, ${FD}${isLight ? '04' : '06'}, transparent),
-            var(--bg)
-          `,
-        }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <SectionLabel color={CR}>Clutch Rating</SectionLabel>
-          <h2
-            className="font-display font-extrabold leading-[1.1] mb-1.5 text-[var(--text-1)]"
-            style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em' }}
-          >
-            What builds your{' '}
-            <span className="font-editorial italic" style={{ color: CR, fontSize: '1.05em' }}>score.</span>
-          </h2>
-          <p className="text-[15px] text-[var(--text-2)] leading-[1.7] mb-9">
-            Every league you play, every bold call that hits — it all feeds your rating.
-          </p>
-
-          {/* Rating Hero — bold dark card */}
+          {/* Future pool types strip */}
           <div
-            className="flex flex-col sm:flex-row gap-8 items-center p-9 rounded-[20px] mb-7 relative overflow-hidden"
+            className="mt-7 p-5 rounded-[14px] flex flex-wrap items-center gap-3"
             style={{
-              background: isLight ? `linear-gradient(135deg, ${SL}, ${SL_M})` : 'linear-gradient(135deg, #1E1B16, #252018)',
-              color: '#F0EBE0',
-              border: isLight ? 'none' : `1px solid ${CR}08`,
-              boxShadow: isLight ? 'none' : `0 0 50px ${CR}06`,
+              background: 'var(--surface)',
+              border: `1px dashed rgba(240,104,32,0.25)`,
             }}
           >
-            <div className="absolute top-[-25%] right-[-8%] w-[280px] h-[280px] rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${CR}18, transparent 55%)` }} />
-            <DecorativeRing size={160} top="-20%" left="-5%" color={CR} opacity={0.08} speed={40} />
-            <div className="relative z-[1]">
-              <ClutchRatingGauge rating={84} tier="expert" size="lg" animated darkBg />
-            </div>
-            <div className="relative z-[1] text-center sm:text-left">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] mb-1.5" style={{ color: CR_B }}>Your Rating</p>
-              <p className="font-display text-[28px] font-extrabold mb-1">Your Name</p>
-              <p className="font-mono text-xs font-semibold uppercase tracking-[0.15em]" style={{ color: CR_B }}>Expert · 84</p>
-            </div>
-          </div>
-
-          {/* Score breakdown card */}
-          <div
-            className="p-8 rounded-[18px]"
-            style={{
-              background: isLight ? '#F7EDDA' : 'var(--surface)',
-              border: `1.5px solid ${isLight ? `${CR}30` : 'var(--card-border)'}`,
-              boxShadow: isLight ? `0 4px 20px ${CR}14` : 'var(--card-shadow)',
-            }}
-          >
-            <h3 className="font-display text-lg font-extrabold text-[var(--text-1)] mb-6">Score Breakdown</h3>
-            <div className="space-y-4">
-              {[
-                { label: 'Prediction Accuracy', pct: 82, c1: BZ, c2: BZ_H },
-                { label: 'Win Rate', pct: 76, c1: FD, c2: FD_B },
-                { label: 'Draft Intelligence', pct: 70, c1: CR, c2: CR_B },
-                { label: 'Consistency', pct: 88, c1: FD, c2: FD_B },
-                { label: 'Bold Calls Rewarded', pct: 65, c1: CR, c2: CR_B },
-              ].map((b, i) => (
-                <div key={i} className="grid grid-cols-[140px_1fr_44px] gap-3.5 items-center">
-                  <span className="font-mono text-xs text-[var(--text-2)]">{b.label}</span>
-                  <div className="h-2 rounded bg-[var(--bg-alt)] overflow-hidden">
-                    <div
-                      className="h-full rounded"
-                      style={{
-                        width: `${b.pct}%`,
-                        background: `linear-gradient(90deg, ${b.c1}, ${b.c2})`,
-                        boxShadow: `0 0 10px ${b.c1}18`,
-                      }}
-                    />
-                  </div>
-                  <span className="font-mono text-sm font-bold text-[var(--text-1)] text-right">{b.pct}%</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Tier badges */}
-            <div className="flex gap-1.5 mt-7 pt-5 border-t border-[var(--card-border)]">
-              {[
-                { range: '90-100', label: 'Elite', c: CR, active: false },
-                { range: '80-89', label: 'Expert', c: CR, active: true },
-                { range: '70-79', label: 'Sharp', c: FD, active: false },
-                { range: '60-69', label: 'Solid', c: BZ, active: false },
-                { range: '<60', label: 'Developing', c: 'var(--text-3)', active: false },
-              ].map((x, i) => (
-                <div
-                  key={i}
-                  className="flex-1 p-2.5 rounded-[10px] text-center font-mono text-[10px] font-semibold"
-                  style={{
-                    border: `1.5px solid ${x.active ? x.c : 'var(--stone)'}`,
-                    background: x.active ? `${x.c}${isLight ? '10' : '18'}` : isLight ? 'var(--surface-alt)' : 'transparent',
-                    color: x.active ? x.c : 'var(--text-2)',
-                  }}
-                >
-                  <span className="block text-[13px] font-bold mb-px">{x.range}</span>
-                  {x.label}
-                </div>
-              ))}
-            </div>
+            <span className="font-mono text-[11px] uppercase tracking-[0.12em] font-bold" style={{ color: BZ }}>
+              ◆ More pool types coming
+            </span>
+            {['Survivor', 'Eliminator', 'Bracket', "NFL Pick'em", '+ Custom'].map(chip => (
+              <span
+                key={chip}
+                className="px-3 py-1.5 rounded-lg font-mono text-[11px] font-medium"
+                style={{ background: 'var(--surface-2)', color: 'var(--text-2)' }}
+              >
+                {chip}
+              </span>
+            ))}
           </div>
         </div>
       </section>
@@ -444,7 +834,7 @@ const Landing = () => {
 
           <div className="grid sm:grid-cols-3 gap-8 sm:gap-6 lg:gap-10">
             {[
-              { num: '1', title: 'Play', desc: 'Run your season-long league on the most modern fantasy platform built. Snake or auction drafts, trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, Fantrax, or MFL.' },
+              { num: '1', title: 'Play', desc: 'Spin up a tournament pool in 5 minutes — or run a full season-long league. Snake or auction drafts, trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, Fantrax, MFL.' },
               { num: '2', title: 'Track', desc: "Log projections and weekly calls. Everything gets tracked — your reasoning, your accuracy, your draft decisions. Over time, Clutch becomes your sports brain." },
               { num: '3', title: 'Prove', desc: "Your Clutch Rating builds from everything you do — league results, prediction accuracy, bold calls, draft intelligence. Share your profile. This is your sports resume." },
             ].map(step => (
@@ -462,16 +852,16 @@ const Landing = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
-            <Link to="/signup">
+            <Link to="/pools/new">
               <Button size="lg" fullWidth className="sm:w-auto">
-                Start Playing — Free
+                Run a Pool — Free
               </Button>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ══════════ WHAT'S LIVE NOW — FANTASY GOLF ══════════ */}
+      {/* ══════════ TWO SPORTS. ONE PLATFORM. ══════════ */}
       <section
         id="features"
         className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8"
@@ -492,12 +882,10 @@ const Landing = () => {
               Two Sports. One Platform.
             </h2>
             <p className="text-[var(--text-2)] max-w-2xl mx-auto leading-relaxed">
-              Fantasy Golf is live for the 2026 PGA Tour season. Fantasy Football launches for the 2026 NFL season.
-              Five league formats, live scoring, real analytics, active roster management.
+              Fantasy Golf is live for the 2026 PGA Tour. Fantasy Football launches for the 2026 NFL season. Run a pool for one tournament, or a season-long league for the year.
             </p>
           </div>
 
-          {/* Feature Cards */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
             {[
               { icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', title: 'Snake & Auction Drafts', desc: 'Choose your draft style. Classic snake or exciting auction formats where every dollar counts.', color: CR },
@@ -531,7 +919,7 @@ const Landing = () => {
             ))}
           </div>
 
-          {/* Dashboard Preview */}
+          {/* Dashboard preview (kept as-is) */}
           <Link to="/signup" className="block max-w-5xl mx-auto group">
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--card-border)] overflow-hidden shadow-lg hover:shadow-xl hover:border-[#D4930D]/30 transition-all duration-300 relative">
               <div className="absolute inset-0 bg-[#D4930D]/0 group-hover:bg-[#D4930D]/5 transition-colors duration-300 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -636,222 +1024,31 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ══════════ IT COMPOUNDS ══════════ */}
-      <section
-        className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 border-y border-[var(--card-border)]"
-        style={{
-          background: `
-            radial-gradient(ellipse 30% 20% at 60% 30%, ${CR}${isLight ? '04' : '06'}, transparent),
-            linear-gradient(180deg, var(--bg-alt) 0%, var(--bg-alt) 100%)
-          `,
-        }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center mb-16">
-            <div className="text-center lg:text-left">
-              <h2
-                className="font-display font-extrabold text-[var(--text-1)] mb-4 leading-tight"
-                style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em' }}
-              >
-                Year one, you have a record.
-                <span className="block font-editorial italic" style={{ color: BZ, fontSize: '1.05em' }}>Year three, you have a database.</span>
-              </h2>
-              <p className="text-[var(--text-2)] leading-relaxed mb-6">
-                Every projection, every call, every reasoning note — permanently logged. Clutch doesn't just track
-                what you predicted. It tracks whether you were right, where you were biased, and how you're improving.
-                This is the home for how you think about sports — and no one else is building it.
-              </p>
-              <p style={{ color: BZ }} className="font-display font-semibold text-lg">
-                One place for everything you know. One score to prove it.
-              </p>
-            </div>
-
-            <div>
-              <svg viewBox="0 0 500 500" className="w-full" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="rgba(240,104,32,0.12)" />
-                    <stop offset="100%" stopColor="rgba(240,104,32,0)" />
-                  </radialGradient>
-                  <marker id="flowArrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
-                    <polygon points="0 1, 9 4, 0 7" fill="rgba(212,147,13,0.5)" />
-                  </marker>
-                </defs>
-                <circle cx="250" cy="250" r="120" fill="url(#coreGlow)" />
-                <circle cx="250" cy="250" r="190" fill="none" stroke="var(--stone)" strokeWidth="50" opacity="0.3" />
-                <circle cx="250" cy="250" r="190" fill="none" stroke="var(--text-3)" strokeWidth="1.5" strokeDasharray="6 5" opacity="0.3" />
-                {[
-                  { from: -90, to: -18, color: '#D4930D' },
-                  { from: -18, to: 54, color: '#F06820' },
-                  { from: 54, to: 126, color: '#0D9668' },
-                  { from: 126, to: 198, color: '#6366F1' },
-                  { from: 198, to: 270, color: '#D4930D' },
-                ].map((arc, i) => {
-                  const r1 = (arc.from + 16) * Math.PI / 180
-                  const r2 = (arc.to - 16) * Math.PI / 180
-                  const x1 = 250 + 190 * Math.cos(r1)
-                  const y1 = 250 + 190 * Math.sin(r1)
-                  const x2 = 250 + 190 * Math.cos(r2)
-                  const y2 = 250 + 190 * Math.sin(r2)
-                  return (
-                    <path key={i} d={`M ${x1} ${y1} A 190 190 0 0 1 ${x2} ${y2}`}
-                      fill="none" stroke={arc.color} strokeWidth="2.5" strokeLinecap="round"
-                      opacity="0.5" markerEnd="url(#flowArrow)" />
-                  )
-                })}
-                {[
-                  { angle: -90, label: 'Research', color: '#D4930D' },
-                  { angle: -18, label: 'Project', color: '#F06820' },
-                  { angle: 54, label: 'Draft', color: '#0D9668' },
-                  { angle: 126, label: 'Compete', color: '#6366F1' },
-                  { angle: 198, label: 'Learn', color: '#D4930D' },
-                ].map((node, i) => {
-                  const rad = node.angle * Math.PI / 180
-                  const nx = 250 + 190 * Math.cos(rad)
-                  const ny = 250 + 190 * Math.sin(rad)
-                  return (
-                    <g key={i}>
-                      <circle cx={nx} cy={ny} r="32" fill="var(--surface)" stroke={node.color} strokeWidth="2" />
-                      <text x={nx} y={ny + 4} textAnchor="middle" fill="var(--text-1)" fontSize="12"
-                        fontFamily="'DM Sans', sans-serif" fontWeight="700">{node.label}</text>
-                    </g>
-                  )
-                })}
-                <circle cx="250" cy="250" r="65" fill="rgba(240,104,32,0.06)" stroke="rgba(240,104,32,0.2)" strokeWidth="1.5" />
-                <text x="250" y="233" textAnchor="middle" fill="#F06820" fontSize="18" fontFamily="'DM Sans', sans-serif" fontWeight="800">&#x2726;</text>
-                <text x="250" y="252" textAnchor="middle" fill="#D4930D" fontSize="11" fontFamily="'DM Sans', sans-serif" fontWeight="700" letterSpacing="2">CLUTCH RATING</text>
-                <text x="250" y="268" textAnchor="middle" fill="var(--text-1)" fontSize="10" fontFamily="'DM Sans', sans-serif" fontWeight="700" letterSpacing="1.5">SPORTS BRAIN</text>
-                <text x="250" y="283" textAnchor="middle" fill="var(--text-3)" fontSize="9" fontFamily="'DM Sans', sans-serif" fontWeight="500" letterSpacing="1">AI INSIGHTS</text>
-              </svg>
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              { num: '1', title: 'Your Sports Journal', desc: 'Projections with reasoning notes. Draft cheat sheets built from your research. Weekly calls with timestamps. Nothing lost, nothing forgotten.' },
-              { num: '2', title: 'Your Self-Scouting Report', desc: "AI surfaces patterns you can't see yourself: positional biases, accuracy trends, draft tendencies. Evaluate your own thinking over time." },
-              { num: '3', title: 'Your Public Resume', desc: 'A shareable profile with your verified Clutch Rating, accuracy stats, badges, and bold calls that hit. Link it from your Twitter, your podcast.' },
-            ].map(card => (
-              <div
-                key={card.num}
-                className="rounded-[14px] p-6 pl-[22px]"
-                style={{
-                  background: isLight ? 'var(--tint-nfl)' : 'var(--surface)',
-                  border: `1.5px solid ${isLight ? `${BZ}22` : 'var(--card-border)'}`,
-                  borderLeft: `3px solid ${BZ}`,
-                  boxShadow: isLight ? `0 2px 12px ${BZ}0A` : 'var(--card-shadow)',
-                }}
-              >
-                <div className="text-3xl font-bold font-mono mb-2" style={{ color: BZ }}>{card.num}</div>
-                <h3 className="text-sm font-semibold font-display text-[var(--text-1)] mb-2 uppercase tracking-wider">{card.title}</h3>
-                <p className="text-[var(--text-2)] text-sm leading-relaxed">{card.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-center text-[var(--text-3)] text-sm mt-8">
-            The longer you're on Clutch, the more valuable it gets. That's the point.
-          </p>
-        </div>
-      </section>
-
-
-      {/* ══════════ THE LEADERBOARD ══════════ */}
-      <section
-        className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8"
-        style={{
-          background: `
-            radial-gradient(ellipse 35% 25% at 70% 30%, ${CR}${isLight ? '03' : '05'}, transparent),
-            linear-gradient(180deg, var(--bg-alt) 0%, var(--bg-alt) 100%)
-          `,
-        }}
-      >
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <h2
-              className="font-display font-extrabold text-[var(--text-1)] mb-4 leading-tight"
-              style={{ fontSize: 'clamp(28px, 4vw, 44px)', letterSpacing: '-0.025em' }}
-            >
-              Who actually knows sports?
-            </h2>
-            <p className="text-[var(--text-2)] max-w-xl mx-auto">
-              A nobody from Ohio outprojected the Fantasy Footballers. That's a story.
-              The leaderboard doesn't care about your follower count.
-            </p>
-          </div>
-
-          <div className="bg-[var(--surface)] rounded-[14px] border border-[var(--card-border)] overflow-hidden" style={{ boxShadow: isLight ? '0 8px 32px rgba(0,0,0,0.06)' : '0 8px 32px rgba(0,0,0,0.25)' }}>
-            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between" style={{ background: 'var(--nav-bg)' }}>
-              <h3 className="text-sm font-semibold text-white">Overall Leaderboard</h3>
-              <span className="text-xs text-white/50 font-mono uppercase tracking-wider">Preview</span>
-            </div>
-
-            <div className="grid grid-cols-[40px_1fr_60px_80px_80px_50px] gap-2 px-4 py-2 text-[11px] text-[var(--text-3)] uppercase tracking-wider font-medium border-b border-[var(--card-border)]">
-              <div className="text-center">#</div>
-              <div>Manager</div>
-              <div className="text-center">Rating</div>
-              <div className="text-center">Record</div>
-              <div className="text-center">Accuracy</div>
-              <div className="text-center">Trend</div>
-            </div>
-
-            {mockLeaderboard.map(p => (
-              <div key={p.rank} className={`grid grid-cols-[40px_1fr_60px_80px_80px_50px] gap-2 px-4 py-3 items-center border-b border-[var(--card-border)] last:border-0 ${p.rank <= 3 ? 'bg-[#D4930D]/5' : ''}`}>
-                <div className={`text-center font-bold text-sm ${p.rank === 1 ? 'text-[#D4930D]' : p.rank === 2 ? 'text-gray-400' : p.rank === 3 ? 'text-amber-700' : 'text-[var(--text-3)]'}`}>
-                  {p.rank}
-                </div>
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-7 h-7 rounded-full bg-[var(--stone)] flex items-center justify-center text-[10px] font-bold text-[var(--text-2)] flex-shrink-0">
-                    {p.name.charAt(0)}
-                  </div>
-                  <span className="text-[var(--text-1)] text-sm font-medium truncate">{p.name}</span>
-                </div>
-                <div className="text-center">
-                  <span className={`text-sm font-mono font-bold ${p.rating >= 90 ? 'text-[#D4930D]' : p.rating >= 70 ? 'text-[#0D9668]' : 'text-[#F06820]'}`}>
-                    {p.rating}
-                  </span>
-                </div>
-                <div className="text-center text-xs text-[var(--text-2)] font-mono">{p.record}</div>
-                <div className="text-center text-xs font-mono" style={{ color: FD }}>{p.accuracy}</div>
-                <div className="text-center">
-                  {p.trend === 'up' && <svg className="w-3.5 h-3.5 mx-auto" viewBox="0 0 12 12"><path d="M6 2L10 7H2L6 2Z" fill="#0D9668" /></svg>}
-                  {p.trend === 'down' && <svg className="w-3.5 h-3.5 mx-auto" viewBox="0 0 12 12"><path d="M6 10L2 5H10L6 10Z" fill="#E83838" /></svg>}
-                  {p.trend === 'stable' && <span className="text-[var(--text-3)] text-xs">—</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════ FINAL CTA — Dark with radial glows ══════════ */}
+      {/* ══════════ FINAL CTA ══════════ */}
       <section
         className="relative py-16 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden"
-        style={{
-          background: isLight ? INK : `linear-gradient(135deg, #18140E, #1E1810)`,
-        }}
+        style={{ background: isLight ? INK : `linear-gradient(135deg, #18140E, #1E1810)` }}
       >
-        {/* Radial glow orbs */}
         <div className="absolute top-[-30%] left-[25%] w-[350px] h-[350px] rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${BZ}15, transparent 55%)` }} />
         <div className="absolute bottom-[-25%] right-[15%] w-[280px] h-[280px] rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${FD}0A, transparent 55%)` }} />
         <div className="absolute top-[40%] left-[60%] w-[200px] h-[200px] rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${CR}08, transparent 55%)` }} />
 
         <div className="max-w-4xl mx-auto text-center relative z-[1]">
-          <h2 className="font-display font-extrabold text-[#F0EBE0] mb-2.5" style={{ fontSize: 32 }}>
-            Ready to prove{' '}
-            <span className="font-editorial italic" style={{ color: BZ, fontSize: '1.05em' }}>it?</span>
+          <h2 className="font-display font-extrabold text-[#F0EBE0] mb-2.5" style={{ fontSize: 'clamp(28px, 3.5vw, 38px)' }}>
+            Golf is live.{' '}
+            <span className="font-editorial italic font-normal" style={{ color: BZ, fontSize: '1.05em' }}>Pools open.</span>
           </h2>
-          <p className="text-base mb-7 max-w-[400px] mx-auto" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Golf is live. Football is coming. Get in before your friends do.
+          <p className="text-base mb-7 max-w-[440px] mx-auto" style={{ color: 'rgba(255,255,255,0.6)' }}>
+            Five minutes to your first pool. Whole season once you're hooked.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-            <Link to="/signup">
+            <Link to="/pools/new">
               <Button size="lg" fullWidth className="sm:w-auto">
-                Start Playing — Free
+                Run a Pool — Free
               </Button>
             </Link>
-            <button
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+            <Link
+              to="/pools"
               className="inline-flex items-center justify-center font-display font-semibold rounded-button px-6 py-3 text-base transition-all duration-300 active:scale-[0.98]"
               style={{
                 background: 'rgba(255,255,255,0.06)',
@@ -860,8 +1057,8 @@ const Landing = () => {
                 borderRadius: 12,
               }}
             >
-              Learn More
-            </button>
+              Browse Leagues
+            </Link>
           </div>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>No credit card required. Free to play.</p>
         </div>
