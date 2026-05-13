@@ -165,8 +165,8 @@ router.post('/:slug/entries', authenticate, async (req, res, next) => {
     if (!teamName || tiebreakerScore == null || !Array.isArray(picks)) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
-    if (!/^[a-zA-Z0-9 _-]{2,30}$/.test(teamName)) {
-      return res.status(400).json({ error: 'Team name must be 2-30 chars, letters/numbers/space/_/- only' })
+    if (!/^[a-zA-Z0-9 _\-'.&!?]{2,30}$/.test(teamName)) {
+      return res.status(400).json({ error: "Team name must be 2-30 chars (letters, numbers, spaces, and ' . - _ & ! ?)" })
     }
 
     const pool = await prisma.pool.findUnique({
