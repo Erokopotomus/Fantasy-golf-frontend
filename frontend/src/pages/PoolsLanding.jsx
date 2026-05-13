@@ -37,7 +37,7 @@ function StatusPill({ status }) {
 function PoolCard({ pool, kind }) {
   // kind: 'commish' or 'entered'
   const href = kind === 'commish'
-    ? `/pools/${pool.slug}/admin?token=${pool.adminToken}`
+    ? `/pools/${pool.slug}/admin`
     : `/pools/${pool.slug}`
   const ctaLabel = kind === 'commish' ? 'Manage →' : 'View →'
 

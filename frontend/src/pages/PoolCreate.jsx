@@ -93,8 +93,9 @@ export default function PoolCreate() {
             <a className="text-blaze break-all" href={`/pools/${created.slug}`}>{base}/pools/{created.slug}</a>
           </div>
           <div>
-            <div className="text-xs text-text-2 uppercase tracking-wide font-mono mb-1">Admin link (keep private)</div>
-            <a className="text-crown break-all" href={`/pools/${created.slug}/admin?token=${created.adminToken}`}>{base}/pools/{created.slug}/admin?token={created.adminToken}</a>
+            <div className="text-xs text-text-2 uppercase tracking-wide font-mono mb-1">Admin link</div>
+            <a className="text-crown break-all" href={`/pools/${created.slug}/admin`}>{base}/pools/{created.slug}/admin</a>
+            <p className="text-xs text-text-2 mt-1.5">Only you (signed in as the commissioner) can access this page.</p>
           </div>
           <p className="text-sm text-text-2 pt-2">
             Both links were sent to {user.email}. Open the admin link and hit Publish when you're ready to accept entries.

@@ -467,24 +467,27 @@ class ApiService {
     return this.request(`/pools/${slug}/entries`, { method: 'POST', body: JSON.stringify(entry) })
   }
 
+  // Admin endpoints now identify the commissioner via the auth Bearer token (auto-sent
+  // by request()). The legacy `token` query param is still accepted server-side as a
+  // back-compat fallback but is no longer surfaced anywhere in the client.
   async getPoolAdmin(slug, token) {
-    return this.request(`/pools/${slug}/admin?token=${encodeURIComponent(token)}`)
+    return this.request(`/pools/${slug}/admin${token ? `?token=${encodeURIComponent(token)}` : ''}`)
   }
 
   async publishPool(slug, token) {
-    return this.request(`/pools/${slug}/publish?token=${encodeURIComponent(token)}`, { method: 'POST' })
+    return this.request(`/pools/${slug}/publish${token ? `?token=${encodeURIComponent(token)}` : ''}`, { method: 'POST' })
   }
 
   async lockPool(slug, token) {
-    return this.request(`/pools/${slug}/lock?token=${encodeURIComponent(token)}`, { method: 'POST' })
+    return this.request(`/pools/${slug}/lock${token ? `?token=${encodeURIComponent(token)}` : ''}`, { method: 'POST' })
   }
 
   async deletePoolEntry(slug, token, entryId) {
-    return this.request(`/pools/${slug}/entries/${entryId}?token=${encodeURIComponent(token)}`, { method: 'DELETE' })
+    return this.request(`/pools/${slug}/entries/${entryId}${token ? `?token=${encodeURIComponent(token)}` : ''}`, { method: 'DELETE' })
   }
 
   async sendPoolInvites(slug, token, emails) {
-    return this.request(`/pools/${slug}/admin/invites?token=${encodeURIComponent(token)}`, {
+    return this.request(`/pools/${slug}/admin/invites${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
       method: 'POST',
       body: JSON.stringify({ emails }),
     })

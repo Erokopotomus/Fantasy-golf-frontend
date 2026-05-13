@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 const STATUS_STYLES = {
   DRAFT:     'bg-text-2/15 text-text-2',
@@ -41,7 +42,9 @@ function Stat({ label, value }) {
 export default function PoolAdmin() {
   const { slug } = useParams()
   const [params] = useSearchParams()
+  // Legacy back-compat: old admin URLs may still carry ?token=. New URLs don't.
   const token = params.get('token')
+  const { user } = useAuth()
 
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -129,9 +132,35 @@ export default function PoolAdmin() {
     )
   }
   if (error) {
+    // Not signed in → push to login (admin requires the commissioner's account)
+    if (!user && !token) {
+      return (
+        <div className="min-h-screen bg-bg flex items-center justify-center px-6">
+          <div className="max-w-md w-full rounded-2xl border border-text-2/15 bg-white shadow-sm p-8 text-center">
+            <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Admin only</div>
+            <h1 className="font-display font-bold text-2xl text-text-primary mb-3">Sign in to manage this pool</h1>
+            <p className="text-text-2 mb-6">Only the commissioner who created it can access this page.</p>
+            <Link
+              to={`/login?redirect=${encodeURIComponent(`/pools/${slug}/admin`)}`}
+              className="inline-flex items-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-xl px-5 py-3 transition-colors"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+      )
+    }
+    // Signed in but not the commissioner → 403 from server
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center px-6">
-        <div className="text-center text-live-red font-mono text-sm">{error}</div>
+        <div className="max-w-md w-full rounded-2xl border border-text-2/15 bg-white shadow-sm p-8 text-center">
+          <div className="font-mono text-xs uppercase tracking-[0.2em] text-live-red mb-3">Not your pool</div>
+          <h1 className="font-display font-bold text-2xl text-text-primary mb-3">Commissioner access required</h1>
+          <p className="text-text-2 mb-6">{error}</p>
+          <Link to="/pools" className="font-mono text-xs uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold">
+            ← Back to your pools
+          </Link>
+        </div>
       </div>
     )
   }

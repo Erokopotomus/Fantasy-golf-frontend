@@ -5,16 +5,35 @@ const { generateUniqueSlug, generateAdminToken } = require('../services/poolServ
 const { sendPoolEmail } = require('../services/emailService')
 const { authenticate, optionalAuth } = require('../middleware/auth')
 
+/**
+ * Admin gate: caller must be signed in AND be the pool's commissioner.
+ *
+ * Legacy token-in-URL is accepted as a fallback (back-compat for any old
+ * admin links saved before this change) but is being phased out — the
+ * client no longer surfaces it. Tokens that don't match the commissioner
+ * user are rejected even if the token string is valid.
+ */
 async function requireAdmin(req, res, next) {
-  const token = req.query.token || req.headers['x-admin-token']
-  if (!token) return res.status(401).json({ error: 'Admin token required' })
   const pool = await prisma.pool.findUnique({
     where: { slug: req.params.slug },
-    select: { id: true, adminToken: true },
+    select: { id: true, adminToken: true, commissionerUserId: true },
   })
-  if (!pool || pool.adminToken !== token) return res.status(403).json({ error: 'Invalid admin token' })
-  req.poolId = pool.id
-  next()
+  if (!pool) return res.status(404).json({ error: 'Pool not found' })
+
+  // Path 1: authenticated commissioner
+  if (req.user && pool.commissionerUserId && req.user.id === pool.commissionerUserId) {
+    req.poolId = pool.id
+    return next()
+  }
+
+  // Path 2: legacy token fallback (kept for any old saved URLs — will be removed later)
+  const token = req.query.token || req.headers['x-admin-token']
+  if (token && pool.adminToken === token) {
+    req.poolId = pool.id
+    return next()
+  }
+
+  return res.status(403).json({ error: 'Commissioner access required' })
 }
 
 // ─── PUBLIC: GET user's pools (commish + entered) ──────────────────────────
@@ -272,7 +291,7 @@ router.post('/', authenticate, async (req, res, next) => {
 })
 
 // ─── ADMIN: POST publish (DRAFT → OPEN, computes locksAt) ─────────────────
-router.post('/:slug/publish', requireAdmin, async (req, res, next) => {
+router.post('/:slug/publish', optionalAuth, requireAdmin, async (req, res, next) => {
   try {
     const pool = await prisma.pool.findUnique({ where: { id: req.poolId }, include: { tournament: true } })
     // locksAt = earliest R1 tee time. Fall back to tournament startDate at 15:00 UTC (11 AM ET) if no tee time.
@@ -296,7 +315,7 @@ router.post('/:slug/publish', requireAdmin, async (req, res, next) => {
 })
 
 // ─── ADMIN: POST lock (OPEN → LOCKED) ──────────────────────────────────────
-router.post('/:slug/lock', requireAdmin, async (req, res, next) => {
+router.post('/:slug/lock', optionalAuth, requireAdmin, async (req, res, next) => {
   try {
     const updated = await prisma.pool.update({
       where: { id: req.poolId },
@@ -307,7 +326,7 @@ router.post('/:slug/lock', requireAdmin, async (req, res, next) => {
 })
 
 // ─── ADMIN: GET admin view (all entries + admin metadata) ─────────────────
-router.get('/:slug/admin', requireAdmin, async (req, res, next) => {
+router.get('/:slug/admin', optionalAuth, requireAdmin, async (req, res, next) => {
   try {
     const pool = await prisma.pool.findUnique({
       where: { id: req.poolId },
@@ -322,7 +341,7 @@ router.get('/:slug/admin', requireAdmin, async (req, res, next) => {
 })
 
 // ─── ADMIN: DELETE entry (DQ) ──────────────────────────────────────────────
-router.delete('/:slug/entries/:entryId', requireAdmin, async (req, res, next) => {
+router.delete('/:slug/entries/:entryId', optionalAuth, requireAdmin, async (req, res, next) => {
   try {
     await prisma.poolEntry.delete({ where: { id: req.params.entryId } })
     res.json({ ok: true })
@@ -330,7 +349,7 @@ router.delete('/:slug/entries/:entryId', requireAdmin, async (req, res, next) =>
 })
 
 // ─── ADMIN: POST send invite emails ─────────────────────────────────────
-router.post('/:slug/admin/invites', requireAdmin, async (req, res, next) => {
+router.post('/:slug/admin/invites', optionalAuth, requireAdmin, async (req, res, next) => {
   try {
     const { emails } = req.body
     if (!Array.isArray(emails) || emails.length === 0) {
