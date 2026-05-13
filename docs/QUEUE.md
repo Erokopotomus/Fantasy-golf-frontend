@@ -6764,7 +6764,8 @@ Same opportunity exists on `/login?redirect=...`.
 ---
 
 ### 182 — Landing page rebuild: pools-first hero + product gallery + kill Rating section + fake leaderboard `HIGH`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-05-13 — Full rewrite of Landing.jsx following Cowork's `landing-mockup.html` spec. New hero with live-red eyebrow + "knows your league" headline + 5 feature pills + pool entry card (Aronimink/Scheffler PICKED) replacing the Clutch Rating gauge. New "See the platform" product surface gallery (6 cards: PlayerDrawer, LiveScoring, DraftRecap radar, Pool entry, Vault, AI Coach) replacing the dedicated Rating section. Why Clutch reordered (Pools NEW first, Rating card dropped) + "More pool types coming" dashed strip. Editorial copy → "Send the link. Everyone's in." Final CTA → "Golf is live. Pools open." How It Works step 1 + Two Sports sub-copy updated to mention pools. Removed: dedicated Rating section (~107 lines), It Compounds section (~119 lines), fake leaderboard section (~67 lines), mockLeaderboard array, ClutchRatingGauge import. Build passes. Files: frontend/src/pages/Landing.jsx
 **Priority:** High — site's "Prove You Know Sports / Clutch Rating gauge" hero is selling the wrong wedge. The actual wedge is pools + leagues + live scoring + real product surfaces we've now built.
 **Source:** Eric + Cowork landing page audit & mockup, May 12 2026
 
