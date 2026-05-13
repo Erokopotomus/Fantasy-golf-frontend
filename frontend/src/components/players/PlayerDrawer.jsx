@@ -229,6 +229,10 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
   useEffect(() => {
     if (isOpen && playerId) {
       setActiveTab('overview')
+      // Clear stale player data + flag loading synchronously so the overlay appears
+      // on the very first render of the new drawer instead of a blank-white frame.
+      setPlayer(null)
+      setLoading(true)
       if (isNfl) {
         setNflSeason(null)
         setNflAvailableSeasons([])
@@ -280,7 +284,9 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr)
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    // Tournament startDate is stored at UTC midnight; format in UTC so timezone
+    // shifts don't push the displayed date back a day for Pacific viewers.
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
   }
 
   const formatPosition = (pos, tied) => {
@@ -371,8 +377,9 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-[var(--bg)] border-l border-[var(--card-border)] shadow-2xl flex flex-col animate-slide-in-right">
         {/* Loading overlay */}
         {loading && (
-          <div className="absolute inset-0 bg-[var(--bg)] z-10 flex items-center justify-center">
-            <div className="w-8 h-8 border-3 border-field-bright/30 border-t-field-bright rounded-full animate-spin" />
+          <div className="absolute inset-0 bg-[var(--bg)] z-10 flex flex-col items-center justify-center gap-3">
+            <div className="w-12 h-12 border-[3px] border-blaze/20 border-t-blaze rounded-full animate-spin" />
+            <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2">Loading player…</div>
           </div>
         )}
 
@@ -975,19 +982,23 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                     )
                   })()}
 
+                  {/* Hide UPCOMING events here — they haven't happened yet, so they don't belong under "Recent Tournaments". */}
+                  {(() => {
+                    const playedPerfs = (player.performances || []).filter(p => p.tournament?.status !== 'UPCOMING')
+                    return <>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider">Recent Tournaments</h3>
-                    {(player.performances || []).length > 0 && (
+                    {playedPerfs.length > 0 && (
                       <div className="flex items-center gap-3 text-[9px] text-text-muted uppercase tracking-wider font-semibold">
                         <span>Score</span>
                         <span className="w-6 text-right">Pos</span>
                       </div>
                     )}
                   </div>
-                  {(player.performances || []).length === 0 ? (
+                  {playedPerfs.length === 0 ? (
                     <div className="text-center py-8 text-text-muted">No tournament results yet</div>
                   ) : (
-                    player.performances.map((perf) => (
+                    playedPerfs.map((perf) => (
                       <div key={perf.id} className="bg-[var(--surface)] rounded-lg border border-[var(--card-border)] p-3">
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1036,6 +1047,8 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
                       </div>
                     ))
                   )}
+                    </>
+                  })()}
                 </div>
               )}
 

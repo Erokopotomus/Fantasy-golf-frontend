@@ -110,8 +110,20 @@ export default function PoolAdmin() {
     }
   }
 
-  if (loading) return <div className="p-6 text-text-2">Loading…</div>
-  if (error) return <div className="p-6 text-live-red">{error}</div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center">
+        <div className="text-text-2 font-mono text-sm uppercase tracking-wider animate-pulse">Loading admin…</div>
+      </div>
+    )
+  }
+  if (error) {
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center px-6">
+        <div className="text-center text-live-red font-mono text-sm">{error}</div>
+      </div>
+    )
+  }
   if (!data) return null
 
   const totalPlayers = data.tiers.reduce((sum, t) => sum + t.players.length, 0)
