@@ -121,6 +121,7 @@ export default function PoolView() {
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [drawerEntryId, setDrawerEntryId] = useState(null)
   const [tournamentLeaderboard, setTournamentLeaderboard] = useState(null)
+  const [activeTab, setActiveTab] = useState('live') // 'live' | 'teams'
 
   useEffect(() => {
     (async () => {
@@ -132,8 +133,8 @@ export default function PoolView() {
           const lb = await api.getPoolLeaderboard(slug)
           setLeaderboard(lb)
         }
-        // For LOCKED/COMPLETED: also fetch the tournament leaderboard so we can show live scoring
-        if ((p.pool.status === 'LOCKED' || p.pool.status === 'COMPLETED') && p.pool.tournamentId) {
+        // Always fetch the tournament leaderboard so Live Scoring tab has data regardless of pool status
+        if (p.pool.status !== 'DRAFT' && p.pool.tournamentId) {
           const tlb = await api.getTournamentLeaderboard(p.pool.tournamentId).catch(() => null)
           if (tlb) setTournamentLeaderboard(tlb.leaderboard || tlb)
         }
@@ -141,9 +142,9 @@ export default function PoolView() {
     })()
   }, [slug])
 
-  // Auto-refresh leaderboard + tournament leaderboard every 60s when LOCKED/COMPLETED
+  // Auto-refresh pool + tournament leaderboards every 60s for any active pool
   useEffect(() => {
-    if (!pool || (pool.status !== 'LOCKED' && pool.status !== 'COMPLETED')) return
+    if (!pool || pool.status === 'DRAFT') return
     const i = setInterval(() => {
       api.getPoolLeaderboard(slug).then(setLeaderboard).catch(() => {})
       if (pool.tournamentId) {
@@ -356,66 +357,21 @@ export default function PoolView() {
           </div>
         )}
 
-        {/* OPEN — already entered (signed-in, has entry). Pool page is the social/share hub;
-            the tournament page is the live home. We deliberately don't CTA back to the tournament
-            here — that creates a navigation loop. */}
-        {pool.status === 'OPEN' && user && myExistingEntry && !submitted && (
-          <div className="max-w-3xl mx-auto space-y-5">
-            <div className="rounded-2xl border border-field/30 bg-surface p-6 sm:p-8 text-center">
-              <div className="font-mono text-xs uppercase tracking-[0.2em] text-field mb-3">You're locked in</div>
-              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-text-primary leading-tight">
-                {myExistingEntry.teamName}
-              </h2>
-              {myExistingEntry.picks && myExistingEntry.picks.length > 0 && (
-                <div className="mt-6 pt-6 border-t border-text-2/10">
-                  <div className="font-mono text-[11px] uppercase tracking-wider text-text-2 mb-3">Your picks</div>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {myExistingEntry.picks.map((pick, i) => (
-                      <span key={i} className="inline-flex items-center gap-1.5 rounded-full bg-bg px-3 py-1 text-sm">
-                        <span>{pick.player?.countryFlag || ''}</span>
-                        <span className="text-text-primary font-medium">{pick.player?.name}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Share + entry count panel */}
-            <div className="rounded-2xl border border-text-2/15 bg-surface p-5 sm:p-6">
-              <div className="flex items-baseline justify-between mb-3">
-                <h3 className="font-display font-bold text-lg text-text-primary">Get your friends in</h3>
-                <span className="font-mono text-xs text-text-2">
-                  {leaderboard?.leaderboard?.length || 0} {(leaderboard?.leaderboard?.length || 0) === 1 ? 'entry' : 'entries'} so far
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="flex-1 rounded-xl border border-text-2/20 bg-bg px-3 py-2.5 font-mono text-sm text-text-primary truncate">
-                  {window.location.origin}/pools/{slug}
-                </div>
-                <button
-                  onClick={() => {
-                    try { navigator.clipboard?.writeText(`${window.location.origin}/pools/${slug}`) } catch {}
-                  }}
-                  className="bg-blaze hover:bg-blaze/90 text-white font-display font-bold px-5 py-2.5 rounded-xl transition-colors"
-                >
-                  Copy
-                </button>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="font-editorial italic text-sm text-text-2 mb-3">
-                Pool locks {pool.locksAt ? new Date(pool.locksAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'soon'}.
-              </p>
-              <Link
-                to={`/tournaments/${pool.tournamentId}?pool=${slug}`}
-                className="inline-flex items-center gap-2 bg-slate hover:bg-slate-mid text-white font-display font-bold rounded-xl px-5 py-3 transition-colors"
-              >
-                Tournament page · Live scoring →
-              </Link>
-            </div>
-          </div>
+        {/* Live tracking experience — entered user, pool is active (OPEN/LOCKED/COMPLETED) */}
+        {user && myExistingEntry && !submitted && (pool.status === 'OPEN' || pool.status === 'LOCKED' || pool.status === 'COMPLETED') && (
+          <PoolLiveExperience
+            pool={pool}
+            slug={slug}
+            myEntry={myExistingEntry}
+            leaderboard={leaderboard}
+            tournamentLeaderboard={tournamentLeaderboard}
+            liveByPlayer={liveByPlayer}
+            yourEntryIds={yourEntryIds}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onOpenEntry={setDrawerEntryId}
+            onOpenPlayer={setDrawerPlayerId}
+          />
         )}
 
         {/* OPEN — Entry flow (signed-in, no entry yet) */}
@@ -571,136 +527,21 @@ export default function PoolView() {
           </form>
         )}
 
-        {/* LOCKED / COMPLETED — Leaderboard */}
-        {(pool.status === 'LOCKED' || pool.status === 'COMPLETED') && leaderboard && (
-          <div className="space-y-6">
-            {/* Tournament leaders mini board */}
-            {tournamentLeaderboard && tournamentLeaderboard.length > 0 && (
-              <section className="rounded-2xl border border-text-2/15 bg-surface overflow-hidden">
-                <div className="px-5 py-3 border-b border-text-2/10 flex items-baseline justify-between">
-                  <h3 className="font-display font-bold text-text-primary">Tournament leaders</h3>
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-2">
-                    {pool.status === 'LOCKED' && <span className="text-live-red">Live · </span>}
-                    Top 10
-                  </span>
-                </div>
-                <div className="divide-y divide-text-2/10">
-                  {tournamentLeaderboard.slice(0, 10).map((row) => {
-                    const pid = row.player?.id || row.playerId
-                    return (
-                      <button
-                        key={pid}
-                        type="button"
-                        onClick={() => setDrawerPlayerId(pid)}
-                        className="w-full text-left px-5 py-2.5 flex items-center gap-3 hover:bg-bg transition-colors"
-                      >
-                        <span className="font-mono text-xs text-text-2 w-8 shrink-0">
-                          {row.positionTied ? 'T' : ''}{row.position || '—'}
-                        </span>
-                        <span className="text-sm leading-none" aria-hidden="true">{row.player?.countryFlag || ''}</span>
-                        <span className="flex-1 min-w-0 font-medium text-text-primary truncate">{row.player?.name}</span>
-                        <span className={`font-mono font-bold text-sm shrink-0 ${
-                          row.totalToPar == null ? 'text-text-2' :
-                          row.totalToPar < 0 ? 'text-field' :
-                          row.totalToPar > 0 ? 'text-live-red' : 'text-text-primary'
-                        }`}>
-                          {row.totalToPar == null ? '—' : row.totalToPar === 0 ? 'E' : row.totalToPar > 0 ? `+${row.totalToPar}` : `${row.totalToPar}`}
-                        </span>
-                        <span className="font-mono text-[10px] text-text-2/70 shrink-0 w-12 text-right">
-                          {row.status === 'CUT' || row.thru === 'CUT' ? 'CUT' : row.thru === 'F' || row.thru === 18 ? 'F' : row.thru ? `Thru ${row.thru}` : '—'}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </section>
-            )}
-
-            <div className="flex items-baseline justify-between">
-              <h2 className="font-display font-bold text-2xl sm:text-3xl text-text-primary">Pool standings</h2>
-              <div className="font-mono text-[11px] uppercase tracking-wider text-text-2">
-                {leaderboard.leaderboard.length} {leaderboard.leaderboard.length === 1 ? 'entry' : 'entries'}
-                {pool.status === 'LOCKED' && <span className="ml-2 text-live-red">· Live</span>}
-                {pool.status === 'COMPLETED' && leaderboard.actualWinningScore != null && (
-                  <span className="ml-2 text-crown">
-                    · Winner finished {leaderboard.actualWinningScore > 0 ? '+' : ''}{leaderboard.actualWinningScore}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-2.5">
-              {leaderboard.leaderboard.map((e, i) => {
-                const isYou = yourEntryIds.has(e.id)
-                const rank = i + 1
-                return (
-                  <button
-                    key={e.id}
-                    type="button"
-                    onClick={() => setDrawerEntryId(e.id)}
-                    className={`group relative block w-full text-left rounded-2xl border bg-surface p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-px ${
-                      isYou
-                        ? 'border-blaze/40 border-l-4 border-l-blaze'
-                        : 'border-text-2/15 hover:border-text-2/30'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <RankBadge rank={rank} />
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-display font-bold text-lg text-text-primary truncate">
-                            {e.teamName}
-                          </h3>
-                          {isYou && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blaze/15 text-blaze font-mono text-[10px] uppercase tracking-wider font-bold">
-                              you
-                            </span>
-                          )}
-                        </div>
-                        <div className="font-editorial italic text-sm text-text-2 truncate">
-                          {e.entrantName}
-                        </div>
-
-                        {/* Pick chips (read-only — tap the row to open the entry drawer) */}
-                        {e.picks && e.picks.length > 0 && (
-                          <div className="mt-2 flex items-center flex-wrap gap-x-2 gap-y-1">
-                            {e.picks.map((p, pi) => (
-                              <span key={pi} className="inline-flex items-center gap-1 text-xs text-text-2">
-                                {p.player?.countryFlag && (
-                                  <span aria-hidden="true">{p.player.countryFlag}</span>
-                                )}
-                                <span className="font-medium text-text-primary">{lastName(p.player?.name)}</span>
-                                {pi < e.picks.length - 1 && <span className="text-text-2/40 ml-1">·</span>}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        <div className="font-mono font-bold text-2xl sm:text-3xl text-text-primary leading-none">
-                          {e.totalFantasyPoints != null ? e.totalFantasyPoints.toFixed(1) : '—'}
-                        </div>
-                        <div className="font-mono text-[10px] uppercase tracking-wider text-text-2 mt-1">PTS</div>
-                        {leaderboard.actualWinningScore != null && e.tiebreakerDiff != null && (
-                          <div className="font-mono text-[11px] text-text-2 mt-1">
-                            TB ±{Math.abs(e.tiebreakerDiff)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-
-            {leaderboard.leaderboard.length === 0 && (
-              <div className="rounded-2xl border border-dashed border-text-2/20 p-8 text-center text-text-2">
-                No entries on the board yet.
-              </div>
-            )}
-          </div>
+        {/* LOCKED / COMPLETED for users without an entry — show the standings only */}
+        {(pool.status === 'LOCKED' || pool.status === 'COMPLETED') && leaderboard && (!user || !myExistingEntry) && (
+          <PoolLiveExperience
+            pool={pool}
+            slug={slug}
+            myEntry={null}
+            leaderboard={leaderboard}
+            tournamentLeaderboard={tournamentLeaderboard}
+            liveByPlayer={liveByPlayer}
+            yourEntryIds={yourEntryIds}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onOpenEntry={setDrawerEntryId}
+            onOpenPlayer={setDrawerPlayerId}
+          />
         )}
       </div>
 
@@ -783,5 +624,261 @@ function Hero({ pool }) {
         </div>
       </div>
     </header>
+  )
+}
+
+// --- Live tracking experience ------------------------------------------
+// Tabbed view for entered users (and viewers on LOCKED/COMPLETED pools).
+// Tab 1: Live Scoring (tournament leaderboard). Tab 2: Teams (pool standings).
+
+function PoolLiveExperience({
+  pool, slug, myEntry, leaderboard, tournamentLeaderboard, liveByPlayer,
+  yourEntryIds, activeTab, setActiveTab, onOpenEntry, onOpenPlayer,
+}) {
+  const [shareCopied, setShareCopied] = useState(false)
+  const entries = leaderboard?.leaderboard || []
+  const totalEntries = entries.length
+  const myRank = myEntry
+    ? (entries.findIndex(e => e.id === myEntry.id) + 1) || null
+    : null
+
+  const tournamentHasLiveData = tournamentLeaderboard && tournamentLeaderboard.some(r => r.totalToPar != null || r.thru != null)
+
+  const copyShare = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/pools/${slug}`)
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    } catch {}
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Pool context strip — compact, always visible */}
+      <div className="rounded-2xl border border-text-2/15 bg-surface p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {myEntry ? (
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 rounded-xl bg-blaze/15 flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-blaze" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="min-w-0">
+                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-2">Your team</div>
+                <div className="font-display font-bold text-text-primary truncate">{myEntry.teamName}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 min-w-0">
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-2">Pool</div>
+              <div className="font-display font-bold text-text-primary truncate">{pool.name}</div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
+            {pool.status === 'OPEN' && pool.locksAt && (
+              <div className="min-w-0">
+                <div className="font-mono text-[10px] uppercase tracking-wider text-text-2">Locks in</div>
+                <div className="font-mono font-bold text-text-primary">
+                  {formatCountdown(pool.locksAt) || 'Locked'}
+                </div>
+              </div>
+            )}
+            {myEntry && (pool.status === 'LOCKED' || pool.status === 'COMPLETED') && (
+              <>
+                <div className="min-w-0">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-text-2">Pool rank</div>
+                  <div className="font-mono font-bold text-text-primary">{myRank ?? '—'} / {totalEntries}</div>
+                </div>
+                <div className="min-w-0">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-text-2">Your pts</div>
+                  <div className="font-mono font-bold text-blaze text-lg">
+                    {myEntry.totalFantasyPoints != null ? myEntry.totalFantasyPoints.toFixed(1) : '—'}
+                  </div>
+                </div>
+              </>
+            )}
+            <button
+              onClick={copyShare}
+              className={`font-display font-bold text-sm rounded-lg px-3 py-2 transition-colors ${
+                shareCopied
+                  ? 'bg-field text-white'
+                  : 'bg-blaze text-white hover:bg-blaze/90'
+              }`}
+            >
+              {shareCopied ? 'Copied ✓' : 'Share pool'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="border-b border-text-2/15 flex items-center gap-1">
+        <TabButton active={activeTab === 'live'} onClick={() => setActiveTab('live')}>
+          Live scoring
+          {pool.status === 'LOCKED' && (
+            <span className="ml-1.5 inline-flex items-center">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live-red opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-live-red"></span>
+              </span>
+            </span>
+          )}
+        </TabButton>
+        <TabButton active={activeTab === 'teams'} onClick={() => setActiveTab('teams')}>
+          Teams <span className="font-mono text-[11px] text-text-2 ml-1">({totalEntries})</span>
+        </TabButton>
+      </div>
+
+      {/* Live Scoring tab */}
+      {activeTab === 'live' && (
+        <div>
+          {tournamentHasLiveData ? (
+            <section className="rounded-2xl border border-text-2/15 bg-surface overflow-hidden">
+              <div className="px-5 py-3 border-b border-text-2/10 flex items-baseline justify-between">
+                <h3 className="font-display font-bold text-text-primary">Tournament leaderboard</h3>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-text-2">
+                  {pool.status === 'LOCKED' && <span className="text-live-red">Live · </span>}
+                  Top 20
+                </span>
+              </div>
+              <div className="divide-y divide-text-2/10">
+                {tournamentLeaderboard.slice(0, 20).map((row) => {
+                  const pid = row.player?.id || row.playerId
+                  const isMyPick = myEntry?.picks?.some(p => p.player?.id === pid)
+                  return (
+                    <button
+                      key={pid}
+                      type="button"
+                      onClick={() => onOpenPlayer(pid)}
+                      className={`w-full text-left px-5 py-2.5 flex items-center gap-3 hover:bg-bg transition-colors ${isMyPick ? 'bg-blaze/[0.04] border-l-2 border-blaze' : ''}`}
+                    >
+                      <span className="font-mono text-xs text-text-2 w-8 shrink-0">
+                        {row.positionTied ? 'T' : ''}{row.position || '—'}
+                      </span>
+                      <span className="text-sm leading-none" aria-hidden="true">{row.player?.countryFlag || ''}</span>
+                      <span className="flex-1 min-w-0 font-medium text-text-primary truncate flex items-center gap-2">
+                        {row.player?.name}
+                        {isMyPick && <span className="font-mono text-[9px] uppercase tracking-wider text-blaze bg-blaze/10 px-1.5 py-0.5 rounded">yours</span>}
+                      </span>
+                      <span className={`font-mono font-bold text-sm shrink-0 ${
+                        row.totalToPar == null ? 'text-text-2' :
+                        row.totalToPar < 0 ? 'text-field' :
+                        row.totalToPar > 0 ? 'text-live-red' : 'text-text-primary'
+                      }`}>
+                        {row.totalToPar == null ? '—' : row.totalToPar === 0 ? 'E' : row.totalToPar > 0 ? `+${row.totalToPar}` : `${row.totalToPar}`}
+                      </span>
+                      <span className="font-mono text-[10px] text-text-2/70 shrink-0 w-12 text-right">
+                        {row.status === 'CUT' || row.thru === 'CUT' ? 'CUT' : row.thru === 'F' || row.thru === 18 ? 'F' : row.thru ? `Thru ${row.thru}` : '—'}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center">
+              <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Tournament hasn't started</div>
+              <h3 className="font-display font-bold text-2xl text-text-primary mb-3">
+                {pool.tournament?.startDate
+                  ? <>Tees off <span className="text-blaze">{new Date(pool.tournament.startDate).toLocaleString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span></>
+                  : 'Tournament data syncing'}
+              </h3>
+              <p className="text-text-2 max-w-md mx-auto mb-6">
+                Live leaderboard, hole-by-hole tracking, and your pool standings will update here in real time when play begins.
+              </p>
+              <Link
+                to={`/tournaments/${pool.tournamentId}?pool=${slug}`}
+                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold"
+              >
+                Full tournament preview →
+              </Link>
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* Teams tab */}
+      {activeTab === 'teams' && (
+        <div className="space-y-2.5">
+          {pool.status === 'COMPLETED' && leaderboard?.actualWinningScore != null && (
+            <div className="rounded-xl border border-crown/30 bg-crown/5 px-4 py-2.5 text-sm text-text-primary font-mono">
+              <span className="text-crown font-bold">Final · </span>
+              Winner finished {leaderboard.actualWinningScore > 0 ? '+' : ''}{leaderboard.actualWinningScore}
+            </div>
+          )}
+
+          {entries.map((e, i) => {
+            const isYou = yourEntryIds.has(e.id)
+            const rank = i + 1
+            return (
+              <button
+                key={e.id}
+                type="button"
+                onClick={() => onOpenEntry(e.id)}
+                className={`block w-full text-left rounded-2xl border bg-surface p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-px ${
+                  isYou
+                    ? 'border-blaze/40 border-l-4 border-l-blaze'
+                    : 'border-text-2/15 hover:border-text-2/30'
+                }`}
+              >
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <RankBadge rank={rank} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-display font-bold text-lg text-text-primary truncate">{e.teamName}</h3>
+                      {isYou && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blaze/15 text-blaze font-mono text-[10px] uppercase tracking-wider font-bold">you</span>
+                      )}
+                    </div>
+                    <div className="font-editorial italic text-sm text-text-2 truncate">{e.entrantName}</div>
+                    {e.picks && e.picks.length > 0 && (
+                      <div className="mt-2 flex items-center flex-wrap gap-x-2 gap-y-1">
+                        {e.picks.map((p, pi) => (
+                          <span key={pi} className="inline-flex items-center gap-1 text-xs text-text-2">
+                            {p.player?.countryFlag && <span aria-hidden="true">{p.player.countryFlag}</span>}
+                            <span className="font-medium text-text-primary">{lastName(p.player?.name)}</span>
+                            {pi < e.picks.length - 1 && <span className="text-text-2/40 ml-1">·</span>}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-mono font-bold text-2xl sm:text-3xl text-text-primary leading-none">
+                      {e.totalFantasyPoints != null ? e.totalFantasyPoints.toFixed(1) : '—'}
+                    </div>
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-text-2 mt-1">PTS</div>
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+
+          {entries.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-text-2/20 p-8 text-center text-text-2">
+              No entries yet — share the link to get rolling.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TabButton({ active, onClick, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative font-display font-bold text-sm px-4 py-3 transition-colors flex items-center ${
+        active
+          ? 'text-text-primary border-b-2 border-blaze -mb-px'
+          : 'text-text-2 hover:text-text-primary'
+      }`}
+    >
+      {children}
+    </button>
   )
 }
