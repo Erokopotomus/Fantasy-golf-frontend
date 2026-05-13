@@ -154,12 +154,14 @@ router.get('/:slug/leaderboard', optionalAuth, async (req, res, next) => {
     const ranked = entries
       .map(e => {
         const isOwnEntry = viewerId && e.userId === viewerId
-        // Hide picks while tournament is upcoming, except for entrant viewing
-        // their own entry, or the commissioner viewing the public leaderboard.
+        // Hide picks AND tiebreaker while tournament is upcoming, except for
+        // entrant viewing their own entry, or the commissioner viewing the
+        // public leaderboard.
         const showPicks = !picksHidden || isOwnEntry || isCommissioner
         return {
           ...e,
           picks: showPicks ? e.picks : [],
+          tiebreakerScore: showPicks ? e.tiebreakerScore : null,
           picksHidden: !showPicks,
           tiebreakerDiff: actualWinningScore == null ? null : Math.abs((e.tiebreakerScore ?? 0) - actualWinningScore),
         }
