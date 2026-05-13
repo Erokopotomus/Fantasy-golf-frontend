@@ -52,6 +52,9 @@ export default function PoolAdmin() {
   const [inviteSending, setInviteSending] = useState(false)
   const [inviteResult, setInviteResult] = useState(null)
 
+  const [dqTarget, setDqTarget] = useState(null) // entry pending DQ confirmation
+  const [dqing, setDqing] = useState(false)
+
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clutchfantasysports.com'
   const shareUrl = `${baseUrl}/pools/${slug}`
 
@@ -85,10 +88,18 @@ export default function PoolAdmin() {
     await api.lockPool(slug, token)
     refresh()
   }
-  const dq = async (entryId) => {
-    if (!confirm('DQ this entry? They will be removed from the leaderboard.')) return
-    await api.deletePoolEntry(slug, token, entryId)
-    refresh()
+  const confirmDq = async () => {
+    if (!dqTarget) return
+    setDqing(true)
+    try {
+      await api.deletePoolEntry(slug, token, dqTarget.id)
+      setDqTarget(null)
+      refresh()
+    } catch (e) {
+      alert(e.message || 'DQ failed')
+    } finally {
+      setDqing(false)
+    }
   }
 
   const sendInvites = async (e) => {
@@ -262,7 +273,7 @@ export default function PoolAdmin() {
                     </td>
                     <td className="py-2.5 px-2 text-right font-mono font-bold text-text-primary">{e.totalFantasyPoints?.toFixed(1) ?? '—'}</td>
                     <td className="py-2.5 px-2 text-right">
-                      <button onClick={() => dq(e.id)} className="text-live-red text-xs font-mono uppercase tracking-wide hover:underline">DQ</button>
+                      <button onClick={() => setDqTarget(e)} className="text-live-red text-xs font-mono uppercase tracking-wide hover:underline">DQ</button>
                     </td>
                   </tr>
                 ))}
@@ -271,6 +282,51 @@ export default function PoolAdmin() {
           </div>
         )}
       </section>
+
+      {/* DQ confirmation modal */}
+      {dqTarget && (
+        <>
+          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => !dqing && setDqTarget(null)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto">
+              <div className="p-6 border-b border-text-2/15">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-live-red/15 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-live-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-display font-bold text-xl text-text-primary">Disqualify this entry?</h3>
+                </div>
+                <div className="rounded-xl bg-bg border border-text-2/15 p-4 mb-3">
+                  <div className="font-display font-bold text-text-primary">{dqTarget.teamName}</div>
+                  <div className="text-sm text-text-2 mt-0.5">{dqTarget.entrantName}</div>
+                  <div className="text-xs text-text-2/70 font-mono mt-0.5">{dqTarget.entrantEmail}</div>
+                </div>
+                <p className="text-sm text-text-2">
+                  This permanently removes their picks from the leaderboard. They'd have to re-enter (if the pool is still open) to get back in. <span className="text-live-red font-medium">This can't be undone.</span>
+                </p>
+              </div>
+              <div className="p-4 flex gap-2 justify-end bg-bg/50 rounded-b-2xl">
+                <button
+                  onClick={() => !dqing && setDqTarget(null)}
+                  disabled={dqing}
+                  className="px-4 py-2 rounded-lg border border-text-2/25 text-text-primary font-display font-bold hover:bg-white transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDq}
+                  disabled={dqing}
+                  className="px-4 py-2 rounded-lg bg-live-red text-white font-display font-bold hover:bg-live-red/90 transition-colors disabled:opacity-50"
+                >
+                  {dqing ? 'Removing…' : 'Yes, DQ entry'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
