@@ -78,32 +78,75 @@ const Tournaments = () => {
         <p className="text-text-muted text-sm mt-1">Schedule, live scoring, and results</p>
       </div>
 
-      {/* No Live Tournament — informative empty state */}
+      {/* No Live Tournament — course-image banner showcasing next event */}
       {liveTournaments.length === 0 && upcomingTournaments.length > 0 && (() => {
         const next = upcomingTournaments[0]
         const daysUntil = next?.startDate ? Math.max(0, Math.ceil((new Date(next.startDate) - Date.now()) / 86400000)) : null
+        const courseImg = next.course?.imageUrl
+        const courseName = next.course?.nickname || next.course?.name || next.courseName
+
         return (
-          <div className="text-center py-8 px-4 rounded-xl bg-[var(--surface)] border border-[var(--card-border)]">
-            <div className="text-4xl mb-3">&#9971;</div>
-            <h2 className="text-lg font-display font-bold text-text-primary mb-1">No Live Tournament</h2>
-            <p className="text-text-muted text-sm mb-4">
-              {daysUntil != null && daysUntil > 0
-                ? `The next event starts in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`
-                : 'The next event starts soon'}
-            </p>
-            <div className="inline-flex flex-col items-center gap-2">
-              <Link
-                to={`/tournaments/${next.id}/preview`}
-                className="px-4 py-2 rounded-lg bg-field-bright/15 text-field text-sm font-semibold hover:bg-field-bright/25 transition-colors"
+          <div className="relative rounded-2xl overflow-hidden border border-[var(--card-border)]">
+            {courseImg ? (
+              <>
+                <img
+                  src={courseImg}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/40" />
+              </>
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-slate via-slate-mid to-slate-light" />
+            )}
+
+            <div className="relative px-6 py-10 sm:px-10 sm:py-14">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/60">
+                  Next Up
+                </span>
+                <TourBadge tour={next.tour} />
+                <EventBadge tournament={next} />
+              </div>
+              <h2
+                className="text-3xl sm:text-4xl font-display font-extrabold text-white mb-2 tracking-tight leading-tight"
+                style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
               >
-                Preview {next.shortName || next.name} Field &rarr;
-              </Link>
-              <Link
-                to="/golf"
-                className="text-xs text-text-muted hover:text-text-primary transition-colors"
+                {next.name}
+              </h2>
+              {courseName && (
+                <p
+                  className="text-base sm:text-lg text-gold font-display font-semibold mb-1"
+                  style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+                >
+                  {courseName}
+                </p>
+              )}
+              <p
+                className="text-sm text-white/80 font-mono mb-6"
+                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
               >
-                View Golf Hub &rarr;
-              </Link>
+                {formatDateRange(next.startDate, next.endDate)}
+                {daysUntil != null && daysUntil > 0 && (
+                  <span className="ml-2 text-white/60">
+                    — {daysUntil} day{daysUntil !== 1 ? 's' : ''} away
+                  </span>
+                )}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  to={`/tournaments/${next.id}/preview`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blaze hover:bg-blaze/90 text-white font-display font-bold text-sm transition-all hover:-translate-y-0.5 shadow-lg"
+                >
+                  Preview Field &rarr;
+                </Link>
+                <Link
+                  to="/golf"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 text-white font-display font-semibold text-sm backdrop-blur-sm transition-colors"
+                >
+                  Golf Hub
+                </Link>
+              </div>
             </div>
           </div>
         )

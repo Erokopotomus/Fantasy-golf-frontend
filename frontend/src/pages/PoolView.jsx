@@ -127,6 +127,7 @@ export default function PoolView() {
   const [tournamentLeaderboard, setTournamentLeaderboard] = useState(null)
   const [weather, setWeather] = useState(null)
   const [activeTab, setActiveTab] = useState('live') // 'live' | 'teams'
+  const [editMode, setEditMode] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -216,10 +217,40 @@ export default function PoolView() {
         tiebreakerScore: parseInt(entry.tiebreakerScore),
         picks,
       })
-      setSubmitted(result.entry)
+      if (result.updated) {
+        // Edit path — refresh leaderboard so myExistingEntry reflects new picks, drop back to live view
+        const lb = await api.getPoolLeaderboard(slug).catch(() => null)
+        if (lb) setLeaderboard(lb)
+        setEditMode(false)
+      } else {
+        setSubmitted(result.entry)
+      }
     } catch (err) {
       setSubmitError(err.message || 'Submission failed')
     } finally { setSubmitting(false) }
+  }
+
+  // Prefill the entry form from the user's existing picks and switch to edit mode
+  const startEdit = () => {
+    if (!myExistingEntry) return
+    const picksByTier = {}
+    for (const p of (myExistingEntry.picks || [])) {
+      const tid = p.tierId
+      if (!picksByTier[tid]) picksByTier[tid] = []
+      picksByTier[tid].push(p.playerId)
+    }
+    setEntry({
+      teamName: myExistingEntry.teamName || '',
+      tiebreakerScore: myExistingEntry.tiebreakerScore ?? 0,
+      picks: picksByTier,
+    })
+    setSubmitError(null)
+    setEditMode(true)
+  }
+
+  const cancelEdit = () => {
+    setEditMode(false)
+    setSubmitError(null)
   }
 
   // Validation hints for the submit button
@@ -373,8 +404,8 @@ export default function PoolView() {
           </div>
         )}
 
-        {/* Live tracking experience — entered user, pool is active (OPEN/LOCKED/COMPLETED) */}
-        {user && myExistingEntry && !submitted && (pool.status === 'OPEN' || pool.status === 'LOCKED' || pool.status === 'COMPLETED') && (
+        {/* Live tracking experience — entered user, pool is active (OPEN/LOCKED/COMPLETED). Hide while editing. */}
+        {user && myExistingEntry && !submitted && !editMode && (pool.status === 'OPEN' || pool.status === 'LOCKED' || pool.status === 'COMPLETED') && (
           <PoolLiveExperience
             pool={pool}
             slug={slug}
@@ -388,12 +419,30 @@ export default function PoolView() {
             setActiveTab={setActiveTab}
             onOpenEntry={setDrawerEntryId}
             onOpenPlayer={setDrawerPlayerId}
+            onEditPicks={pool.status === 'OPEN' ? startEdit : null}
           />
         )}
 
-        {/* OPEN — Entry flow (signed-in, no entry yet) */}
-        {pool.status === 'OPEN' && user && !myExistingEntry && (
+        {/* OPEN — Entry flow (signed-in: brand new entry OR editing an existing one) */}
+        {pool.status === 'OPEN' && user && (!myExistingEntry || editMode) && (
           <form onSubmit={submit} className="space-y-6 sm:space-y-8">
+            {editMode && (
+              <div className="rounded-2xl border border-blaze/30 bg-blaze/[0.06] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-blaze mb-1">Editing your picks</div>
+                  <div className="text-text-primary text-sm">
+                    Changes will replace your current team. You can edit until the pool locks.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg border border-text-2/25 bg-[var(--surface)] hover:border-blaze/40 text-text-primary font-display font-semibold text-sm px-4 py-2 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
             {submitError && (
               <div className="rounded-xl bg-live-red/10 border border-live-red/30 text-live-red p-4 font-mono text-sm">
                 {submitError}
@@ -539,7 +588,9 @@ export default function PoolView() {
               disabled={submitting || !validation.ok}
               className="w-full bg-blaze hover:bg-blaze/90 disabled:bg-text-2/20 disabled:text-text-2 text-white font-display font-bold rounded-2xl py-4 sm:py-5 text-lg shadow-sm transition-all enabled:hover:-translate-y-0.5 enabled:hover:shadow-md disabled:cursor-not-allowed"
             >
-              {submitting ? 'Submitting…' : 'Lock in my picks →'}
+              {submitting
+                ? (editMode ? 'Saving…' : 'Submitting…')
+                : (editMode ? 'Save changes →' : 'Lock in my picks →')}
             </button>
           </form>
         )}
@@ -586,6 +637,11 @@ export default function PoolView() {
           setDrawerEntryId(null)
           setDrawerPlayerId(pid)
         }}
+        onEditPicks={
+          pool?.status === 'OPEN' && myExistingEntry && drawerEntryId === myExistingEntry.id
+            ? () => { setDrawerEntryId(null); startEdit(); }
+            : null
+        }
       />
     </div>
   )
@@ -744,6 +800,7 @@ function PoolHeroWidgets({ tournament, leaderboard = [], weather = [] }) {
 function PoolLiveExperience({
   pool, slug, myEntry, leaderboard, tournamentLeaderboard, liveByPlayer,
   weather, yourEntryIds, activeTab, setActiveTab, onOpenEntry, onOpenPlayer,
+  onEditPicks,
 }) {
   const [shareCopied, setShareCopied] = useState(false)
   const entries = leaderboard?.leaderboard || []
@@ -812,6 +869,17 @@ function PoolLiveExperience({
                   </div>
                 </div>
               </>
+            )}
+            {myEntry && onEditPicks && pool.status === 'OPEN' && (
+              <button
+                onClick={onEditPicks}
+                className="font-display font-bold text-sm rounded-lg px-3 py-2 border border-text-2/25 bg-[var(--surface)] hover:border-blaze/40 hover:text-blaze text-text-primary transition-colors inline-flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                Edit picks
+              </button>
             )}
             <button
               onClick={copyShare}

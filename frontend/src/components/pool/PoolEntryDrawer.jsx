@@ -4,7 +4,7 @@ import { useEffect } from 'react'
  * Slide-in drawer showing a single pool entry's roster with live tournament scoring.
  * Tap any pick to open the player drawer (handled by parent via onPlayerClick).
  */
-export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlayer, isOpen, onClose, onPlayerClick }) {
+export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlayer, isOpen, onClose, onPlayerClick, onEditPicks }) {
   // Close on escape
   useEffect(() => {
     if (!isOpen) return
@@ -42,9 +42,22 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
         </div>
 
         {/* Total points hero */}
-        <div className="px-5 py-5 border-b border-text-2/10 flex items-baseline gap-3">
-          <span className="font-mono font-extrabold text-5xl text-blaze leading-none">{totalPts.toFixed(1)}</span>
-          <span className="font-mono text-xs uppercase tracking-wider text-text-2">Fantasy pts</span>
+        <div className="px-5 py-5 border-b border-text-2/10 flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-3">
+            <span className="font-mono font-extrabold text-5xl text-blaze leading-none">{totalPts.toFixed(1)}</span>
+            <span className="font-mono text-xs uppercase tracking-wider text-text-2">Fantasy pts</span>
+          </div>
+          {onEditPicks && (
+            <button
+              onClick={() => { onClose?.(); onEditPicks(); }}
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-text-2/25 hover:border-blaze/40 hover:text-blaze text-text-primary font-display font-semibold text-sm px-3 py-2 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Edit picks
+            </button>
+          )}
         </div>
 
         {/* Picks list */}

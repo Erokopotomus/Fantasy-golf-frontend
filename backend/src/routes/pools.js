@@ -176,12 +176,6 @@ router.post('/:slug/entries', authenticate, async (req, res, next) => {
     if (!pool) return res.status(404).json({ error: 'Pool not found' })
     if (pool.status !== 'OPEN') return res.status(409).json({ error: `Pool is ${pool.status.toLowerCase()}, not accepting entries` })
 
-    // One entry per user per pool
-    const existing = await prisma.poolEntry.findFirst({ where: { poolId: pool.id, userId: req.user.id } })
-    if (existing) {
-      return res.status(409).json({ error: 'You already have an entry in this pool. Want to update it? Delete the existing one first.' })
-    }
-
     // Validate exactly picksRequired per tier, all picks belong to the tier
     const picksByTier = new Map()
     for (const p of picks) {
@@ -199,6 +193,26 @@ router.post('/:slug/entries', authenticate, async (req, res, next) => {
           return res.status(400).json({ error: `Player ${pid} is not in tier ${tier.tierNumber}` })
         }
       }
+    }
+
+    // Upsert: if user already has an entry in this pool, replace picks + update metadata.
+    // (Pool is OPEN — we already gated above. Existing entries are not editable once LOCKED.)
+    const existing = await prisma.poolEntry.findFirst({ where: { poolId: pool.id, userId: req.user.id } })
+
+    if (existing) {
+      const entry = await prisma.$transaction(async (tx) => {
+        await tx.poolPick.deleteMany({ where: { entryId: existing.id } })
+        return tx.poolEntry.update({
+          where: { id: existing.id },
+          data: {
+            teamName,
+            tiebreakerScore: parseInt(tiebreakerScore),
+            picks: { create: picks.map(p => ({ tierId: p.tierId, playerId: p.playerId })) },
+          },
+          include: { picks: { include: { player: true, tier: true } } },
+        })
+      })
+      return res.json({ entry, updated: true })
     }
 
     const entry = await prisma.poolEntry.create({
