@@ -6567,6 +6567,548 @@ Two options:
 
 ---
 
+### 172 — Pool: PlayerDrawer flashes blank-white for ~4s when chained from PoolEntryDrawer `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-12 — Verified in re-audit: PlayerDrawer now shows centered "LOADING" with spinner during fetch. Files: PlayerDrawer.jsx
+**Priority:** Medium — perceived-broken UX, not a functional bug
+**Source:** Cowork smoke test, May 12 2026, pool `t6c9h2` (Buckeye PGA Championship)
+
+**Repro:**
+1. `/pools/t6c9h2` → Teams tab → click an entry (e.g. "Turd Farts")
+2. PoolEntryDrawer opens (correctly, solid white bg)
+3. Click any player row inside the entry drawer (e.g. Scottie Scheffler)
+4. PoolEntryDrawer closes → PlayerDrawer panel slides in but renders **completely blank/white for ~4 seconds**
+5. Content (player header, SG Skill Match, etc.) eventually appears after the API call resolves
+
+**Why it matters:** Eric will perceive this as "the drawer is broken" before the content lands. The pool view's own initial load has a polished centered "LOADING POOL…" state, but the chained PlayerDrawer has none — just empty white.
+
+**Fix:** Add a loading skeleton or spinner to `PlayerDrawer` for its initial fetch. Probably gated by `loading && !player` state. Should match the existing loading aesthetics on the platform (centered, mono-font, faded text).
+
+**FILES:**
+- `frontend/src/components/players/PlayerDrawer.jsx` (or equivalent — the drawer rendered when `selectedPlayerId` is set after clicking a row in `PoolEntryDrawer`)
+- `frontend/src/components/pool/PoolEntryDrawer.jsx` — confirm it closes before PlayerDrawer mounts (current behavior)
+
+---
+
+### 173 — Pool: PlayerDrawer "Recent Tournaments" shows upcoming PGA Championship dated May 13 (UTC→Pacific shift + wrong section) `MEDIUM`
+**Status:** `PARTIAL`
+**Re-audited:** 2026-05-12 — Date half fixed: now reads "May 14" (timezone fix landed; Truist also shifted May 6→May 7 as expected). Filter half NOT done: upcoming PGA Championship still appears at the top of "Recent Tournaments" with empty score chips. Should be filtered to `COMPLETED` only (item 137 pattern). Remaining work: filter "Recent Tournaments" by status.
+**Priority:** Medium — date display bug + categorization bug
+**Source:** Cowork smoke test, May 12 2026
+
+**Repro:**
+1. `/pools/t6c9h2` → Teams tab → open Turd Farts entry → click Scottie Scheffler
+2. PlayerDrawer opens → switch to "Results" tab
+3. Top of "Recent Tournaments" list shows: **PGA Championship · May 13** (with empty score/position chips)
+4. But the pool hero says "Locks Thu, May 14, 8:00 AM" and the admin says "Locks May 14, 2026, 8:00 AM"
+
+**Two issues stacked:**
+1. **Timezone shift.** Tournament start is stored as `2026-05-14T...Z` (UTC midnight or similar). Formatted in Pacific local time without `timeZone: 'UTC'`, it becomes May 13. Cowork's smoke-test prompt explicitly warned about this pattern: "anything not using timeZone: 'UTC' will display May 14 → May 13 for Pacific." Hero + admin format correctly. PlayerDrawer Results tab does not.
+2. **Wrong section.** The PGA Championship hasn't started yet (UPCOMING per tournament page). It should not appear under "Recent Tournaments" at all — that's reserved for completed events (item 137 territory).
+
+**Fix:**
+- Add `timeZone: 'UTC'` to whatever `Date#toLocaleDateString`/`Intl.DateTimeFormat` call renders the date in PlayerDrawer's results list
+- Filter "Recent Tournaments" to `status === 'COMPLETED'` (or whatever the completion flag is) before rendering
+
+**FILES:**
+- `frontend/src/components/players/PlayerDrawer.jsx` — "Recent Tournaments" / Results tab render
+- Possibly `frontend/src/hooks/usePlayerTournaments.js` (or similar) if there's a shared selector
+
+---
+
+### 174 — Pool: PoolAdmin loading state is bare unstyled "Loading..." text `LOW`
+**Status:** `DONE`
+**Completed:** 2026-05-12 — Verified in re-audit: PoolAdmin now shows polished centered "LOADING ADMIN…" matching PoolView aesthetic. Files: PoolAdmin.jsx
+**Priority:** Low — cosmetic but inconsistent with rest of platform
+**Source:** Cowork smoke test, May 12 2026
+
+**Repro:**
+1. `/pools/t6c9h2/admin?token=...` (cold load, no cache)
+2. While fetching admin payload (~3s per CLAUDE.md note about Prisma joins), top-left of the page shows raw black "Loading..." text with no styling, no centering, no skeleton
+
+**Compare with:** `/pools/:slug` (PoolView) shows a polished centered "LOADING POOL…" in mono uppercase — looks intentional. PoolAdmin's loader looks like a developer placeholder that shipped.
+
+**Fix:** Match PoolView's loading state — centered container, font-mono uppercase tracking, "LOADING POOL…" or "LOADING ADMIN…". Trivial copy-paste from PoolView.jsx.
+
+**FILES:**
+- `frontend/src/pages/PoolAdmin.jsx` — the early-return loading branch
+
+---
+
+### 175 — Pool: Player count mismatch — admin shows 152, public pool view shows 153 `LOW`
+**Status:** `TODO`
+**Re-audited:** 2026-05-12 — Still present. Admin: PLAYERS 152, tiers sum to 152. Public Field Analysis: "153 players". Tournament page Field Strength: "153 players". One player is in the tournament field but missing from any tier.
+**Priority:** Low — likely benign but worth a check
+**Source:** Cowork smoke test, May 12 2026, pool `t6c9h2`
+
+**Observed:**
+- Public pool view (Live scoring tab) → "Field Analysis · **153 players**"
+- Admin → stat tile "PLAYERS · **152**"
+- Admin tiers sum: T1-T5 = 10 × 5 + T6 = 102 → **152**
+
+One player is in the tournament field but isn't in any tier (so unpickable). Possible causes:
+- Monday qualifier added after commish set tier rosters
+- One player was deliberately excluded from tiers
+- ESPN field sync added a player after pool was created
+
+**Action:** Either (a) admin should auto-detect this and warn the commish ("1 player in field isn't in any tier — they can't be picked"), or (b) field count should match the picks-eligible count, or (c) confirm this is intentional and document.
+
+**FILES:**
+- `backend/src/routes/pools.js` — admin tier/field assembly
+- `frontend/src/pages/PoolAdmin.jsx` — could show an "unassigned in field" badge
+
+---
+
+### 176 — Pool: Mobile audit needed (PoolView, PoolAdmin, TournamentPreview pool banner) `MEDIUM`
+**Status:** `TODO`
+**Priority:** Medium — Cowork smoke test couldn't complete this leg
+**Source:** Cowork smoke test, May 12 2026
+
+**Why it's queued:** Chrome MCP's `resize_window` does not actually emulate a mobile viewport (window resizes but `window.innerWidth` stays at 1564). I couldn't run a real 390px audit on `/pools/t6c9h2`, `/pools/t6c9h2/admin`, or the tournament-page pool context banner.
+
+**Manual audit needed in Chrome DevTools device mode (iPhone 14, 390px) covering:**
+- `/pools/t6c9h2`:
+  - Hero — does the locks-countdown chip + "Accepting entries" pill fit on one line, or wrap?
+  - Your Team / Locks / Share Pool strip — does Share Pool button collapse or stay inline?
+  - Tab bar (Live scoring / Teams) — touch targets ≥44px?
+  - Field Analysis table — horizontal scroll? CPI slider bars truncating?
+  - Quick Insights + Pool Standings — stack vertically below Field Analysis?
+  - Weather Forecast hour-by-hour table — already looked clipped on desktop right edge; confirm mobile scroll works
+- `/pools/t6c9h2/admin`:
+  - Share Link + Copy button — does the URL field truncate cleanly?
+  - "View public page" + "Enter your picks" CTAs — stack? Touch target?
+  - Email invite textarea — usable at 390px?
+  - Stat tiles (Tiers/Players/Entries/Scoring) — 2x2 grid or single column?
+- `/tournaments/:id?pool=t6c9h2`:
+  - Pool context banner (white card, left blaze rail, "YOUR POOL" / "YOUR TEAM" / "LOCKS IN" / "PICKS …") — at desktop it's a single horizontal row. On mobile the three label columns + picks row should stack cleanly without overlapping the hero.
+
+**FILES:**
+- `frontend/src/pages/PoolView.jsx`
+- `frontend/src/pages/PoolAdmin.jsx`
+- `frontend/src/components/pool/PoolContextBanner.jsx`
+- `frontend/src/components/pool/PoolEntryDrawer.jsx`
+
+---
+
+### 177 — Pool: PlayerDrawer Recent Tournaments — filter out UPCOMING events `MEDIUM`
+**Status:** `TODO`
+**Priority:** Medium — finishes the second half of 173
+**Source:** Cowork pool re-audit, May 12 2026
+
+After 173's timezone half landed, the date now reads correctly ("May 14"), but the upcoming PGA Championship still shows up at the top of the "Recent Tournaments" list in PlayerDrawer's Results tab with empty score/position chips. Filter the list to `status !== 'UPCOMING'` (or `=== 'COMPLETED'`) so only completed events appear.
+
+**Repro:** `/pools/t6c9h2` → Teams tab → open Smoke Test Squad → click Scottie Scheffler → Results tab.
+
+**FILES:**
+- `frontend/src/components/players/PlayerDrawer.jsx` — Results tab render of "Recent Tournaments"
+- Same pattern as item 137 fix (PlayerDrawer was supposed to hide IN_PROGRESS/UPCOMING).
+
+---
+
+### 178 — Pool admin: DQ button deletes entry with zero confirmation `HIGH`
+**Status:** `TODO`
+**Priority:** High — destructive action with no guard
+**Source:** Cowork pool re-audit, May 12 2026, pool `t6c9h2`
+
+Clicking the "DQ" cell in the Entries table on PoolAdmin immediately deletes the entry. No native `confirm()`, no modal, no undo. Tested by clicking DQ on Turd Farts entry — entry count went 1 → 0, banner disappeared, entry gone (had to re-create as "Smoke Test Squad"). A commissioner who misclicks or pinch-zooms could wipe a friend's entry instantly.
+
+**Fix:** Add a confirm modal or at minimum a native `confirm('Disqualify {teamName}? This deletes their entry and can't be undone.')`. Bonus: soft-delete with restore window.
+
+**FILES:**
+- `frontend/src/pages/PoolAdmin.jsx` — DQ click handler
+- `backend/src/routes/pools.js` — `deletePoolEntry` endpoint could also support soft-delete
+
+---
+
+### 179 — Pool admin: any token holder can manage pool (no auth required) `DISCUSS`
+**Status:** `TODO`
+**Priority:** Discuss — by-design tradeoff but security/UX implications worth a call
+**Source:** Cowork pool re-audit, May 12 2026
+
+The admin URL `/pools/t6c9h2/admin?token=...` is fully functional while signed-out. Anyone with the token can:
+- View entrants' email addresses (commish PoolAdmin Entries table exposes `ericmsaylor@gmail.com`)
+- DQ entries
+- Send email invites (Resend cost vector)
+- Lock the pool
+
+Pros of current design: commish doesn't need to log in across devices. Token-as-credential is simple.
+Cons: link is sticky-sensitive. If commish forwards admin link by accident, full takeover. No token rotation/revocation UI. Entrant emails leak to anyone with the URL.
+
+**Options for discussion:**
+1. Leave as-is, document the tradeoff
+2. Require the token AND the commish to be signed-in (with their account associated with the pool)
+3. Add token rotation/regen on admin page so commish can invalidate a leaked link
+4. Stop exposing entrants' raw email addresses (show display name only, or masked email like `e***r@gmail.com`)
+
+**FILES:**
+- `backend/src/routes/pools.js` — `getPoolAdmin` token check
+- `frontend/src/pages/PoolAdmin.jsx` — Entries table column showing entrant email
+
+---
+
+### 180 — Pool: signup gate copy is generic, not pool-aware `LOW`
+**Status:** `TODO`
+**Priority:** Low — copy enhancement
+**Source:** Cowork pool re-audit, May 12 2026
+
+Hitting `/pools/t6c9h2` as anon → click "Create account" → `/signup?redirect=%2Fpools%2Ft6c9h2`. The redirect param is preserved correctly ✅, but the signup form copy is generic: "Create your account / Start your fantasy sports journey today". A user invited to a friend's pool sees this and could lose context (am I in the right place?).
+
+**Fix:** When `?redirect=/pools/...` is present, the signup page could detect and show pool-aware copy like "Create your account to enter the Buckeye PGA Championship pool" by fetching pool name via the redirect slug.
+
+Same opportunity exists on `/login?redirect=...`.
+
+**FILES:**
+- `frontend/src/pages/Signup.jsx` (and `Login.jsx`)
+- Could call `GET /pools/:slug/preview` (lightweight name-only endpoint) when redirect starts with `/pools/`
+
+---
+
+### 182 — Landing page rebuild: pools-first hero + product gallery + kill Rating section + fake leaderboard `HIGH`
+**Status:** `TODO`
+**Priority:** High — site's "Prove You Know Sports / Clutch Rating gauge" hero is selling the wrong wedge. The actual wedge is pools + leagues + live scoring + real product surfaces we've now built.
+**Source:** Eric + Cowork landing page audit & mockup, May 12 2026
+
+**Visual source of truth:** `/Users/ericsaylor/Desktop/Clutch/landing-mockup.html`
+Open this file in Chrome before you start coding. Every section below references what it looks like in the mockup. Treat the mockup as the design spec — match the layout, copy, and visual treatment. The mockup uses inline HTML/CSS for speed; the implementation should use Tailwind + the existing brand CSS variables.
+
+**The current page** (`frontend/src/pages/Landing.jsx`, 875 lines) has 9 sections, four of which sell Clutch Rating as the moat (hero, editorial, dedicated Rating section, It Compounds, fake leaderboard). The product has moved past that — real wedge is now pools as the on-ramp, leagues as the depth play, real product surfaces (PlayerDrawer, DraftRecap, Vault, Live Scoring) as the proof. Page should be ~40% shorter.
+
+**Brand tokens already defined in Landing.jsx** (keep using these):
+- `BZ`, `BZ_H`, `BZ_D` — blaze orange ramp
+- `SL`, `SL_M`, `SL_L` — slate ramp
+- `FD`, `FD_B` — field green ramp
+- `CR`, `CR_B` — crown gold ramp
+- `LV` — live red, `INK` — near-black
+- CSS vars: `var(--bg)`, `var(--bg-alt)`, `var(--surface)`, `var(--text-1)`, `var(--text-2)`, `var(--text-3)`, `var(--card-border)`
+- Tailwind font classes: `font-display`, `font-body`, `font-mono`, `font-editorial`
+
+**Final section order (target):**
+1. Hero (rebuilt)
+2. Editorial band (copy rewrite)
+3. Product Gallery — NEW section, six cards each showcasing a real product surface
+4. Why Clutch (reordered + Future Pool Types strip added)
+5. How It Works (mostly kept, copy tweak on step 1)
+6. Two Sports. One Platform. (mostly kept, dashboard mockup can stay or be lightly refreshed)
+7. Final CTA (copy rewrite)
+8. Footer (unchanged)
+
+**REMOVED sections:**
+- Dedicated "Clutch Rating" section (current lines 316-422, ~107 lines)
+- "It Compounds / Sports Brain" section (current lines 639-757, ~119 lines)
+- "The Leaderboard" fake leaderboard section (current lines 759-825, ~67 lines)
+- `mockLeaderboard` array at the top of the file (no longer used)
+- `mockLeagues`, `mockStandings`, `mockActivity` — only if the Two Sports dashboard mockup is being replaced; otherwise keep them
+
+---
+
+## SECTION-BY-SECTION SPEC
+
+### 1. HERO (rebuild — current lines 77-222)
+
+**Layout:** two columns. Left = copy + CTAs + feature pills. Right = sport strip above a pool entry card.
+
+**Left column:**
+- **Eyebrow pill** — replace the current "2026 PGA TOUR IS LIVE" green pill with a **red live-indicator pill** styled like:
+  ```
+  ● POOLS OPEN — PGA CHAMPIONSHIP · LOCKS THU
+  ```
+  Background `rgba(232,56,56,0.08)`, border `rgba(232,56,56,0.2)`, color `var(--live-red)` (`#E83838`), font-mono 11px, letter-spacing 0.12em. Dot is 6×6 round, `var(--live-red)`, pulse animation (`pulse 2s infinite`, opacity 1↔0.4).
+- **H1 headline** — `font-display font-extrabold`, `font-size: clamp(44px, 5.5vw, 72px)`, line-height 1.02, letter-spacing -0.035em:
+  ```
+  The fantasy platform that <em>knows your league.</em>
+  ```
+  The `<em>knows your league.</em>` span uses `font-editorial italic font-normal`, color `var(--blaze)` (BZ), font-size `1.05em`. Same italic-accent pattern as the live site uses for "Sports." today.
+- **Sub-headline** — `text-lg`, `text-[var(--text-2)]`, `max-w-[460px]`, `line-height: 1.6`:
+  > Twelve years of league memory. Real strokes-gained analytics. An AI coach that remembers what your buddy drafted in 2018. **Built for leagues that take it seriously.**
+  
+  The final sentence ("Built for leagues that take it seriously.") wrapped in `<strong>` with `text-[var(--text-1)] font-semibold`.
+- **Feature icon pills** — REPLACE the current text-only "Fantasy leagues · AI coach · ..." line with a row of 5 white pills, each with an inline SVG icon. Use `flex flex-wrap gap-2 mb-8`. Each pill:
+  - Padding `7px 12px`, `border-radius: 999px`, `background: white`, `border: 1px solid var(--card-border)`, `font-mono`, `text-[11px]`, `font-semibold`, `tracking-[0.04em]`, `text-[var(--text-2)]`
+  - Hover: translate y -1px, border becomes `rgba(240,104,32,0.3)`, text becomes blaze
+  - SVG icons inline (14×14, stroke-width 2). Each pill has a different icon color matching its theme:
+    1. **Deeper analytics** — chart-trending-up icon, color blaze (BZ)
+    2. **AI coach** — neural-node icon (concentric dots), color field (FD)
+    3. **League vault** — vault/safe icon (rectangle with grid), color crown (CR)
+    4. **Live scoring** — lightning bolt, color live-red (LV)
+    5. **Pools** — diamond/gem icon, color slate-light (SL_L)
+  - Reference the mockup file `<svg>` source for the exact path data — copy them as-is.
+- **CTAs** — two buttons in `flex gap-3 justify-start`:
+  - Primary: "Run a Pool — Free" (existing `<Button>` component, `size="lg"`)
+  - Secondary: "Browse Leagues" (existing `<Button variant="secondary" size="lg">`)
+- Drop the existing "Get Started — Free / Fantasy Football" CTAs — replaced by the above.
+
+**Right column:**
+- **Sport strip** — horizontal pill bar ABOVE the pool card. White background, `border-radius: 14px`, `box-shadow: 0 8px 24px rgba(30,42,58,0.1)`, `border: 1px solid var(--card-border)`, padding `8px 12px`, `display: flex gap-2`. Contains two tabs (NOT four — drop NBA/MLB):
+  - **Tab 1 — Golf**: `background: rgba(13,150,104,0.08)`, `color: var(--field)`, `padding: 8px 14px`, `border-radius: 10px`, `font-mono text-[11px] font-bold uppercase tracking-[0.08em]`. Includes a pulsing live dot (6×6, `var(--field-bright)`, pulse animation) before the text "Golf · Live now".
+  - **Tab 2 — NFL**: same shape, `color: var(--text-2)`, no fill. Text "NFL" with a small badge "Fall '26" inside (`text-[9px] opacity-60 tracking-[0.05em] font-medium`).
+- **Pool entry card** — the centerpiece. Replaces the existing Clutch Rating gauge card entirely. White background, `border-radius: 20px`, `box-shadow: 0 24px 70px rgba(30,42,58,0.15)`, `overflow: hidden`. Float animation 6s ease-in-out infinite (already defined in landing CSS).
+  - Width ~440px, max-width 100%.
+  - **Hero strip** at the top (height ~130px):
+    - Background: golf-course-green linear gradient with dark overlay. Use this exact CSS:
+      ```
+      background:
+        linear-gradient(180deg, rgba(30,42,58,0.35) 0%, rgba(30,42,58,0.92) 100%),
+        linear-gradient(135deg, #4F6F52 0%, #88AA70 40%, #5A7842 70%, #3C5A2E 100%);
+      ```
+    - White text. Two-column row inside: left = copy block, right = stacked pills.
+    - Left:
+      - Eyebrow (`font-mono text-[9px] uppercase tracking-[0.18em] opacity-70`): "Buckeye PGA Championship"
+      - Title (`font-display font-extrabold text-[24px] tracking-[-0.02em] mt-1.5`): "PGA Championship"
+      - Meta (`font-editorial italic text-[13px] opacity-85 mt-0.5`): "Aronimink · Newtown Sq, PA"
+    - Right (`flex flex-col gap-1.5 items-end`):
+      - Live pill (red): `bg-[rgba(232,56,56,0.85)] border-[rgba(232,56,56,0.4)]` with white text "Accepting entries" + small pulsing white dot before text. `font-mono text-[10px] uppercase tracking-[0.1em] font-semibold px-2.5 py-1 rounded-md`.
+      - Locks pill (frost): `bg-[rgba(255,255,255,0.15)] backdrop-blur border-[rgba(255,255,255,0.18)]` with white text "Locks 1d 13h" (same font sizing as above).
+  - **Tier 1 header bar** — `bg-[var(--surface-2)] border-b border-[var(--card-border)] px-[18px] py-2.5 flex justify-between items-center`:
+    - Left: orange "T1" pill (`bg-[var(--blaze)] text-white font-mono text-[10px] font-bold px-2 py-0.5 rounded-md tracking-[0.08em]`)
+    - Right: progress text (`font-mono text-[11px] text-[var(--text-2)]`): "0 / 10 picked · pick 1" — the "0" should be colored `var(--field)` and font-bold when picks have been made.
+  - **Player rows** (four rows). Each row is `flex items-center gap-3 px-[18px] py-2.5 border-b border-[var(--card-border)] last:border-0`. One row (Scheffler) is in the PICKED state — give it `bg-[rgba(240,104,32,0.04)] border-l-[3px] border-l-[var(--blaze)] pl-[15px]` (note the pl adjustment to compensate for the 3px border).
+    - Each row contains:
+      - **Headshot** — 38×38 rounded-full with a player-specific colored gradient (initials inside). Mockup uses `linear-gradient(135deg, #C49C7A, #8B6B4A)` for Scheffler etc. — the real implementation should use the existing `<img>` headshot pipeline pointing at the player record. For initial implementation, render a circle with the player's initials.
+      - **Player info** (flex-1): name in `text-sm font-semibold text-[var(--text-1)]` (in PICKED state, color is `var(--blaze-deep)`). Below it: meta line `font-mono text-[10px] text-[var(--text-3)] tracking-[0.04em] mt-0.5` reading `{flag} PGA · {OWGR} · {stat}`. Use real flags (🇺🇸 for Scheffler, 🇪🇸 for Rahm, 🇬🇧 for McIlroy, 🇺🇸 for Young).
+      - **CPI mini-bar** — small inline sliding-scale bar. 36px wide, 4px tall, `bg-[var(--surface-2)] rounded-sm overflow-hidden relative`. Inside it has a colored fill anchored to a center line (CPI is signed). Right of the bar: `font-mono text-[10px] font-bold` value (green for positive, gray for negative).
+      - **Pick button** — `font-mono text-[11px] font-bold px-2.5 py-1.5 rounded-md tracking-[0.05em]`. Default: `bg-[var(--surface-2)] text-[var(--text-2)]` reading "+ Pick". PICKED state: `bg-[var(--blaze)] text-white` reading "✓ PICKED".
+  - Four players in T1 (in this order, with Scheffler PICKED):
+    1. Scottie Scheffler · 🇺🇸 PGA · #1 · SG +2.9 · CPI +2.0 · **PICKED**
+    2. Jon Rahm · 🇪🇸 LIV · #20 · Form 100 · CPI +0.8 · + Pick
+    3. Rory McIlroy · 🇬🇧 PGA · #2 · SG +1.4 · CPI +1.5 · + Pick
+    4. Cameron Young · 🇺🇸 PGA · #3 · Form 88 · CPI -0.4 · + Pick
+  - **Footer strip** — small mono-text band before the CTA: `bg-[var(--surface-2)] border-t border-[var(--card-border)] px-[18px] py-2.5 flex justify-between items-center font-mono text-[11px] text-[var(--text-2)]`:
+    - Left: "+ 6 more · 5 tiers below"
+    - Right: "1 of 6 picked" (the "1" colored `var(--blaze-deep)` and font-bold)
+  - **Big CTA button** at the bottom (full-width inside the card): `bg-[var(--blaze)] text-white py-3 px-4 text-center font-display font-bold text-[14px] tracking-[0.02em]` reading **"Lock in your picks →"**.
+
+### 2. EDITORIAL BAND (rewrite copy — current lines 224-247)
+
+Keep the dark slate background, the radial glow, the editorial-italic typography treatment — those all work. Just swap the copy:
+
+**Current:**
+> Everyone's got *opinions.*
+> We've got *receipts.*
+> Clutch Rating — one number for everything you know
+
+**New:**
+> Send the *link.*
+> Everyone's *in.*
+> Five minutes from idea to invites out · No app to download
+
+The italic "link" stays orange (BZ_H), italic "in" stays crown (CR_B). The mono-uppercase subtitle becomes the new tagline.
+
+### 3. PRODUCT SURFACE GALLERY — NEW SECTION (insert after Editorial, replacing "Why Clutch + Clutch Rating dedicated" lines 249-422)
+
+This is the biggest new addition. A grid of 6 cards each showing a real product surface as a mini-mockup. Tells visitors "look at the actual platform" instead of abstract claims.
+
+**Section wrapper:**
+- `py-20 px-6` standard section padding
+- Section label: "◆ See the platform" (existing `<SectionLabel>` component, color BZ)
+- Section title: "Built for *how you actually watch sports.*" — display-bold with italic-accent crown color on "how you actually watch sports"
+- Section sub: "Strokes Gained vs course DNA. Hole-by-hole scorecards. League vaults with 14 years of history. The kind of fantasy app you've been waiting for." — `text-base text-[var(--text-2)] max-w-[600px] leading-relaxed mb-10`
+
+**Grid:** `grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5`. Six cards, each 360×~360px. Card structure:
+- White background, `rounded-[16px]`, `border border-[var(--card-border)]`, `overflow-hidden`, position relative.
+- **Preview area** (top half, ~200px tall): tinted background (`var(--surface-2)` or product-specific tint), with an inline mini-mockup of the product surface (NOT a screenshot — actual JSX recreating the visual). Small annotation chip in the top-right (white-ish bg, font-mono uppercase 10px, letter-spacing 0.12em): the component name.
+- **Body** (bottom half): `p-4`:
+  - Label: `font-mono text-[10px] text-[var(--blaze)] uppercase tracking-[0.12em] mb-1.5`
+  - Title: `font-display text-base font-bold mb-1`
+  - Description: `text-[13px] text-[var(--text-2)] leading-[1.5]`
+
+**The six cards** (in this order — see mockup for exact mini-mockup visuals):
+
+1. **PLAYER INTEL** — "Strokes Gained vs course DNA"
+   - Preview: PlayerDrawer-style header (38px avatar + "Scottie Scheffler" + meta "#1 OWGR · PGA · 🇺🇸") + 2×2 stats grid (SG Total +2.9, OWGR #1, Avg Fin 8, Events 12) + 4 SG bars (Drv, App, ARG, Putt) with green fills and values.
+   - Description: "Tap any player. See their SG profile matched against the week's course. Recent results, season ranks, course history — all one tap deep."
+
+2. **LIVE SCORING** — "Hole-by-hole, every Sunday."
+   - Preview: LiveScoringWidget-style header ("Truist Championship · R4" + red LIVE pill) + 5 leaderboard rows with position, name, thru, score (Justin Rose F -13, Scheffler F -12, Bhatia F -9, Stevens 17 -9, Bradley 15 -7).
+   - Description: "Real-time scorecards from ESPN's feed. Watch your roster move. Tap a player to see their card hole-by-hole as they play it."
+
+3. **DRAFT RECAP** — "Letter grades. Stacked side-by-side."
+   - Preview: top row with A− grade pill + "Your draft vs. league avg" text. Below: centered 5-axis SG radar (OFF TEE / APPROACH / SHORT GAME / PUTTING / FORM) showing two overlaid polygons — solid blaze fill for "Your draft" (with white-edged vertex dots) + dashed slate outline for "League avg". Legend strip below the radar.
+   - Description: "Every draft auto-graded. Five SG dimensions rendered as a radar — your team vs. the league average. AI coach drops a paragraph on what you nailed and what's thin."
+   - Implementation note: the radar SVG is in the mockup — copy the geometry. ViewBox `-95 -68 190 142`. Five axes at angles -90, -18, 54, 126, 198. Concentric grid pentagons at 50%, 33%, 17% scale. Use mockup polygon point coordinates as-is.
+
+4. **POOLS** — "Tier picks. Tiebreaker. Done."
+   - Preview: simplified pool entry mock with 5 rows showing Tier label + picked player (Tier 1 → 🇺🇸 Scheffler, Tier 2 → 🇬🇧 Rose, Tier 3 → 🇦🇺 Scott, Tier 4 → 🇺🇸 Bhatia, Tiebreaker → -12 in crown color).
+   - Description: "Six tiers, one pick per tier, a tiebreaker for the winner's score. Locks Thursday morning. Live scoring kicks in automatically."
+
+5. **LEAGUE VAULT** — "Every season. Forever logged."
+   - Preview: gold-tinted background (`linear-gradient(135deg, #F7E9B8, #FAF2D3)`). "◆ ◆ ◆ Vault unlocked ◆ ◆ ◆" label in mono crown. Title: "The Sunday Crew · 12 years". Inside a dark slate card (`rgba(30,42,58,0.92)`): 4 standings rows with rank/name/pts ("1 Mike B · 142 W · 4 chips" — gold-highlighted; then "2 Sam D · 131 W · 3 chips", "3 Chris P · 125 W · 2 chips", "4 Jen K · 119 W · 1 chip"). **Use these anonymized names verbatim — do NOT use Eric's actual league names.**
+   - Description: "Import from ESPN, Yahoo, Sleeper, Fantrax, MFL. Owner aliases. Draft history. Championship rolls. Your league's story, always live."
+
+6. **AI COACH** — "Knows your team. And the field."
+   - Preview: NeuralCluster-style brain SVG (5-point star + ring + dots — copy from mockup) at left with "YOUR COACH · Friday morning briefing" header. Below: an italic editorial-serif paragraph reading: "Scheffler tees off at 8:14 from the back nine. Course is firm — that helps Bhatia and Justin Rose more than Bradley. You're picked low on Rose in the pool, decent leverage if he repeats Truist." Two tag chips below: "Roster check" (blaze tint), "Pool leverage" (field tint).
+   - Description: "A coach that's read every box score, watched every tournament, and remembers what you drafted three years ago. Writes you a brief every morning."
+
+### 4. WHY CLUTCH (reorder + future pool types strip — current lines 249-314)
+
+Keep the section wrapper, label, and 6-card grid structure. Change:
+
+**New order of cards** (the current order leads with Predictions; new order leads with Pools):
+1. **Pools** (NEW badge) — left border BZ. Icon 🎯. Title "Pools" with a small `<span class="new-badge">NEW</span>` inline (orange pill, white text, font-mono 9px, uppercase, 2px 6px padding). Description: "Tier picks for any tournament. 5-minute setup. Send a link. Auto-locks Thursday morning. Live scoring built in."
+2. **Fantasy Leagues** — left border FD. Icon 🏆. Description: "Auction or snake drafts. FAAB waivers. H2H or roto. Trades, chat, playoffs. Golf live, NFL launching Fall '26."
+3. **Live Scoring** — left border CR. Icon ⚡. Description: "Shot-by-shot during PGA events, play-by-play for NFL. Hole-by-hole scorecards. Pool standings update live."
+4. **Predictions** — left border BZ. Icon 📊. Description: "Winner, top 5, top 10, make/miss cut, R1 leader, H2H matchups. Auto-resolves Monday. Track your accuracy over time."
+5. **AI Coach** — left border SL_L. Icon 🧠. Description: "Reads your draft, your roster, your league. Surfaces leverage, flags bias, writes a Friday-morning briefing."
+6. **League Vault** — left border CR. Icon 📚. Description: "Import from ESPN, Yahoo, Sleeper, Fantrax, MFL. 14 years of league history, owner aliases, draft archives."
+
+**DROP** the current "Clutch Rating" card from the grid entirely. (Rating is no longer surfaced on the landing.)
+
+**New strip below the grid** — "More pool types coming":
+- Wrapper: `mt-7 p-5 bg-[var(--surface)] border border-dashed border-[rgba(240,104,32,0.25)] rounded-[14px] flex flex-wrap items-center gap-3`
+- Label: "◆ More pool types coming" (`font-mono text-[11px] text-[var(--blaze)] uppercase tracking-[0.12em] font-bold`)
+- Five chips: Survivor, Eliminator, Bracket, NFL Pick'em, + Custom. Each chip `bg-[var(--surface-2)] text-[var(--text-2)] px-3 py-1.5 rounded-lg font-mono text-[11px] font-medium`.
+
+### 5. SECTION TITLE FOR WHY CLUTCH
+
+Replace the current "One number for everything you *know.*" with:
+> Everything you need.
+> *Nothing you don't.*
+
+(Italic accent on "Nothing you don't" — crown color, font-editorial.)
+
+Description below: drop the current "Your Clutch Rating captures league performance..." line entirely. The 6 cards do the explanatory work now.
+
+### 6. HOW IT WORKS (mostly keep — current lines 424-472)
+
+Keep the 3-step structure (Play / Track / Prove). Change step 1's description to lead with pools:
+
+**Step 1 — "Play"** new description:
+> Spin up a tournament pool in 5 minutes — or run a full season-long league. Snake or auction drafts, trades, waivers, live scoring, in-league chat. Import your history from ESPN, Yahoo, Sleeper, Fantrax, MFL.
+
+Steps 2 and 3 unchanged.
+
+### 7. TWO SPORTS. ONE PLATFORM. (keep — current lines 474-637)
+
+Keep this section as-is for now. The 6 sport-feature cards work fine. The Dashboard preview mockup can stay (uses `mockLeagues`, `mockStandings`, `mockActivity`).
+
+**One small copy tweak** — the section sub currently reads:
+> Fantasy Golf is live for the 2026 PGA Tour season. Fantasy Football launches for the 2026 NFL season.
+> Five league formats, live scoring, real analytics, active roster management.
+
+Change to:
+> Fantasy Golf is live for the 2026 PGA Tour. Fantasy Football launches for the 2026 NFL season. Run a pool for one tournament, or a season-long league for the year.
+
+### 8. FINAL CTA (copy rewrite — current lines 827-867)
+
+Keep the dark INK background, the radial glow orbs, the layout. Swap copy:
+
+**Current:**
+> Ready to prove *it?*
+> Golf is live. Football is coming. Get in before your friends do.
+
+**New:**
+> Golf is live. *Pools open.*
+> Five minutes to your first pool. Whole season once you're hooked.
+
+CTAs:
+- Primary stays: "Run a Pool — Free" (orange)
+- Secondary changes from "Learn More" (scrolls to features) to "Browse Leagues" (links to `/login` or `/signup`)
+- Keep the "No credit card required" small print below.
+
+---
+
+## FILES TO MODIFY
+
+1. **`frontend/src/pages/Landing.jsx`** — main file, rewrite as above
+   - Delete `mockLeaderboard` constant
+   - Keep `mockLeagues`, `mockStandings`, `mockActivity` (used in Two Sports section)
+   - Delete the dedicated Clutch Rating section (current ~line 316-422)
+   - Delete the It Compounds section (current ~line 639-757)
+   - Delete the Leaderboard section (current ~line 759-825)
+   - Rewrite hero, editorial, why clutch, add new product gallery section
+   - Final page should be roughly 500-600 lines (down from 875).
+
+2. **No new component files required** if you inline everything. Optional refactor: pull the 6 gallery cards into a `<ProductSurfaceCard>` component if it keeps Landing.jsx readable. Not required.
+
+3. **No image assets needed** — all visuals are inline SVG or CSS gradients. Headshots in the hero pool card can be initial circles as in the mockup (real headshots are a follow-up).
+
+---
+
+## RULES
+
+- **Match the mockup file's visual** as closely as you can with Tailwind. If a particular box-shadow / gradient / spacing needs to be inline `style={...}`, that's fine — Landing.jsx already does this throughout.
+- **Use existing Clutch typography**: `font-display` (Bricolage Grotesque) for headlines, `font-editorial` (Instrument Serif) for italic accents, `font-mono` (JetBrains Mono) for eyebrows + labels + numbers, `font-body` (DM Sans) for body. These classes are already configured in `tailwind.config.js`.
+- **Light AND dark mode** — the existing Landing.jsx supports both via `isLight = useTheme().theme !== 'dark'`. Preserve that. The mockup is light-only; for dark mode, use the existing patterns (`isLight ? lightColor : darkColor` style ternaries).
+- **DO NOT** add any new player avatars or course images that aren't already in the codebase. Use SVG/gradient placeholders.
+- **DO NOT** ship the bottom mockup-banner element from `landing-mockup.html` — that's a Cowork-only indicator.
+- **DO NOT** wire any of the gallery card mini-mockups to live data. They are static visual demos.
+- **TEST in both light and dark mode** before declaring done. Walk through every section.
+- **Commit and deploy in chunks** if you want — e.g. one commit per section (hero, editorial, gallery, why clutch, etc.). Cowork will verify in Chrome after each push.
+
+---
+
+## VERIFICATION (after deploy)
+
+Walk the page at https://www.clutchfantasysports.com as an anon visitor and confirm:
+1. Hero — red live eyebrow, "knows your league" headline, 5 feature icon pills, two CTAs, sport strip + pool entry card with player rows on the right
+2. Editorial band — "Send the link. Everyone's in." copy
+3. Product gallery — 6 cards each showing a working mini-mockup (player drawer, live scoring, draft radar, pool entry, vault, coach)
+4. Why Clutch — Pools (NEW) is first, no Clutch Rating card, "More pool types coming" strip below
+5. How It Works — Step 1 mentions pools
+6. Two Sports — sub mentions pools
+7. Final CTA — "Golf is live. Pools open."
+8. Dedicated Clutch Rating section is GONE
+9. It Compounds / Sports Brain SVG section is GONE
+10. Fake leaderboard (ChaseTheTrophy / GridironGuru / etc.) is GONE
+11. Page is noticeably shorter than before (~40% less scroll)
+12. Light mode AND dark mode both render correctly
+
+Open `/Users/ericsaylor/Desktop/Clutch/landing-mockup.html` in another tab to compare side-by-side.
+
+---
+
+### 183 — Pool create: auto-tier the field, hide editor behind Customize toggle `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-13 — Selecting a tournament now auto-builds 3 tiers from the field's OWGR ranking (Stars top ~13% / Contenders middle ~33% / Sleepers rest, 2 picks each). Pool name prefills to "<Tournament> Pool". Step 3 shows a read-only summary card; "Customize tiers →" reveals the full editor. Switching tournament resets tiers + drops back to auto mode. Files: PoolCreate.jsx
+**Priority:** MEDIUM — major friction reduction for new commissioners
+**Source:** Eric, May 13 2026 — "if i want to start a pool and i land on that im like shit... i have to know all the golfers and build tiers, nevermind"
+
+**Problem:** `/pools/new` landed users on a blank tier editor with a 152-player multi-select per tier. New commissioners had to manually triage the field by world ranking — guaranteed to scare them off.
+
+---
+
+### 184 — Pool view: allow editing picks while pool is OPEN `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-13 — Backend POST `/pools/:slug/entries` now upserts when user already has an entry and pool is OPEN — replaces picks + team name + tiebreaker in a tx, skips confirmation email on edit. Frontend: editMode state + startEdit/cancelEdit; "Edit picks" button on the pool context strip AND inside PoolEntryDrawer. Form renders for new-entry OR edit flow with a banner + Cancel + "Save changes" CTA. Files: backend/src/routes/pools.js, PoolView.jsx, PoolEntryDrawer.jsx
+**Priority:** MEDIUM — basic table stakes for pool entries
+**Source:** Eric, May 13 2026 — "how do i modify my picks before the tourney has started if i wanted to?"
+
+**Problem:** Once a user submitted an entry the form disappeared and there was no way to update picks before lock. Backend hard-rejected re-submission with "delete the existing one first."
+
+---
+
+### 185 — Tournaments page: course-image banner empty state `LOW`
+**Status:** `DONE`
+**Completed:** 2026-05-13 — Replaced bare flag-emoji "No Live Tournament" empty state with a full-bleed course-image banner pulled from `upcomingTournaments[0].course.imageUrl` (Aronimink for the PGA Championship). Gradient overlay, large display heading, course name in gold, tour/major badges, "X days away" inline with date range, primary blaze CTA + secondary Golf Hub button. Falls back to slate gradient when no course image is available. Files: Tournaments.jsx
+**Priority:** LOW — visual polish, not a blocker
+**Source:** Eric, May 13 2026 — "can we get a banner for the PGA tournament - image in the banner that is"
+
+---
+
+### 181 — Navbar account dropdown: duplicate "My Profile" entry `LOW`
+**Status:** `TODO`
+**Priority:** Low — cosmetic but obvious to user
+**Source:** Cowork pool re-audit, May 12 2026
+
+Clicking the avatar at top-right (Eric Saylor) opens the account menu. "My Profile" appears as **both** the 2nd and 4th item in the dropdown:
+
+```
+Eric Saylor / ericmsaylor@gmail.com
+- My Profile          ← #1
+- Manager Stats
+- Clutch Rating
+- My Profile          ← duplicate
+- Leaderboard
+- My Leagues
+- ...
+```
+
+Remove the duplicate. Likely two route definitions both labeled "My Profile" — one of them was probably meant to be a different label (e.g. "Settings" or "Account").
+
+**FILES:**
+- `frontend/src/components/layout/Navbar.jsx` — account dropdown menu items
+
+---
+
 ### BACKLOG — Projected Cut Line Display
 **Status:** `BACKLOG`
 **Priority:** Low — nice-to-have enhancement for live tournament experience
