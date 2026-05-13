@@ -32,7 +32,7 @@ function StatusBadge({ status }) {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-2xl border border-text-2/25 bg-white shadow-sm p-4">
+    <div className="rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-4">
       <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-2 mb-1">{label}</div>
       <div className="font-mono font-bold text-2xl text-text-primary">{value}</div>
     </div>
@@ -136,7 +136,7 @@ export default function PoolAdmin() {
     if (!user && !token) {
       return (
         <div className="min-h-screen bg-bg flex items-center justify-center px-6">
-          <div className="max-w-md w-full rounded-2xl border border-text-2/15 bg-white shadow-sm p-8 text-center">
+          <div className="max-w-md w-full rounded-2xl border border-text-2/15 bg-[var(--surface)] shadow-sm p-8 text-center">
             <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Admin only</div>
             <h1 className="font-display font-bold text-2xl text-text-primary mb-3">Sign in to manage this pool</h1>
             <p className="text-text-2 mb-6">Only the commissioner who created it can access this page.</p>
@@ -153,7 +153,7 @@ export default function PoolAdmin() {
     // Signed in but not the commissioner → 403 from server
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center px-6">
-        <div className="max-w-md w-full rounded-2xl border border-text-2/15 bg-white shadow-sm p-8 text-center">
+        <div className="max-w-md w-full rounded-2xl border border-text-2/15 bg-[var(--surface)] shadow-sm p-8 text-center">
           <div className="font-mono text-xs uppercase tracking-[0.2em] text-live-red mb-3">Not your pool</div>
           <h1 className="font-display font-bold text-2xl text-text-primary mb-3">Commissioner access required</h1>
           <p className="text-text-2 mb-6">{error}</p>
@@ -177,7 +177,7 @@ export default function PoolAdmin() {
         <div>
           <h1 className="text-3xl sm:text-4xl font-display font-bold text-text-primary tracking-tight">
             {data.name}
-            <span className="ml-3 align-middle text-xs font-mono uppercase tracking-wider text-text-2 px-2 py-0.5 rounded-md bg-white border border-text-2/25">admin</span>
+            <span className="ml-3 align-middle text-xs font-mono uppercase tracking-wider text-text-2 px-2 py-0.5 rounded-md bg-[var(--surface)] border border-text-2/25">admin</span>
           </h1>
           <p className="font-mono text-xs uppercase tracking-wider text-text-2 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>{data.tournament.name}</span>
@@ -204,7 +204,7 @@ export default function PoolAdmin() {
       </header>
 
       {/* Share link card */}
-      <section className="rounded-2xl border border-text-2/25 bg-white shadow-sm p-5 space-y-4">
+      <section className="rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-5 space-y-4">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-2">Share link</div>
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="flex-1 rounded-lg border border-text-2/25 bg-bg px-3 py-2.5 font-mono text-sm text-text-primary truncate">
@@ -217,7 +217,7 @@ export default function PoolAdmin() {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 pt-2">
           <Link to={`/pools/${slug}`}
-            className="flex-1 text-center bg-white border border-text-2/25 hover:border-blaze/50 text-text-primary font-display font-bold px-4 py-2.5 rounded-lg transition-colors">
+            className="flex-1 text-center bg-[var(--surface)] border border-text-2/25 hover:border-blaze/50 text-text-primary font-display font-bold px-4 py-2.5 rounded-lg transition-colors">
             View public page →
           </Link>
           <Link to={`/pools/${slug}`}
@@ -228,7 +228,7 @@ export default function PoolAdmin() {
       </section>
 
       {/* Invite by email */}
-      <section className="rounded-2xl border border-text-2/25 bg-white shadow-sm p-5 space-y-3">
+      <section className="rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-5 space-y-3">
         <div>
           <h2 className="font-display font-bold text-lg text-text-primary">Invite friends by email</h2>
           <p className="text-sm text-text-2 mt-1">Drop a list of emails — we'll send each one a link to enter your pool. They'll need a free Clutch account.</p>
@@ -263,7 +263,7 @@ export default function PoolAdmin() {
       </section>
 
       {/* Tiers */}
-      <section className="rounded-2xl border border-text-2/25 bg-white shadow-sm p-5">
+      <section className="rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-5">
         <h2 className="font-display font-bold text-lg text-text-primary mb-3">Tiers</h2>
         <ul className="space-y-1.5">
           {data.tiers.map(t => (
@@ -277,7 +277,7 @@ export default function PoolAdmin() {
       </section>
 
       {/* Entries */}
-      <section className="rounded-2xl border border-text-2/25 bg-white shadow-sm p-5">
+      <section className="rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-5">
         <h2 className="font-display font-bold text-lg text-text-primary mb-3">Entries ({data.entries.length})</h2>
         {data.entries.length === 0 ? (
           <p className="text-sm text-text-2">No entries yet. Share the link to get rolling.</p>
@@ -317,7 +317,7 @@ export default function PoolAdmin() {
         <>
           <div className="fixed inset-0 bg-black/60 z-40" onClick={() => !dqing && setDqTarget(null)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto">
+            <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto">
               <div className="p-6 border-b border-text-2/15">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-10 h-10 rounded-full bg-live-red/15 flex items-center justify-center shrink-0">
@@ -340,7 +340,7 @@ export default function PoolAdmin() {
                 <button
                   onClick={() => !dqing && setDqTarget(null)}
                   disabled={dqing}
-                  className="px-4 py-2 rounded-lg border border-text-2/25 text-text-primary font-display font-bold hover:bg-white transition-colors disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg border border-text-2/25 text-text-primary font-display font-bold hover:bg-[var(--surface)] transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>

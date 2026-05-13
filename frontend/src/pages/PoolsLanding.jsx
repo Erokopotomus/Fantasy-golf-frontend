@@ -42,7 +42,7 @@ function PoolCard({ pool, kind }) {
   const ctaLabel = kind === 'commish' ? 'Manage →' : 'View →'
 
   return (
-    <div className="group relative rounded-2xl border border-text-2/25 bg-white shadow-sm p-5 hover:border-blaze/40 hover:shadow-md transition-all">
+    <div className="group relative rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-5 hover:border-blaze/40 hover:shadow-md transition-all">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <Link to={href} className="block">
@@ -89,7 +89,7 @@ export default function PoolsLanding() {
   if (!user) {
     return (
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16">
-        <div className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center">
+        <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-8 sm:p-12 text-center">
           <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Members only</div>
           <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-text-primary mb-3 tracking-tight">
             Sign in to <span className="font-editorial italic font-normal">manage pools</span>

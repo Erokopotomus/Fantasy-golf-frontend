@@ -279,7 +279,7 @@ export default function PoolView() {
       <div className="min-h-screen bg-bg">
         <Hero pool={pool} />
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
-          <div className="rounded-2xl border border-field/30 bg-surface p-6 sm:p-8 text-center">
+          <div className="rounded-2xl border border-field/30 bg-[var(--surface)] p-6 sm:p-8 text-center">
             <div className="font-mono text-xs uppercase tracking-[0.2em] text-field mb-3">You're in</div>
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-text-primary leading-tight">
               {submitted.teamName}
@@ -334,7 +334,7 @@ export default function PoolView() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* DRAFT */}
         {pool.status === 'DRAFT' && (
-          <div className="rounded-2xl border-2 border-dashed border-text-2/20 bg-surface p-8 sm:p-12 text-center max-w-2xl mx-auto">
+          <div className="rounded-2xl border-2 border-dashed border-text-2/20 bg-[var(--surface)] p-8 sm:p-12 text-center max-w-2xl mx-auto">
             <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Coming soon</div>
             <h2 className="font-display font-bold text-2xl sm:text-3xl text-text-primary mb-2">
               This pool isn't open yet.
@@ -347,7 +347,7 @@ export default function PoolView() {
 
         {/* OPEN — gate to logged-in users */}
         {pool.status === 'OPEN' && !user && (
-          <div className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center max-w-2xl mx-auto">
+          <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-8 sm:p-12 text-center max-w-2xl mx-auto">
             <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Members only</div>
             <h2 className="font-display font-bold text-2xl sm:text-3xl text-text-primary mb-3">
               Sign in to <span className="font-editorial italic font-normal">enter</span>
@@ -405,7 +405,7 @@ export default function PoolView() {
                 const picked = entry.picks[tier.id] || []
                 const satisfied = picked.length === tier.picksRequired
                 return (
-                  <div key={tier.id} className="rounded-2xl border border-text-2/15 bg-surface overflow-hidden flex flex-col">
+                  <div key={tier.id} className="rounded-2xl border border-text-2/15 bg-[var(--surface)] overflow-hidden flex flex-col">
                     <div className="flex items-center justify-between gap-2 p-4 border-b border-text-2/10">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-blaze/10 text-blaze font-mono text-[11px] font-bold">
@@ -477,7 +477,7 @@ export default function PoolView() {
             </div>
 
             {/* Your entry */}
-            <div className="rounded-2xl border border-text-2/15 bg-surface p-5 sm:p-6 space-y-4">
+            <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-5 sm:p-6 space-y-4">
               <div>
                 <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-text-2 mb-1">Step 2</div>
                 <h3 className="font-display font-bold text-xl text-text-primary">Your entry</h3>
@@ -676,7 +676,7 @@ function PoolLiveExperience({
   return (
     <div className="space-y-5">
       {/* Pool context strip — compact, always visible */}
-      <div className="rounded-2xl border border-text-2/15 bg-surface p-4 sm:p-5">
+      <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           {myEntry ? (
             <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -874,7 +874,7 @@ function PoolLiveExperience({
                 key={e.id}
                 type="button"
                 onClick={() => onOpenEntry(e.id)}
-                className={`block w-full text-left rounded-2xl border bg-surface p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-px ${
+                className={`block w-full text-left rounded-2xl border bg-[var(--surface)] p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-px ${
                   isYou
                     ? 'border-blaze/40 border-l-4 border-l-blaze'
                     : 'border-text-2/15 hover:border-text-2/30'

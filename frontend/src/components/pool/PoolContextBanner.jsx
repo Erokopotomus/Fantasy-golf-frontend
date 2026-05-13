@@ -46,7 +46,7 @@ export default function PoolContextBanner({ poolSlug }) {
   const countdown = pool.locksAt ? formatCountdown(pool.locksAt) : null
 
   return (
-    <div className="rounded-2xl border-l-4 border-blaze border-y border-r border-y-blaze/20 border-r-blaze/20 bg-white shadow-sm p-4 sm:p-5">
+    <div className="rounded-2xl border-l-4 border-blaze border-y border-r border-y-blaze/20 border-r-blaze/20 bg-[var(--surface)] shadow-sm p-4 sm:p-5">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-blaze/15 flex items-center justify-center shrink-0">
