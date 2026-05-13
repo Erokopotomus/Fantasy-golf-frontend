@@ -56,15 +56,26 @@ function WeeklySlate({ onPredictionMade }) {
   useEffect(() => {
     async function load() {
       try {
-        const tourneyRes = await api.getCurrentTournament().catch(() => null)
+        // Fetch tournament + user predictions in parallel — predictions don't
+        // depend on the tournament response.
+        const [tourneyRes, predRes] = await Promise.all([
+          api.getCurrentTournament().catch(() => null),
+          api.getMyPredictions({ sport: 'golf', limit: 200 }).catch(() => ({ predictions: [] })),
+        ])
         const tournament = tourneyRes?.tournament || tourneyRes
         setCurrentTournament(tournament)
 
         if (!tournament?.id) {
+          setAllPredictions(predRes.predictions || [])
           setLoading(false)
           return
         }
 
+        // Filter predictions to this event once we know the tournament ID
+        const eventPreds = (predRes.predictions || []).filter(p => p.eventId === tournament.id)
+        setAllPredictions(eventPreds)
+
+        // Leaderboard depends on tournament.id, so it has to come after
         const lbRes = await api.getTournamentLeaderboard(tournament.id, { limit: 50 }).catch(() => ({ leaderboard: [] }))
         const targets = (lbRes.leaderboard || [])
           .filter(p => p.sgTotal != null || p.seasonSgTotal != null)
@@ -86,11 +97,6 @@ function WeeklySlate({ onPredictionMade }) {
           return (b.sgTotal || 0) - (a.sgTotal || 0)
         })
         setSlate(targets)
-
-        // Get all user predictions for this event (all types)
-        const predRes = await api.getMyPredictions({ sport: 'golf', limit: 200 }).catch(() => ({ predictions: [] }))
-        const eventPreds = (predRes.predictions || []).filter(p => p.eventId === tournament.id)
-        setAllPredictions(eventPreds)
       } catch (err) {
         console.error('Failed to load slate:', err)
       } finally {

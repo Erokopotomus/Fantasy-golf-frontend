@@ -131,25 +131,27 @@ const LeagueHome = () => {
   const [tournamentField, setTournamentField] = useState([])
   useEffect(() => {
     if (isNflLeague) return
-    api.getCurrentTournament()
-      .then(data => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const data = await api.getCurrentTournament()
+        if (cancelled) return
         const t = data.tournament || data
         setCurrentTournament(t)
-        // Fetch leaderboard/field for Field Strength in header
-        if (t?.id) {
-          api.getTournamentLeaderboard(t.id)
-            .then(lbData => {
-              // Flatten nested player data so TournamentHeader can access owgrRank at top level
-              const flat = (lbData?.leaderboard || []).map(entry => {
-                const p = entry.player || {}
-                return { ...entry, id: p.id, name: p.name, owgrRank: p.owgrRank, countryFlag: p.countryFlag }
-              })
-              setTournamentField(flat)
-            })
-            .catch(() => {})
-        }
-      })
-      .catch(() => {})
+        if (!t?.id) return
+        const lbData = await api.getTournamentLeaderboard(t.id)
+        if (cancelled) return
+        // Flatten nested player data so TournamentHeader can access owgrRank at top level
+        const flat = (lbData?.leaderboard || []).map(entry => {
+          const p = entry.player || {}
+          return { ...entry, id: p.id, name: p.name, owgrRank: p.owgrRank, countryFlag: p.countryFlag }
+        })
+        setTournamentField(flat)
+      } catch {
+        // ignore
+      }
+    })()
+    return () => { cancelled = true }
   }, [isNflLeague])
 
 
