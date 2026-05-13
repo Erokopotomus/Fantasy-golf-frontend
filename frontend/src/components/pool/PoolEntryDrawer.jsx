@@ -20,9 +20,9 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
   return (
     <>
       <div className="fixed inset-0 bg-black/60 z-40" onClick={onClose} />
-      <aside className="fixed right-0 top-0 h-full w-full sm:w-[480px] bg-surface z-50 shadow-2xl overflow-y-auto">
+      <aside className="fixed right-0 top-0 h-full w-full sm:w-[480px] bg-[var(--surface)] z-50 shadow-2xl overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-surface border-b border-text-2/15 px-5 py-4 flex items-start justify-between gap-3">
+        <div className="sticky top-0 bg-[var(--surface)] border-b border-text-2/15 px-5 py-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-text-2 mb-1">
               {rank ? `Rank #${rank}${totalEntries ? ` of ${totalEntries}` : ''}` : 'Entry'}

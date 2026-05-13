@@ -4,6 +4,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 import PoolEntryDrawer from '../components/pool/PoolEntryDrawer'
+import WeatherStrip from '../components/tournament/WeatherStrip'
 
 // --- Helper components ----------------------------------------------------
 
@@ -121,6 +122,7 @@ export default function PoolView() {
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [drawerEntryId, setDrawerEntryId] = useState(null)
   const [tournamentLeaderboard, setTournamentLeaderboard] = useState(null)
+  const [weather, setWeather] = useState(null)
   const [activeTab, setActiveTab] = useState('live') // 'live' | 'teams'
 
   useEffect(() => {
@@ -133,10 +135,14 @@ export default function PoolView() {
           const lb = await api.getPoolLeaderboard(slug)
           setLeaderboard(lb)
         }
-        // Always fetch the tournament leaderboard so Live Scoring tab has data regardless of pool status
+        // Always fetch the tournament leaderboard + weather so Live Scoring tab has data regardless of pool status
         if (p.pool.status !== 'DRAFT' && p.pool.tournamentId) {
-          const tlb = await api.getTournamentLeaderboard(p.pool.tournamentId).catch(() => null)
+          const [tlb, w] = await Promise.all([
+            api.getTournamentLeaderboard(p.pool.tournamentId).catch(() => null),
+            api.getTournamentWeather(p.pool.tournamentId).catch(() => null),
+          ])
           if (tlb) setTournamentLeaderboard(tlb.leaderboard || tlb)
+          if (w) setWeather(w.weather || w)
         }
       } finally { setLoading(false) }
     })()
@@ -366,6 +372,7 @@ export default function PoolView() {
             leaderboard={leaderboard}
             tournamentLeaderboard={tournamentLeaderboard}
             liveByPlayer={liveByPlayer}
+            weather={weather}
             yourEntryIds={yourEntryIds}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -536,6 +543,7 @@ export default function PoolView() {
             leaderboard={leaderboard}
             tournamentLeaderboard={tournamentLeaderboard}
             liveByPlayer={liveByPlayer}
+            weather={weather}
             yourEntryIds={yourEntryIds}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
@@ -633,7 +641,7 @@ function Hero({ pool }) {
 
 function PoolLiveExperience({
   pool, slug, myEntry, leaderboard, tournamentLeaderboard, liveByPlayer,
-  yourEntryIds, activeTab, setActiveTab, onOpenEntry, onOpenPlayer,
+  weather, yourEntryIds, activeTab, setActiveTab, onOpenEntry, onOpenPlayer,
 }) {
   const [shareCopied, setShareCopied] = useState(false)
   const entries = leaderboard?.leaderboard || []
@@ -642,7 +650,11 @@ function PoolLiveExperience({
     ? (entries.findIndex(e => e.id === myEntry.id) + 1) || null
     : null
 
-  const tournamentHasLiveData = tournamentLeaderboard && tournamentLeaderboard.some(r => r.totalToPar != null || r.thru != null)
+  // Only show the live leaderboard when the tournament has actually started.
+  // (Pre-tournament, the backend returns thru=18 for everyone which is misleading.)
+  const tournamentStatus = pool.tournament?.status
+  const tournamentIsLive = tournamentStatus === 'IN_PROGRESS' || tournamentStatus === 'COMPLETED'
+  const tournamentHasLiveData = tournamentIsLive && tournamentLeaderboard && tournamentLeaderboard.length > 0
 
   const copyShare = async () => {
     try {
@@ -733,69 +745,118 @@ function PoolLiveExperience({
 
       {/* Live Scoring tab */}
       {activeTab === 'live' && (
-        <div>
-          {tournamentHasLiveData ? (
-            <section className="rounded-2xl border border-text-2/15 bg-surface overflow-hidden">
-              <div className="px-5 py-3 border-b border-text-2/10 flex items-baseline justify-between">
-                <h3 className="font-display font-bold text-text-primary">Tournament leaderboard</h3>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-text-2">
-                  {pool.status === 'LOCKED' && <span className="text-live-red">Live · </span>}
-                  Top 20
-                </span>
-              </div>
-              <div className="divide-y divide-text-2/10">
-                {tournamentLeaderboard.slice(0, 20).map((row) => {
-                  const pid = row.player?.id || row.playerId
-                  const isMyPick = myEntry?.picks?.some(p => p.player?.id === pid)
-                  return (
-                    <button
-                      key={pid}
-                      type="button"
-                      onClick={() => onOpenPlayer(pid)}
-                      className={`w-full text-left px-5 py-2.5 flex items-center gap-3 hover:bg-bg transition-colors ${isMyPick ? 'bg-blaze/[0.04] border-l-2 border-blaze' : ''}`}
-                    >
-                      <span className="font-mono text-xs text-text-2 w-8 shrink-0">
-                        {row.positionTied ? 'T' : ''}{row.position || '—'}
-                      </span>
-                      <span className="text-sm leading-none" aria-hidden="true">{row.player?.countryFlag || ''}</span>
-                      <span className="flex-1 min-w-0 font-medium text-text-primary truncate flex items-center gap-2">
-                        {row.player?.name}
-                        {isMyPick && <span className="font-mono text-[9px] uppercase tracking-wider text-blaze bg-blaze/10 px-1.5 py-0.5 rounded">yours</span>}
-                      </span>
-                      <span className={`font-mono font-bold text-sm shrink-0 ${
-                        row.totalToPar == null ? 'text-text-2' :
-                        row.totalToPar < 0 ? 'text-field' :
-                        row.totalToPar > 0 ? 'text-live-red' : 'text-text-primary'
-                      }`}>
-                        {row.totalToPar == null ? '—' : row.totalToPar === 0 ? 'E' : row.totalToPar > 0 ? `+${row.totalToPar}` : `${row.totalToPar}`}
-                      </span>
-                      <span className="font-mono text-[10px] text-text-2/70 shrink-0 w-12 text-right">
-                        {row.status === 'CUT' || row.thru === 'CUT' ? 'CUT' : row.thru === 'F' || row.thru === 18 ? 'F' : row.thru ? `Thru ${row.thru}` : '—'}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </section>
-          ) : (
-            <section className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center">
-              <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Tournament hasn't started</div>
-              <h3 className="font-display font-bold text-2xl text-text-primary mb-3">
-                {pool.tournament?.startDate
-                  ? <>Tees off <span className="text-blaze">{new Date(pool.tournament.startDate).toLocaleString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span></>
-                  : 'Tournament data syncing'}
-              </h3>
-              <p className="text-text-2 max-w-md mx-auto mb-6">
-                Live leaderboard, hole-by-hole tracking, and your pool standings will update here in real time when play begins.
-              </p>
-              <Link
-                to={`/tournaments/${pool.tournamentId}?pool=${slug}`}
-                className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold"
-              >
-                Full tournament preview →
-              </Link>
-            </section>
-          )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {/* Main column — tournament leaderboard or pre-tournament panel */}
+          <div className="lg:col-span-2 space-y-5">
+            {tournamentHasLiveData ? (
+              <section className="rounded-2xl border border-text-2/15 bg-surface overflow-hidden">
+                <div className="px-5 py-3 border-b border-text-2/10 flex items-baseline justify-between">
+                  <h3 className="font-display font-bold text-text-primary">Tournament leaderboard</h3>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-2">
+                    {pool.status === 'LOCKED' && <span className="text-live-red">Live · </span>}
+                    Top 20
+                  </span>
+                </div>
+                <div className="divide-y divide-text-2/10">
+                  {tournamentLeaderboard.slice(0, 20).map((row) => {
+                    const pid = row.player?.id || row.playerId
+                    const isMyPick = myEntry?.picks?.some(p => p.player?.id === pid)
+                    return (
+                      <button
+                        key={pid}
+                        type="button"
+                        onClick={() => onOpenPlayer(pid)}
+                        className={`w-full text-left px-5 py-2.5 flex items-center gap-3 hover:bg-bg transition-colors ${isMyPick ? 'bg-blaze/[0.04] border-l-2 border-blaze' : ''}`}
+                      >
+                        <span className="font-mono text-xs text-text-2 w-8 shrink-0">
+                          {row.positionTied ? 'T' : ''}{row.position || '—'}
+                        </span>
+                        <span className="text-sm leading-none" aria-hidden="true">{row.player?.countryFlag || ''}</span>
+                        <span className="flex-1 min-w-0 font-medium text-text-primary truncate flex items-center gap-2">
+                          {row.player?.name}
+                          {isMyPick && <span className="font-mono text-[9px] uppercase tracking-wider text-blaze bg-blaze/10 px-1.5 py-0.5 rounded">yours</span>}
+                        </span>
+                        <span className={`font-mono font-bold text-sm shrink-0 ${
+                          row.totalToPar == null ? 'text-text-2' :
+                          row.totalToPar < 0 ? 'text-field' :
+                          row.totalToPar > 0 ? 'text-live-red' : 'text-text-primary'
+                        }`}>
+                          {row.totalToPar == null ? '—' : row.totalToPar === 0 ? 'E' : row.totalToPar > 0 ? `+${row.totalToPar}` : `${row.totalToPar}`}
+                        </span>
+                        <span className="font-mono text-[10px] text-text-2/70 shrink-0 w-12 text-right">
+                          {row.status === 'CUT' || row.thru === 'CUT' ? 'CUT' : row.thru === 'F' || row.thru === 18 ? 'F' : row.thru ? `Thru ${row.thru}` : '—'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            ) : (
+              <section className="rounded-2xl border border-text-2/15 bg-surface p-8 sm:p-12 text-center">
+                <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-3">Tournament hasn't started</div>
+                <h3 className="font-display font-bold text-2xl text-text-primary mb-3">
+                  {pool.tournament?.startDate
+                    ? <>Tees off <span className="text-blaze">{new Date(pool.tournament.startDate).toLocaleString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</span></>
+                    : 'Tournament data syncing'}
+                </h3>
+                <p className="text-text-2 max-w-md mx-auto mb-6">
+                  Live leaderboard, hole-by-hole tracking, and your pool standings will update here in real time when play begins.
+                </p>
+                <Link
+                  to={`/tournaments/${pool.tournamentId}?pool=${slug}`}
+                  className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold"
+                >
+                  Full tournament preview →
+                </Link>
+              </section>
+            )}
+          </div>
+
+          {/* Sidebar — pool top 5 + weather */}
+          <aside className="space-y-5">
+            {entries.length > 0 && (
+              <section className="rounded-2xl border border-text-2/15 bg-[var(--surface)] overflow-hidden">
+                <div className="px-4 py-3 border-b border-text-2/10 flex items-baseline justify-between">
+                  <h3 className="font-display font-bold text-text-primary text-sm">Pool standings</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('teams')}
+                    className="font-mono text-[10px] uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold"
+                  >
+                    All teams →
+                  </button>
+                </div>
+                <div className="divide-y divide-text-2/10">
+                  {entries.slice(0, 5).map((e, i) => {
+                    const isYou = yourEntryIds.has(e.id)
+                    return (
+                      <button
+                        key={e.id}
+                        type="button"
+                        onClick={() => onOpenEntry(e.id)}
+                        className={`w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-bg transition-colors ${isYou ? 'bg-blaze/[0.04] border-l-2 border-blaze' : ''}`}
+                      >
+                        <span className="font-mono text-xs text-text-2 w-5 shrink-0">{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-display font-bold text-text-primary truncate flex items-center gap-1.5">
+                            {e.teamName}
+                            {isYou && <span className="font-mono text-[9px] uppercase tracking-wider text-blaze">you</span>}
+                          </div>
+                        </div>
+                        <span className="font-mono font-bold text-sm text-text-primary shrink-0">
+                          {e.totalFantasyPoints != null ? e.totalFantasyPoints.toFixed(1) : '—'}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )}
+
+            {weather && weather.length > 0 && (
+              <WeatherStrip weather={weather} tournamentStart={pool.tournament?.startDate} />
+            )}
+          </aside>
         </div>
       )}
 
