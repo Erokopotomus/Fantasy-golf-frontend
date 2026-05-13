@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import api from '../services/api'
 import Button from '../components/common/Button'
 import Input from '../components/common/Input'
 import Checkbox from '../components/common/Checkbox'
@@ -24,6 +25,19 @@ const Signup = () => {
   const from = redirectParam
     ? redirectParam
     : (fromLocation ? `${fromLocation.pathname}${fromLocation.search || ''}` : '/dashboard')
+
+  // Pool-aware copy: if the redirect points at /pools/:slug, fetch the pool name
+  // so we can tell the user *which* pool they're about to join.
+  const poolSlug = redirectParam && /^\/pools\/[^/?#]+(?:\?|#|$)/.test(redirectParam)
+    ? redirectParam.split('/')[2].split(/[?#]/)[0]
+    : null
+  const [poolContext, setPoolContext] = useState(null)
+  useEffect(() => {
+    if (!poolSlug) return
+    api.getPool(poolSlug)
+      .then(d => setPoolContext({ name: d.pool?.name, tournament: d.pool?.tournament?.name }))
+      .catch(() => {})
+  }, [poolSlug])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -90,10 +104,24 @@ const Signup = () => {
             <span className="text-2xl font-display font-extrabold text-gold tracking-tight">CLUTCH</span>
           </Link>
 
-          <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2">Create your account</h1>
-          <p className="text-text-secondary mb-8 leading-relaxed">
-            Start your fantasy sports journey today
-          </p>
+          {poolContext ? (
+            <>
+              <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-blaze mb-2">Pool invite</div>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2 leading-tight">
+                Create an account to enter <span className="text-blaze">{poolContext.name}</span>
+              </h1>
+              <p className="text-text-secondary mb-8 leading-relaxed">
+                {poolContext.tournament ? `${poolContext.tournament} pool. ` : ''}Free, takes 30 seconds — your picks save to your account so you can check them on any device.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl sm:text-3xl font-bold font-display text-text-primary mb-2">Create your account</h1>
+              <p className="text-text-secondary mb-8 leading-relaxed">
+                Start your fantasy sports journey today
+              </p>
+            </>
+          )}
 
           {error && (
             <div className="bg-live-red/10 border border-live-red/50 text-live-red px-4 py-3 rounded-lg mb-6 animate-fade-in">
