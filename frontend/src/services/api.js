@@ -500,6 +500,19 @@ class ApiService {
     })
   }
 
+  async updatePoolName(slug, token, name) {
+    return this.request(`/pools/${slug}/admin${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ name }),
+    })
+  }
+
+  async deletePool(slug, token) {
+    return this.request(`/pools/${slug}/admin${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Matchups
   async getLeagueMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`)

@@ -354,6 +354,45 @@ router.get('/:slug/admin', optionalAuth, requireAdmin, async (req, res, next) =>
   } catch (e) { next(e) }
 })
 
+// ─── ADMIN: PATCH pool name ────────────────────────────────────────────────
+router.patch('/:slug/admin', optionalAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { name } = req.body
+    if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 60) {
+      return res.status(400).json({ error: 'Pool name must be 2-60 characters' })
+    }
+    const updated = await prisma.pool.update({
+      where: { id: req.poolId },
+      data: { name: name.trim() },
+      select: { id: true, name: true, slug: true },
+    })
+    res.json({ pool: updated })
+  } catch (e) { next(e) }
+})
+
+// ─── ADMIN: DELETE pool (full cascade) ─────────────────────────────────────
+// The DB-level CASCADE on `pool_picks_tier_id_fkey` isn't reliable, so we
+// walk the relations manually: picks → tier-players → entries → tiers → pool.
+router.delete('/:slug/admin', optionalAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const poolId = req.poolId
+    await prisma.$transaction(async (tx) => {
+      const tiers = await tx.poolTier.findMany({ where: { poolId }, select: { id: true } })
+      const entries = await tx.poolEntry.findMany({ where: { poolId }, select: { id: true } })
+      const tierIds = tiers.map(t => t.id)
+      const entryIds = entries.map(e => e.id)
+      await tx.poolPick.deleteMany({
+        where: { OR: [{ entryId: { in: entryIds } }, { tierId: { in: tierIds } }] },
+      })
+      await tx.poolTierPlayer.deleteMany({ where: { tierId: { in: tierIds } } })
+      await tx.poolEntry.deleteMany({ where: { id: { in: entryIds } } })
+      await tx.poolTier.deleteMany({ where: { id: { in: tierIds } } })
+      await tx.pool.delete({ where: { id: poolId } })
+    })
+    res.json({ ok: true })
+  } catch (e) { next(e) }
+})
+
 // ─── ADMIN: DELETE entry (DQ) ──────────────────────────────────────────────
 router.delete('/:slug/entries/:entryId', optionalAuth, requireAdmin, async (req, res, next) => {
   try {

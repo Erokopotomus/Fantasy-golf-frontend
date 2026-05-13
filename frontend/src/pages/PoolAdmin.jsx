@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import TierBuilder from '../components/pool/TierBuilder'
@@ -42,6 +42,7 @@ function Stat({ label, value }) {
 
 export default function PoolAdmin() {
   const { slug } = useParams()
+  const navigate = useNavigate()
   const [params] = useSearchParams()
   // Legacy back-compat: old admin URLs may still carry ?token=. New URLs don't.
   const token = params.get('token')
@@ -64,6 +65,15 @@ export default function PoolAdmin() {
   const [tierField, setTierField] = useState([])
   const [savingTiers, setSavingTiers] = useState(false)
   const [tierError, setTierError] = useState(null)
+
+  const [editingName, setEditingName] = useState(false)
+  const [nameDraft, setNameDraft] = useState('')
+  const [savingName, setSavingName] = useState(false)
+  const [nameError, setNameError] = useState(null)
+
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clutchfantasysports.com'
   const shareUrl = `${baseUrl}/pools/${slug}`
@@ -109,6 +119,50 @@ export default function PoolAdmin() {
       alert(e.message || 'DQ failed')
     } finally {
       setDqing(false)
+    }
+  }
+
+  // ─── Pool name editing ──────────────────────────────────────────────────
+  const startEditName = () => {
+    setNameDraft(data?.name || '')
+    setNameError(null)
+    setEditingName(true)
+  }
+  const cancelEditName = () => {
+    setEditingName(false)
+    setNameError(null)
+  }
+  const saveName = async () => {
+    const trimmed = nameDraft.trim()
+    if (trimmed.length < 2 || trimmed.length > 60) {
+      setNameError('Name must be 2–60 characters')
+      return
+    }
+    if (trimmed === data.name) {
+      setEditingName(false)
+      return
+    }
+    setSavingName(true); setNameError(null)
+    try {
+      await api.updatePoolName(slug, token, trimmed)
+      setEditingName(false)
+      refresh()
+    } catch (e) {
+      setNameError(e.message || 'Failed to update name')
+    } finally {
+      setSavingName(false)
+    }
+  }
+
+  // ─── Pool deletion ──────────────────────────────────────────────────────
+  const confirmDelete = async () => {
+    setDeleting(true); setDeleteError(null)
+    try {
+      await api.deletePool(slug, token)
+      navigate('/pools', { replace: true })
+    } catch (e) {
+      setDeleteError(e.message || 'Failed to delete pool')
+      setDeleting(false)
     }
   }
 
@@ -247,11 +301,57 @@ export default function PoolAdmin() {
 
       {/* Hero */}
       <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-display font-bold text-text-primary tracking-tight">
-            {data.name}
-            <span className="ml-3 align-middle text-xs font-mono uppercase tracking-wider text-text-2 px-2 py-0.5 rounded-md bg-[var(--surface)] border border-text-2/25">admin</span>
-          </h1>
+        <div className="flex-1 min-w-0">
+          {editingName ? (
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  autoFocus
+                  type="text"
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); saveName() }
+                    if (e.key === 'Escape') { e.preventDefault(); cancelEditName() }
+                  }}
+                  maxLength={60}
+                  disabled={savingName}
+                  className="flex-1 text-2xl sm:text-3xl font-display font-bold text-text-primary tracking-tight bg-[var(--surface)] border border-blaze/40 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blaze/40 disabled:opacity-50"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={saveName}
+                    disabled={savingName}
+                    className="bg-blaze hover:bg-blaze/90 disabled:bg-text-2/20 text-white px-4 py-2 rounded-lg font-display font-bold text-sm transition-colors"
+                  >
+                    {savingName ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    onClick={cancelEditName}
+                    disabled={savingName}
+                    className="border border-text-2/25 text-text-primary px-4 py-2 rounded-lg font-display font-semibold text-sm hover:border-text-2/50 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              {nameError && <div className="text-sm text-live-red">{nameError}</div>}
+            </div>
+          ) : (
+            <h1 className="text-3xl sm:text-4xl font-display font-bold text-text-primary tracking-tight">
+              {data.name}
+              <button
+                onClick={startEditName}
+                aria-label="Edit pool name"
+                className="ml-2 align-middle inline-flex items-center justify-center w-7 h-7 rounded-md text-text-2 hover:text-blaze hover:bg-blaze/10 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+              <span className="ml-3 align-middle text-xs font-mono uppercase tracking-wider text-text-2 px-2 py-0.5 rounded-md bg-[var(--surface)] border border-text-2/25">admin</span>
+            </h1>
+          )}
           <p className="font-mono text-xs uppercase tracking-wider text-text-2 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>{data.tournament.name}</span>
             <span className="text-text-2/40">·</span>
@@ -434,6 +534,73 @@ export default function PoolAdmin() {
           </div>
         )}
       </section>
+
+      {/* Danger zone — delete pool */}
+      <section className="rounded-2xl border border-live-red/25 bg-live-red/[0.03] p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-live-red mb-1">Danger zone</div>
+            <h2 className="font-display font-bold text-lg text-text-primary">Delete this pool</h2>
+            <p className="text-sm text-text-2 mt-1">
+              Permanently removes the pool, its tiers, and every entry. {data.entries.length > 0 && (
+                <span className="text-text-primary font-semibold">{data.entries.length} {data.entries.length === 1 ? 'entry' : 'entries'} will be erased.</span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={() => { setDeleteError(null); setDeleteConfirm(true); }}
+            className="shrink-0 px-4 py-2.5 rounded-lg border border-live-red/50 text-live-red hover:bg-live-red/10 font-display font-bold transition-colors"
+          >
+            Delete pool
+          </button>
+        </div>
+      </section>
+
+      {/* Delete confirmation modal */}
+      {deleteConfirm && (
+        <>
+          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => !deleting && setDeleteConfirm(false)} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto">
+              <div className="p-6 border-b border-text-2/15">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-live-red/15 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5 text-live-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3" />
+                    </svg>
+                  </div>
+                  <h3 className="font-display font-bold text-xl text-text-primary">Delete "{data.name}"?</h3>
+                </div>
+                <p className="text-sm text-text-2 mb-3">
+                  This permanently deletes the pool, all {data.tiers.length} tier{data.tiers.length === 1 ? '' : 's'}, and {data.entries.length === 0 ? 'every future entry' : `${data.entries.length} entry/entries (${data.entries.map(e => e.teamName).join(', ')})`}.
+                </p>
+                <p className="text-sm text-live-red font-medium">This cannot be undone.</p>
+                {deleteError && (
+                  <div className="mt-3 rounded-lg bg-live-red/10 border border-live-red/30 text-live-red p-3 text-sm">
+                    {deleteError}
+                  </div>
+                )}
+              </div>
+              <div className="p-4 flex gap-2 justify-end bg-bg/50 rounded-b-2xl">
+                <button
+                  onClick={() => !deleting && setDeleteConfirm(false)}
+                  disabled={deleting}
+                  className="px-4 py-2 rounded-lg border border-text-2/25 text-text-primary font-display font-bold hover:bg-[var(--surface)] transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 rounded-lg bg-live-red text-white font-display font-bold hover:bg-live-red/90 transition-colors disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting…' : 'Yes, delete pool'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* DQ confirmation modal */}
       {dqTarget && (
