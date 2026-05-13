@@ -362,6 +362,52 @@ router.delete('/:slug/entries/:entryId', optionalAuth, requireAdmin, async (req,
   } catch (e) { next(e) }
 })
 
+// ─── ADMIN: PATCH tiers (DRAFT-only) ───────────────────────────────────────
+// Replace the pool's tier structure. Only allowed while pool is DRAFT — once
+// published or locked, tiers are frozen because entries reference them.
+router.patch('/:slug/admin/tiers', optionalAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { tiers } = req.body
+    if (!Array.isArray(tiers) || tiers.length === 0) {
+      return res.status(400).json({ error: 'Provide tiers as a non-empty array' })
+    }
+    const pool = await prisma.pool.findUnique({
+      where: { id: req.poolId },
+      select: { id: true, status: true, tournamentId: true },
+    })
+    if (!pool) return res.status(404).json({ error: 'Pool not found' })
+    if (pool.status !== 'DRAFT') {
+      return res.status(409).json({ error: `Tiers can only be edited while pool is DRAFT (current: ${pool.status.toLowerCase()})` })
+    }
+
+    for (const t of tiers) {
+      if (typeof t.tierNumber !== 'number' || typeof t.picksRequired !== 'number' || !Array.isArray(t.playerIds)) {
+        return res.status(400).json({ error: 'Each tier needs tierNumber, picksRequired, playerIds' })
+      }
+      if (t.playerIds.length < t.picksRequired) {
+        return res.status(400).json({ error: `Tier ${t.tierNumber} has fewer players (${t.playerIds.length}) than picksRequired (${t.picksRequired})` })
+      }
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.poolTier.deleteMany({ where: { poolId: pool.id } })
+      for (const t of tiers) {
+        await tx.poolTier.create({
+          data: {
+            poolId: pool.id,
+            tierNumber: t.tierNumber,
+            label: t.label || null,
+            picksRequired: t.picksRequired,
+            players: { create: t.playerIds.map(pid => ({ playerId: pid })) },
+          },
+        })
+      }
+    })
+
+    res.json({ ok: true })
+  } catch (e) { next(e) }
+})
+
 // ─── ADMIN: POST send invite emails ─────────────────────────────────────
 router.post('/:slug/admin/invites', optionalAuth, requireAdmin, async (req, res, next) => {
   try {

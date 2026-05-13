@@ -493,6 +493,13 @@ class ApiService {
     })
   }
 
+  async updatePoolTiers(slug, token, tiers) {
+    return this.request(`/pools/${slug}/admin/tiers${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ tiers }),
+    })
+  }
+
   // Matchups
   async getLeagueMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`)

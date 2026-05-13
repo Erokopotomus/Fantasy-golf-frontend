@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import TierBuilder from '../components/pool/TierBuilder'
 
 const STATUS_STYLES = {
   DRAFT:     'bg-text-2/15 text-text-2',
@@ -58,6 +59,12 @@ export default function PoolAdmin() {
   const [dqTarget, setDqTarget] = useState(null) // entry pending DQ confirmation
   const [dqing, setDqing] = useState(false)
 
+  const [editingTiers, setEditingTiers] = useState(false)
+  const [draftTiers, setDraftTiers] = useState(null) // staging state while editing
+  const [tierField, setTierField] = useState([])
+  const [savingTiers, setSavingTiers] = useState(false)
+  const [tierError, setTierError] = useState(null)
+
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clutchfantasysports.com'
   const shareUrl = `${baseUrl}/pools/${slug}`
 
@@ -102,6 +109,72 @@ export default function PoolAdmin() {
       alert(e.message || 'DQ failed')
     } finally {
       setDqing(false)
+    }
+  }
+
+  // ─── Tier editing (DRAFT only) ──────────────────────────────────────────
+  const startEditTiers = async () => {
+    if (!data || data.status !== 'DRAFT') return
+    setTierError(null)
+    // Seed the editor with current tier state (in TierBuilder's expected shape)
+    const seeded = data.tiers.map(t => ({
+      tierNumber: t.tierNumber,
+      label: t.label || '',
+      picksRequired: t.picksRequired,
+      playerIds: t.players.map(p => p.player?.id || p.playerId).filter(Boolean),
+    }))
+    setDraftTiers(seeded)
+
+    // Fetch the full tournament field so the customize editor has the whole roster
+    try {
+      const fields = await api.request('/tournaments/upcoming-with-fields')
+      const t = (fields.tournaments || []).find(x => x.id === data.tournamentId)
+      setTierField(t?.field || [])
+    } catch {
+      // Fall back to whatever's currently in tiers if we can't load the wider field
+      const flat = []
+      for (const tier of data.tiers) {
+        for (const p of tier.players) {
+          if (p.player) {
+            flat.push({
+              playerId: p.player.id,
+              playerName: p.player.name,
+              owgrRank: p.player.owgrRank,
+              countryFlag: p.player.countryFlag,
+            })
+          }
+        }
+      }
+      setTierField(flat)
+    }
+    setEditingTiers(true)
+  }
+
+  const cancelEditTiers = () => {
+    setEditingTiers(false)
+    setDraftTiers(null)
+    setTierError(null)
+  }
+
+  const saveTiers = async () => {
+    if (!draftTiers) return
+    setSavingTiers(true); setTierError(null)
+    try {
+      // Strip empty playerIds tiers? No — let the server reject if invalid.
+      const payload = draftTiers.map(t => ({
+        tierNumber: t.tierNumber,
+        label: t.label || '',
+        picksRequired: t.picksRequired,
+        playerIds: t.playerIds,
+      }))
+      await api.updatePoolTiers(slug, token, payload)
+      setEditingTiers(false)
+      setDraftTiers(null)
+      refresh()
+    } catch (e) {
+      setTierError(e.message || 'Failed to save tiers')
+    } finally {
+      setSavingTiers(false)
     }
   }
 
@@ -264,16 +337,66 @@ export default function PoolAdmin() {
 
       {/* Tiers */}
       <section className="rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-5">
-        <h2 className="font-display font-bold text-lg text-text-primary mb-3">Tiers</h2>
-        <ul className="space-y-1.5">
-          {data.tiers.map(t => (
-            <li key={t.id} className="flex items-center gap-3 text-sm">
-              <span className="font-mono text-xs bg-bg border border-text-2/20 px-2 py-0.5 rounded text-text-2">T{t.tierNumber}</span>
-              {t.label && <span className="font-medium text-text-primary">{t.label}</span>}
-              <span className="text-text-2">— {t.players.length} player{t.players.length === 1 ? '' : 's'}, pick {t.picksRequired}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="font-display font-bold text-lg text-text-primary">Tiers</h2>
+          {data.status === 'DRAFT' && !editingTiers && (
+            <button
+              onClick={startEditTiers}
+              className="inline-flex items-center gap-1.5 text-sm font-display font-semibold text-blaze hover:text-blaze/80 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              Edit tiers →
+            </button>
+          )}
+          {data.status !== 'DRAFT' && (
+            <span className="font-mono text-[10px] uppercase tracking-wider text-text-2/70">
+              Frozen after publish
+            </span>
+          )}
+        </div>
+
+        {editingTiers ? (
+          <div className="space-y-4">
+            {tierError && (
+              <div className="rounded-xl bg-live-red/10 border border-live-red/30 text-live-red p-3 text-sm">
+                {tierError}
+              </div>
+            )}
+            <TierBuilder
+              field={tierField}
+              tiers={draftTiers || []}
+              onChange={setDraftTiers}
+            />
+            <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2 border-t border-text-2/10">
+              <button
+                onClick={cancelEditTiers}
+                disabled={savingTiers}
+                className="px-4 py-2.5 rounded-lg border border-text-2/25 bg-[var(--surface)] hover:border-blaze/40 text-text-primary font-display font-semibold text-sm transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveTiers}
+                disabled={savingTiers || !draftTiers || draftTiers.some(t => t.playerIds.length < t.picksRequired)}
+                className="flex-1 sm:flex-initial px-5 py-2.5 rounded-lg bg-blaze hover:bg-blaze/90 disabled:bg-text-2/20 disabled:text-text-2 text-white font-display font-bold text-sm transition-colors disabled:cursor-not-allowed"
+              >
+                {savingTiers ? 'Saving…' : 'Save tier changes'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <ul className="space-y-1.5">
+            {data.tiers.map(t => (
+              <li key={t.id} className="flex items-center gap-3 text-sm">
+                <span className="font-mono text-xs bg-bg border border-text-2/20 px-2 py-0.5 rounded text-text-2">T{t.tierNumber}</span>
+                {t.label && <span className="font-medium text-text-primary">{t.label}</span>}
+                <span className="text-text-2">— {t.players.length} player{t.players.length === 1 ? '' : 's'}, pick {t.picksRequired}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* Entries */}
