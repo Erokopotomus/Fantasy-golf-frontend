@@ -57,7 +57,7 @@ const FILTER_OPTIONS = [
   { key: 'myRoster', label: 'My Roster' },
 ]
 
-const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlayerIds = [] }) => {
+const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlayerIds = [], sidebarSlot = null }) => {
   // Auto-detect whether clutch metrics exist to pick smart defaults
   const hasClutchData = leaderboard.some(p => p.clutchMetrics?.courseFitScore != null)
 
@@ -305,6 +305,7 @@ const TournamentPreview = ({ tournament, leaderboard = [], weather = [], myPlaye
 
       {/* ── Right: Sidebar ── */}
       <div className="space-y-4">
+        {sidebarSlot}
         <QuickInsights leaderboard={leaderboard} />
 
         {/* Weather in sidebar */}

@@ -6,6 +6,7 @@ import PlayerDrawer from '../components/players/PlayerDrawer'
 import PoolEntryDrawer from '../components/pool/PoolEntryDrawer'
 import WeatherStrip from '../components/tournament/WeatherStrip'
 import TournamentPreview from '../components/tournament/TournamentPreview'
+import TournamentHeader from '../components/tournament/TournamentHeader'
 import { flattenEntry } from '../hooks/useTournamentScoring'
 
 // --- Helper components ----------------------------------------------------
@@ -277,7 +278,7 @@ export default function PoolView() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-bg">
-        <Hero pool={pool} />
+        <Hero pool={pool} tournamentLeaderboard={tournamentLeaderboard} />
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 sm:py-12">
           <div className="rounded-2xl border border-field/30 bg-[var(--surface)] p-6 sm:p-8 text-center">
             <div className="font-mono text-xs uppercase tracking-[0.2em] text-field mb-3">You're in</div>
@@ -329,7 +330,7 @@ export default function PoolView() {
   // --- Main render --------------------------------------------------------
   return (
     <div className="min-h-screen bg-bg">
-      <Hero pool={pool} />
+      <Hero pool={pool} tournamentLeaderboard={tournamentLeaderboard} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* DRAFT */}
@@ -592,53 +593,35 @@ export default function PoolView() {
 
 // --- Hero ---------------------------------------------------------------
 
-function Hero({ pool }) {
-  const courseImg = pool.tournament?.course?.imageUrl
-  const courseName = pool.tournament?.course?.name
-  const cityState = [pool.tournament?.course?.city, pool.tournament?.course?.state].filter(Boolean).join(', ')
+// Hero: a thin pool-branding strip ("← Pools / pool name / status / locks countdown")
+// followed by the platform-standard TournamentHeader so we get the field-strength /
+// forecast / what-wins-here widgets embedded in the dark banner for free.
 
+function Hero({ pool, tournamentLeaderboard }) {
   return (
-    <header className="relative overflow-hidden bg-slate text-white">
-      {courseImg && (
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{ backgroundImage: `url(${courseImg})` }}
-          aria-hidden="true"
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate/60 via-slate/70 to-slate" aria-hidden="true" />
-      <div className="absolute inset-0 bg-gradient-to-r from-slate/80 via-transparent to-transparent" aria-hidden="true" />
-
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
-        <div className="flex items-start justify-between gap-3 mb-6">
-          <Link to="/pools" className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/60 hover:text-white transition-colors">
-            ← Pools
-          </Link>
+    <header>
+      {/* Pool-branding strip */}
+      <div className="bg-slate text-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Link to="/pools" className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/60 hover:text-white transition-colors shrink-0">
+              ← Pools
+            </Link>
+            <span className="text-white/30">/</span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/80 truncate">
+              {pool.name}
+            </span>
+          </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {pool.status === 'OPEN' && pool.locksAt && <CountdownPill date={pool.locksAt} />}
             <StatusPill status={pool.status} />
           </div>
         </div>
+      </div>
 
-        <div className="max-w-3xl">
-          <div className="font-mono text-[11px] uppercase tracking-[0.25em] text-white/60 mb-2">
-            {pool.name}
-          </div>
-          <h1 className="font-display font-extrabold text-4xl sm:text-5xl md:text-6xl leading-[0.95] tracking-tight">
-            {pool.tournament?.name || 'Tournament TBD'}
-          </h1>
-          {(courseName || cityState || pool.tournament?.location) && (
-            <p className="font-editorial italic text-lg sm:text-xl text-white/80 mt-4">
-              {courseName || pool.tournament?.location}
-              {cityState && <span className="text-white/60"> · {cityState}</span>}
-            </p>
-          )}
-          {pool.status === 'OPEN' && pool.locksAt && (
-            <p className="font-mono text-[11px] uppercase tracking-wider text-white/60 mt-3">
-              Locks {new Date(pool.locksAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-            </p>
-          )}
-        </div>
+      {/* Tournament header with embedded widgets (Field Strength / Forecast / What Wins Here) */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
+        <TournamentHeader tournament={pool.tournament} leaderboard={tournamentLeaderboard || []} />
       </div>
     </header>
   )
@@ -926,56 +909,28 @@ function PoolLiveExperience({
               </aside>
             </div>
           ) : (
-            // Pre-tournament — hero stats strip + pool standings (horizontal) + TournamentPreview full width
-            <div className="space-y-5">
-              <section className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-5 text-center">
-                <div className="font-mono text-xs uppercase tracking-[0.2em] text-text-2 mb-2">Tournament hasn't started</div>
-                <h3 className="font-display font-bold text-2xl text-text-primary">
-                  Tees off <span className="text-blaze">{pool.tournament?.startDate
-                    ? new Date(pool.tournament.startDate).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' })
-                    : 'TBD'}</span>
-                </h3>
-              </section>
-
-              <PoolHeroWidgets
+            // Pre-tournament — Pool standings now slots into TournamentPreview's right rail (next to Quick Insights).
+            // Hero widgets already live inside TournamentHeader at the top of the page.
+            tournamentLeaderboard && tournamentLeaderboard.length > 0 ? (
+              <TournamentPreview
                 tournament={pool.tournament}
-                leaderboard={tournamentLeaderboard || []}
+                leaderboard={tournamentLeaderboard}
                 weather={weather || []}
+                myPlayerIds={myEntry?.picks?.map(p => p.player?.id).filter(Boolean) || []}
+                sidebarSlot={
+                  <PoolStandingsCard
+                    entries={entries}
+                    yourEntryIds={yourEntryIds}
+                    onOpenEntry={onOpenEntry}
+                    onSwitchToTeams={() => setActiveTab('teams')}
+                  />
+                }
               />
-
-              <PoolStandingsCard
-                entries={entries}
-                yourEntryIds={yourEntryIds}
-                onOpenEntry={onOpenEntry}
-                onSwitchToTeams={() => setActiveTab('teams')}
-                layout="horizontal"
-              />
-
-              {/* Tournament preview link */}
-              {pool.tournamentId && (
-                <div className="flex justify-end">
-                  <Link
-                    to={`/tournaments/${pool.tournamentId}/preview`}
-                    className="font-mono text-[11px] uppercase tracking-wider text-blaze hover:text-blaze/80 font-bold"
-                  >
-                    Full tournament preview →
-                  </Link>
-                </div>
-              )}
-
-              {tournamentLeaderboard && tournamentLeaderboard.length > 0 ? (
-                <TournamentPreview
-                  tournament={pool.tournament}
-                  leaderboard={tournamentLeaderboard}
-                  weather={weather || []}
-                  myPlayerIds={myEntry?.picks?.map(p => p.player?.id).filter(Boolean) || []}
-                />
-              ) : (
-                <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-12 text-center text-text-2">
-                  Field syncing…
-                </div>
-              )}
-            </div>
+            ) : (
+              <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-12 text-center text-text-2">
+                Field syncing…
+              </div>
+            )
           )}
         </>
       )}
