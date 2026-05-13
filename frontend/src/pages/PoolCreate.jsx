@@ -3,15 +3,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
-// Build a 6-tier default from the tournament field, 1 pick per tier
-// (EasyOfficePools-style). Tier sizes scale with field size:
-//   T1 Stars         top  ~5% (min 5)
-//   T2 Studs         next ~8% (min 8)
-//   T3 Contenders    next ~13% (min 12)
-//   T4 Solid plays   next ~20% (min 18)
-//   T5 Long shots    next ~24% (min 22)
-//   T6 Lottery       everyone else
-// Unranked players sort to the back so they land in Lottery.
+// Build a 6-tier default mirroring the original Buckeye PGA Championship
+// pool (the structure the commissioner described as "looks great"):
+//   T1–T5: 10 players each, sorted by OWGR
+//   T6:    the rest of the field (long tail)
+// Each tier requires 1 pick (6 picks total per entry).
+// Unranked players sort to the back so they land in T6.
 function buildDefaultTiers(field) {
   if (!field || field.length === 0) return null
 
@@ -21,34 +18,21 @@ function buildDefaultTiers(field) {
     return ra - rb
   })
 
-  const n = sorted.length
-  const sizes = [
-    Math.max(5,  Math.round(n * 0.05)), // T1
-    Math.max(8,  Math.round(n * 0.08)), // T2
-    Math.max(12, Math.round(n * 0.13)), // T3
-    Math.max(18, Math.round(n * 0.20)), // T4
-    Math.max(22, Math.round(n * 0.24)), // T5
-  ]
-  const labels = ['Stars', 'Studs', 'Contenders', 'Solid plays', 'Long shots', 'Lottery']
-
-  let cursor = 0
   const tiers = []
   for (let i = 0; i < 5; i++) {
-    const slice = sorted.slice(cursor, cursor + sizes[i])
+    const slice = sorted.slice(i * 10, (i + 1) * 10)
     tiers.push({
       tierNumber: i + 1,
-      label: labels[i],
+      label: '',
       picksRequired: 1,
       playerIds: slice.map(p => p.playerId),
     })
-    cursor += sizes[i]
   }
-  // T6 Lottery — rest of the field (always at least includes leftovers)
   tiers.push({
     tierNumber: 6,
-    label: labels[5],
+    label: '',
     picksRequired: 1,
-    playerIds: sorted.slice(cursor).map(p => p.playerId),
+    playerIds: sorted.slice(50).map(p => p.playerId),
   })
 
   return tiers
@@ -283,7 +267,7 @@ export default function PoolCreate() {
                   {form.tiers.length} tiers · {totalPicks} picks per entry
                 </div>
                 <div className="font-editorial italic text-sm text-text-2 mt-0.5">
-                  Built from the field's world ranking. Tap +/− to bump picks per tier.
+                  Tiers 1–5 are the top 50 by world ranking. Tier 6 is the rest of the field. Tap +/− to bump picks per tier.
                 </div>
               </div>
             </div>
