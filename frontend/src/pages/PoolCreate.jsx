@@ -144,20 +144,47 @@ export default function PoolCreate() {
   if (created) {
     const base = window.location.origin
     return (
-      <div className="max-w-2xl mx-auto p-6 space-y-4">
-        <h1 className="text-3xl font-display font-bold text-text-primary">Pool created.</h1>
-        <div className="rounded-xl border bg-[var(--surface)] p-4 space-y-3">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10 space-y-6">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.25em] text-field mb-2">You're the commissioner</div>
+          <h1 className="text-4xl font-display font-extrabold text-text-primary tracking-tight">Pool created.</h1>
+        </div>
+
+        {/* Publish-first callout — most common point of confusion */}
+        <div className="rounded-2xl bg-blaze/10 border border-blaze/30 p-4 sm:p-5 flex gap-3 sm:gap-4">
+          <div className="shrink-0 w-9 h-9 rounded-xl bg-blaze flex items-center justify-center text-white font-display font-bold">
+            1
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-display font-bold text-text-primary text-base sm:text-lg leading-tight">
+              Publish before you (or anyone) can make picks.
+            </div>
+            <p className="text-sm text-text-2 mt-1 leading-relaxed">
+              Pools start as a draft so you can preview them. Hit <strong className="text-text-primary">Publish</strong> on the admin page to open entries — your share link won't work until then.
+            </p>
+          </div>
+        </div>
+
+        {/* Primary CTA */}
+        <Link
+          to={`/pools/${created.slug}/admin`}
+          className="w-full inline-flex items-center justify-center gap-2 bg-blaze hover:bg-blaze/90 text-white font-display font-bold rounded-2xl py-4 text-lg shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+        >
+          Take me to the admin page →
+        </Link>
+
+        {/* Secondary links */}
+        <div className="rounded-2xl border border-text-2/15 bg-[var(--surface)] p-4 sm:p-5 space-y-3">
           <div>
-            <div className="text-xs text-text-2 uppercase tracking-wide font-mono mb-1">Share link</div>
-            <a className="text-blaze break-all" href={`/pools/${created.slug}`}>{base}/pools/{created.slug}</a>
+            <div className="text-[11px] text-text-2 uppercase tracking-wider font-mono mb-1">Share link (sent to entrants)</div>
+            <Link className="text-blaze break-all text-sm" to={`/pools/${created.slug}`}>{base}/pools/{created.slug}</Link>
           </div>
           <div>
-            <div className="text-xs text-text-2 uppercase tracking-wide font-mono mb-1">Admin link</div>
-            <a className="text-crown break-all" href={`/pools/${created.slug}/admin`}>{base}/pools/{created.slug}/admin</a>
-            <p className="text-xs text-text-2 mt-1.5">Only you (signed in as the commissioner) can access this page.</p>
+            <div className="text-[11px] text-text-2 uppercase tracking-wider font-mono mb-1">Admin link (only you)</div>
+            <Link className="text-crown break-all text-sm" to={`/pools/${created.slug}/admin`}>{base}/pools/{created.slug}/admin</Link>
           </div>
-          <p className="text-sm text-text-2 pt-2">
-            Both links were sent to {user.email}. Open the admin link and hit Publish when you're ready to accept entries.
+          <p className="text-xs text-text-2 font-editorial italic pt-2 border-t border-text-2/10">
+            Both links were also emailed to your account: <span className="not-italic font-mono text-text-primary">{user.email}</span>
           </p>
         </div>
       </div>
