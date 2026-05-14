@@ -467,7 +467,7 @@ export default function PoolView() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             onOpenEntry={setDrawerEntryId}
-            onOpenPlayer={setDrawerPlayerId}
+            onOpenPlayer={setScorecardPlayerId}
             onEditPicks={pool.status === 'OPEN' ? startEdit : null}
             onOpenRules={() => setRulesOpen(true)}
           />
@@ -659,7 +659,7 @@ export default function PoolView() {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             onOpenEntry={setDrawerEntryId}
-            onOpenPlayer={setDrawerPlayerId}
+            onOpenPlayer={setScorecardPlayerId}
             onOpenRules={() => setRulesOpen(true)}
           />
         )}

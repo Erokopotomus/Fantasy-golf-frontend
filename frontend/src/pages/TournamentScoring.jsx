@@ -285,6 +285,11 @@ const TournamentScoring = () => {
             onClose={() => setSelectedPlayer(null)}
           />
 
+          {/* Weather — top of sidebar; more useful than calls once predictions lock */}
+          {weather && weather.length > 0 && (
+            <WeatherStrip weather={weather} tournamentStart={tournament?.startDate} />
+          )}
+
           {/* This Week's Calls */}
           <EventPredictionSlate eventId={tournamentId} leaderboard={leaderboard || []} tournamentStatus={tournament?.status} />
 
@@ -369,10 +374,6 @@ const TournamentScoring = () => {
             )}
           </div>
 
-          {/* Weather — compact card in sidebar */}
-          {weather && weather.length > 0 && (
-            <WeatherStrip weather={weather} tournamentStart={tournament?.startDate} />
-          )}
         </div>
       </div>
     </div>
