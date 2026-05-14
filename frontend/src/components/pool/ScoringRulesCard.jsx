@@ -43,8 +43,12 @@ export default function ScoringRulesCard({ pool, onEdit, editable = false, showC
   const cutScoreToPar = pool.cutScoreToPar ?? 2
   const countPicks = pool.countPicks ?? null
 
-  const allOnePerTier = tiers.length > 0 && tiers.every(t => (t.picksRequired || 1) === 1)
-  const tierBreakdown = allOnePerTier ? null : tiers.map(t => `T${t.tierNumber}: ${t.picksRequired}`).join(' · ')
+  const firstReq = tiers[0]?.picksRequired || 0
+  const uniformPerTier = tiers.length > 0 && tiers.every(t => (t.picksRequired || 0) === firstReq)
+  const tierBreakdown = uniformPerTier ? null : tiers.map(t => `T${t.tierNumber}: ${t.picksRequired}`).join(' · ')
+  const formatLine = uniformPerTier
+    ? `Pick ${firstReq} from each tier · ${totalPicks} picks total`
+    : `${totalPicks} picks per entry · ${tierBreakdown}`
 
   const shareText = buildShareableRules({
     poolName: pool.name,
@@ -75,11 +79,7 @@ export default function ScoringRulesCard({ pool, onEdit, editable = false, showC
       <ul className="space-y-2 text-sm mb-4">
         <RuleRow
           label="Format"
-          value={
-            allOnePerTier
-              ? `Pick 1 from each tier · ${totalPicks} picks total`
-              : `${totalPicks} picks per entry (varies by tier — see your team)`
-          }
+          value={formatLine}
         />
         <RuleRow
           label="Missed cut / WD"
