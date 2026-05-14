@@ -4,6 +4,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 import PoolEntryDrawer from '../components/pool/PoolEntryDrawer'
+import PlayerScorecardDrawer from '../components/pool/PlayerScorecardDrawer'
 import WeatherStrip from '../components/tournament/WeatherStrip'
 import TournamentPreview from '../components/tournament/TournamentPreview'
 import TournamentHeader from '../components/tournament/TournamentHeader'
@@ -139,6 +140,7 @@ export default function PoolView() {
   const [submitting, setSubmitting] = useState(false)
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [drawerEntryId, setDrawerEntryId] = useState(null)
+  const [scorecardPlayerId, setScorecardPlayerId] = useState(null)
   const [tournamentLeaderboard, setTournamentLeaderboard] = useState(null)
   const [weather, setWeather] = useState(null)
   const [activeTab, setActiveTab] = useState('live') // 'live' | 'teams'
@@ -207,6 +209,37 @@ export default function PoolView() {
     }
     return m
   }, [tournamentLeaderboard])
+
+  // Flat playerId → tier-player record map so the scorecard drawer can resolve
+  // name/headshot/country for any pick across the pool.
+  const playerById = useMemo(() => {
+    const m = new Map()
+    if (!pool?.tiers) return m
+    for (const tier of pool.tiers) {
+      for (const tp of tier.players || []) {
+        if (tp.player?.id) m.set(tp.player.id, tp.player)
+      }
+    }
+    return m
+  }, [pool])
+
+  // Merge static player record + live performance for the scorecard drawer prop
+  const scorecardPlayer = useMemo(() => {
+    if (!scorecardPlayerId) return null
+    const p = playerById.get(scorecardPlayerId)
+    if (!p) return null
+    const live = liveByPlayer.get(scorecardPlayerId) || {}
+    return {
+      id: p.id,
+      name: p.name,
+      countryFlag: p.countryFlag,
+      headshotUrl: p.headshotUrl,
+      position: live.position,
+      scoreToPar: live.totalToPar,
+      thru: live.thru,
+      status: live.status,
+    }
+  }, [scorecardPlayerId, playerById, liveByPlayer])
 
   const togglePick = (tierId, playerId, picksRequired) => {
     setEntry(e => {
@@ -670,6 +703,14 @@ export default function PoolView() {
         </>
       )}
 
+      <PlayerScorecardDrawer
+        tournamentId={pool.tournamentId}
+        coursePar={pool.tournament?.course?.par || 70}
+        player={scorecardPlayer}
+        isOpen={!!scorecardPlayerId}
+        onClose={() => setScorecardPlayerId(null)}
+      />
+
       <PoolEntryDrawer
         entry={leaderboard?.leaderboard?.find(e => e.id === drawerEntryId) || null}
         rank={drawerEntryId ? (leaderboard?.leaderboard?.findIndex(e => e.id === drawerEntryId) ?? -1) + 1 : null}
@@ -681,7 +722,7 @@ export default function PoolView() {
         onPlayerClick={(pid) => {
           if (!pid) return
           setDrawerEntryId(null)
-          setDrawerPlayerId(pid)
+          setScorecardPlayerId(pid)
         }}
         onEditPicks={
           pool?.status === 'OPEN' && myExistingEntry && drawerEntryId === myExistingEntry.id
