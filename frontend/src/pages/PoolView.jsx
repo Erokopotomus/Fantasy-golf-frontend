@@ -143,6 +143,7 @@ export default function PoolView() {
   const [weather, setWeather] = useState(null)
   const [activeTab, setActiveTab] = useState('live') // 'live' | 'teams'
   const [editMode, setEditMode] = useState(false)
+  const [rulesOpen, setRulesOpen] = useState(false)
 
   useEffect(() => {
     (async () => {
@@ -435,6 +436,7 @@ export default function PoolView() {
             onOpenEntry={setDrawerEntryId}
             onOpenPlayer={setDrawerPlayerId}
             onEditPicks={pool.status === 'OPEN' ? startEdit : null}
+            onOpenRules={() => setRulesOpen(true)}
           />
         )}
 
@@ -625,6 +627,7 @@ export default function PoolView() {
             setActiveTab={setActiveTab}
             onOpenEntry={setDrawerEntryId}
             onOpenPlayer={setDrawerPlayerId}
+            onOpenRules={() => setRulesOpen(true)}
           />
         )}
       </div>
@@ -639,6 +642,33 @@ export default function PoolView() {
           tournamentName: pool.tournament.name,
         } : undefined}
       />
+
+      {/* Scoring rules modal — opens from the tiny "Rules" link in the context strip */}
+      {rulesOpen && (
+        <>
+          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setRulesOpen(false)} />
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+            <div className="bg-[var(--surface)] rounded-t-2xl sm:rounded-2xl shadow-2xl max-w-lg w-full pointer-events-auto max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-[var(--surface)] border-b border-text-2/10 px-5 py-4 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="font-display font-bold text-xl text-text-primary">Scoring rules</h2>
+                  <p className="font-editorial italic text-sm text-text-2 mt-0.5">How your picks turn into a score.</p>
+                </div>
+                <button
+                  onClick={() => setRulesOpen(false)}
+                  aria-label="Close"
+                  className="shrink-0 w-8 h-8 rounded-full hover:bg-bg flex items-center justify-center text-text-2 hover:text-text-primary transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-5">
+                <ScoringRulesCard pool={pool} hideChrome />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <PoolEntryDrawer
         entry={leaderboard?.leaderboard?.find(e => e.id === drawerEntryId) || null}
@@ -816,7 +846,7 @@ function PoolHeroWidgets({ tournament, leaderboard = [], weather = [] }) {
 function PoolLiveExperience({
   pool, slug, myEntry, leaderboard, tournamentLeaderboard, liveByPlayer,
   weather, yourEntryIds, activeTab, setActiveTab, onOpenEntry, onOpenPlayer,
-  onEditPicks,
+  onEditPicks, onOpenRules,
 }) {
   const [shareCopied, setShareCopied] = useState(false)
   const entries = leaderboard?.leaderboard || []
@@ -897,6 +927,15 @@ function PoolLiveExperience({
                 Edit picks
               </button>
             )}
+            {onOpenRules && (
+              <button
+                onClick={onOpenRules}
+                className="font-mono text-[11px] uppercase tracking-wider text-text-2 hover:text-blaze transition-colors px-1 py-1.5"
+                title="View scoring rules"
+              >
+                Rules
+              </button>
+            )}
             <button
               onClick={copyShare}
               className={`font-display font-bold text-sm rounded-lg px-3 py-2 transition-colors ${
@@ -910,9 +949,6 @@ function PoolLiveExperience({
           </div>
         </div>
       </div>
-
-      {/* Scoring rules — visible to all viewers (copy-to-chat button included) */}
-      <ScoringRulesCard pool={pool} />
 
       {/* Tabs */}
       <div className="border-b border-text-2/15 flex items-center gap-1">
