@@ -94,6 +94,7 @@ async function recomputePoolScoresToPar(poolId, prismaClient = prisma) {
       countPicks: true,
       tournament: {
         select: {
+          status: true,
           course: { select: { par: true } },
         },
       },
@@ -102,14 +103,17 @@ async function recomputePoolScoresToPar(poolId, prismaClient = prisma) {
   if (!pool) return { updated: 0 }
 
   const coursePar = pool.tournament?.course?.par ?? 72
-  const expectedTotalPar = TOURNAMENT_ROUNDS * coursePar
   // Strokes assigned per missed round = course par + the over-par offset (default +2)
   const cutStrokes = coursePar + (pool.cutScoreToPar ?? 2)
+  // Only apply the cut-round penalty to unplayed rounds once the tournament is
+  // over OR the player is out (CUT/WD). While play is live, unplayed rounds
+  // simply don't count yet — otherwise everyone reads +80 at Thursday tee time.
+  const tournamentDone = pool.tournament?.status === 'COMPLETED'
 
   // Load performances — Performance has round1..round4 columns directly (strokes per round)
   const performances = await prismaClient.performance.findMany({
     where: { tournamentId: pool.tournamentId },
-    select: { playerId: true, round1: true, round2: true, round3: true, round4: true },
+    select: { playerId: true, status: true, round1: true, round2: true, round3: true, round4: true },
   })
   const perfByPlayer = new Map(performances.map(p => [p.playerId, p]))
 
@@ -128,7 +132,7 @@ async function recomputePoolScoresToPar(poolId, prismaClient = prisma) {
       const perf = perfByPlayer.get(pick.playerId)
       const rounds = perf ? [perf.round1, perf.round2, perf.round3, perf.round4] : [null, null, null, null]
 
-      // Sum actual round strokes; fill missing rounds with cutScore strokes
+      // Sum actual round strokes that are present.
       let actualStrokes = 0
       let roundsPlayed = 0
       for (const r of rounds) {
@@ -137,9 +141,19 @@ async function recomputePoolScoresToPar(poolId, prismaClient = prisma) {
           roundsPlayed += 1
         }
       }
-      const missingRounds = TOURNAMENT_ROUNDS - roundsPlayed
-      const totalStrokes = actualStrokes + (missingRounds * cutStrokes)
-      const scoreToPar = totalStrokes - expectedTotalPar
+      const isPlayerOut = perf?.status === 'CUT' || perf?.status === 'WD'
+      let totalStrokes, expectedPar
+      if (tournamentDone || isPlayerOut) {
+        // Penalize unplayed rounds with the cut-score offset
+        const missingRounds = TOURNAMENT_ROUNDS - roundsPlayed
+        totalStrokes = actualStrokes + (missingRounds * cutStrokes)
+        expectedPar = TOURNAMENT_ROUNDS * coursePar
+      } else {
+        // Live tournament, player still in: only count what they've played
+        totalStrokes = actualStrokes
+        expectedPar = roundsPlayed * coursePar
+      }
+      const scoreToPar = totalStrokes - expectedPar
 
       scoredPicks.push({ pickId: pick.id, scoreToPar, roundsPlayed })
 
