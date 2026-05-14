@@ -110,12 +110,21 @@ async function recomputePoolScoresToPar(poolId, prismaClient = prisma) {
   // simply don't count yet — otherwise everyone reads +80 at Thursday tee time.
   const tournamentDone = pool.tournament?.status === 'COMPLETED'
 
-  // Load performances — Performance has round1..round4 columns directly (strokes per round)
+  // Load performances — Performance.round1..round4 hold finalized strokes per round
   const performances = await prismaClient.performance.findMany({
     where: { tournamentId: pool.tournamentId },
     select: { playerId: true, status: true, round1: true, round2: true, round3: true, round4: true },
   })
   const perfByPlayer = new Map(performances.map(p => [p.playerId, p]))
+
+  // Load LiveScore — DataGolf updates this every ~5 min during play with the
+  // cumulative tournament to-par including the in-progress round. This is the
+  // canonical "live" pick score for ACTIVE players during play.
+  const liveScores = await prismaClient.liveScore.findMany({
+    where: { tournamentId: pool.tournamentId },
+    select: { playerId: true, totalToPar: true, currentRound: true, thru: true },
+  })
+  const liveByPlayer = new Map(liveScores.map(l => [l.playerId, l]))
 
   // Load all entries with picks
   const entries = await prismaClient.poolEntry.findMany({
@@ -130,9 +139,10 @@ async function recomputePoolScoresToPar(poolId, prismaClient = prisma) {
     const scoredPicks = []
     for (const pick of entry.picks) {
       const perf = perfByPlayer.get(pick.playerId)
+      const live = liveByPlayer.get(pick.playerId)
       const rounds = perf ? [perf.round1, perf.round2, perf.round3, perf.round4] : [null, null, null, null]
 
-      // Sum actual round strokes that are present.
+      // Count finalized rounds from Performance for the cut-penalty branch
       let actualStrokes = 0
       let roundsPlayed = 0
       for (const r of rounds) {
@@ -142,18 +152,26 @@ async function recomputePoolScoresToPar(poolId, prismaClient = prisma) {
         }
       }
       const isPlayerOut = perf?.status === 'CUT' || perf?.status === 'WD'
-      let totalStrokes, expectedPar
+
+      let scoreToPar
       if (tournamentDone || isPlayerOut) {
-        // Penalize unplayed rounds with the cut-score offset
+        // Tournament over OR player cut/WD — penalize unplayed rounds, use finalized strokes
         const missingRounds = TOURNAMENT_ROUNDS - roundsPlayed
-        totalStrokes = actualStrokes + (missingRounds * cutStrokes)
-        expectedPar = TOURNAMENT_ROUNDS * coursePar
+        const totalStrokes = actualStrokes + (missingRounds * cutStrokes)
+        const expectedPar = TOURNAMENT_ROUNDS * coursePar
+        scoreToPar = totalStrokes - expectedPar
+      } else if (live && live.totalToPar != null) {
+        // Live play, player still in — DataGolf's cumulative tournament to-par
+        // (includes in-progress round). Updates every ~5 min.
+        scoreToPar = live.totalToPar
+        roundsPlayed = Math.max(roundsPlayed, live.currentRound || 0)
+      } else if (roundsPlayed > 0) {
+        // No live data but we have finalized round(s) — sum what they've played
+        scoreToPar = actualStrokes - (roundsPlayed * coursePar)
       } else {
-        // Live tournament, player still in: only count what they've played
-        totalStrokes = actualStrokes
-        expectedPar = roundsPlayed * coursePar
+        // No data yet — pick reads E
+        scoreToPar = 0
       }
-      const scoreToPar = totalStrokes - expectedPar
 
       scoredPicks.push({ pickId: pick.id, scoreToPar, roundsPlayed })
 
