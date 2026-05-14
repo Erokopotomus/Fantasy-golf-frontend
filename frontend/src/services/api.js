@@ -513,6 +513,13 @@ class ApiService {
     })
   }
 
+  async updatePoolScoring(slug, token, scoring) {
+    return this.request(`/pools/${slug}/admin/scoring${token ? `?token=${encodeURIComponent(token)}` : ''}`, {
+      method: 'PATCH',
+      body: JSON.stringify(scoring),
+    })
+  }
+
   // Matchups
   async getLeagueMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups`)

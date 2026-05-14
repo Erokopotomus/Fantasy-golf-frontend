@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import TierBuilder from '../components/pool/TierBuilder'
+import ScoringRulesCard from '../components/pool/ScoringRulesCard'
 
 const STATUS_STYLES = {
   DRAFT:     'bg-text-2/15 text-text-2',
@@ -74,6 +75,12 @@ export default function PoolAdmin() {
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+
+  // Scoring rules editor
+  const [editingScoring, setEditingScoring] = useState(false)
+  const [scoringDraft, setScoringDraft] = useState({ cutScoreToPar: 2, countPicks: null })
+  const [savingScoring, setSavingScoring] = useState(false)
+  const [scoringError, setScoringError] = useState(null)
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://clutchfantasysports.com'
   const shareUrl = `${baseUrl}/pools/${slug}`
@@ -151,6 +158,35 @@ export default function PoolAdmin() {
       setNameError(e.message || 'Failed to update name')
     } finally {
       setSavingName(false)
+    }
+  }
+
+  // ─── Scoring rules editing (tournament UPCOMING only) ──────────────────
+  const startEditScoring = () => {
+    setScoringDraft({
+      cutScoreToPar: data?.cutScoreToPar ?? 2,
+      countPicks: data?.countPicks ?? null,
+    })
+    setScoringError(null)
+    setEditingScoring(true)
+  }
+  const cancelEditScoring = () => {
+    setEditingScoring(false)
+    setScoringError(null)
+  }
+  const saveScoring = async () => {
+    setSavingScoring(true); setScoringError(null)
+    try {
+      await api.updatePoolScoring(slug, token, {
+        cutScoreToPar: scoringDraft.cutScoreToPar,
+        countPicks: scoringDraft.countPicks,
+      })
+      setEditingScoring(false)
+      refresh()
+    } catch (e) {
+      setScoringError(e.message || 'Failed to save scoring rules')
+    } finally {
+      setSavingScoring(false)
     }
   }
 
@@ -498,6 +534,89 @@ export default function PoolAdmin() {
           </ul>
         )}
       </section>
+
+      {/* Scoring rules */}
+      <ScoringRulesCard
+        pool={data}
+        onEdit={startEditScoring}
+        editable={data.tournament?.status === 'UPCOMING'}
+      />
+
+      {/* Scoring edit modal */}
+      {editingScoring && (
+        <>
+          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => !savingScoring && cancelEditScoring()} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-md w-full pointer-events-auto">
+              <div className="p-6 border-b border-text-2/15">
+                <h3 className="font-display font-bold text-xl text-text-primary mb-4">Edit scoring rules</h3>
+
+                <div className="space-y-4">
+                  <label className="block">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-text-2">Missed cut / WD penalty</span>
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className="text-text-2 font-mono text-sm">+</span>
+                      <input
+                        type="number"
+                        min={-5}
+                        max={20}
+                        value={scoringDraft.cutScoreToPar}
+                        onChange={(e) => setScoringDraft(s => ({ ...s, cutScoreToPar: parseInt(e.target.value) || 0 }))}
+                        className="w-20 rounded-lg border border-text-2/25 bg-bg px-3 py-2 font-mono font-bold text-text-primary focus:outline-none focus:border-blaze focus:ring-2 focus:ring-blaze/20"
+                      />
+                      <span className="text-text-2 text-sm">over par per unplayed round</span>
+                    </div>
+                    <p className="text-xs text-text-2 mt-1.5">Default +2. Set to 0 for no penalty. Range: -5 to 20.</p>
+                  </label>
+
+                  <label className="block">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-text-2">Picks that count</span>
+                    <select
+                      value={scoringDraft.countPicks ?? 'all'}
+                      onChange={(e) => setScoringDraft(s => ({
+                        ...s,
+                        countPicks: e.target.value === 'all' ? null : parseInt(e.target.value),
+                      }))}
+                      className="mt-1 w-full rounded-lg border border-text-2/25 bg-bg px-3 py-2 text-text-primary focus:outline-none focus:border-blaze focus:ring-2 focus:ring-blaze/20"
+                    >
+                      <option value="all">All picks count</option>
+                      {(() => {
+                        const total = data.tiers.reduce((s, t) => s + t.picksRequired, 0)
+                        return Array.from({ length: total - 1 }, (_, i) => i + 1).map(n => (
+                          <option key={n} value={n}>Best {n} of {total}</option>
+                        ))
+                      })()}
+                    </select>
+                    <p className="text-xs text-text-2 mt-1.5">Drop your worst N picks — useful for handling blow-up scores.</p>
+                  </label>
+                </div>
+
+                {scoringError && (
+                  <div className="mt-4 rounded-lg bg-live-red/10 border border-live-red/30 text-live-red p-3 text-sm">
+                    {scoringError}
+                  </div>
+                )}
+              </div>
+              <div className="p-4 flex gap-2 justify-end bg-bg/50 rounded-b-2xl">
+                <button
+                  onClick={cancelEditScoring}
+                  disabled={savingScoring}
+                  className="px-4 py-2 rounded-lg border border-text-2/25 text-text-primary font-display font-bold hover:bg-[var(--surface)] transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveScoring}
+                  disabled={savingScoring}
+                  className="px-4 py-2 rounded-lg bg-blaze text-white font-display font-bold hover:bg-blaze/90 transition-colors disabled:opacity-50"
+                >
+                  {savingScoring ? 'Saving…' : 'Save rules'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Entries */}
       <section className="rounded-2xl border border-text-2/25 bg-[var(--surface)] shadow-sm p-5">

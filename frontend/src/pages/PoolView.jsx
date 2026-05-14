@@ -7,7 +7,22 @@ import PoolEntryDrawer from '../components/pool/PoolEntryDrawer'
 import WeatherStrip from '../components/tournament/WeatherStrip'
 import TournamentPreview from '../components/tournament/TournamentPreview'
 import TournamentHeader from '../components/tournament/TournamentHeader'
+import ScoringRulesCard from '../components/pool/ScoringRulesCard'
 import { flattenEntry } from '../hooks/useTournamentScoring'
+
+// Format a pool entry's running score in a mode-aware way:
+//   to_par      → "+3" / "-2" / "E" with TO PAR label, lower is better
+//   fantasy_points → "42.5" with PTS label, higher is better (legacy)
+function formatEntryScore(entry, scoringMode) {
+  if (scoringMode === 'to_par') {
+    const v = entry.totalScoreToPar
+    if (v == null) return { value: '—', label: 'TO PAR' }
+    if (v === 0) return { value: 'E', label: 'TO PAR' }
+    return { value: v > 0 ? `+${v}` : `${v}`, label: 'TO PAR' }
+  }
+  const v = entry.totalFantasyPoints
+  return { value: v != null ? v.toFixed(1) : '—', label: 'PTS' }
+}
 
 // --- Helper components ----------------------------------------------------
 
@@ -630,6 +645,7 @@ export default function PoolView() {
         rank={drawerEntryId ? (leaderboard?.leaderboard?.findIndex(e => e.id === drawerEntryId) ?? -1) + 1 : null}
         totalEntries={leaderboard?.leaderboard?.length || 0}
         liveByPlayer={liveByPlayer}
+        scoringMode={pool?.scoringMode}
         isOpen={!!drawerEntryId}
         onClose={() => setDrawerEntryId(null)}
         onPlayerClick={(pid) => {
@@ -863,9 +879,9 @@ function PoolLiveExperience({
                   <div className="font-mono font-bold text-text-primary">{myRank ?? '—'} / {totalEntries}</div>
                 </div>
                 <div className="min-w-0">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-text-2">Your pts</div>
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-text-2">Your score</div>
                   <div className="font-mono font-bold text-blaze text-lg">
-                    {myEntry.totalFantasyPoints != null ? myEntry.totalFantasyPoints.toFixed(1) : '—'}
+                    {formatEntryScore(myEntry, pool.scoringMode).value}
                   </div>
                 </div>
               </>
@@ -894,6 +910,9 @@ function PoolLiveExperience({
           </div>
         </div>
       </div>
+
+      {/* Scoring rules — visible to all viewers (copy-to-chat button included) */}
+      <ScoringRulesCard pool={pool} />
 
       {/* Tabs */}
       <div className="border-b border-text-2/15 flex items-center gap-1">
@@ -970,6 +989,7 @@ function PoolLiveExperience({
                   yourEntryIds={yourEntryIds}
                   onOpenEntry={onOpenEntry}
                   onSwitchToTeams={() => setActiveTab('teams')}
+                  scoringMode={pool.scoringMode}
                 />
                 {weather && weather.length > 0 && (
                   <WeatherStrip weather={weather} tournamentStart={pool.tournament?.startDate} />
@@ -991,6 +1011,7 @@ function PoolLiveExperience({
                     yourEntryIds={yourEntryIds}
                     onOpenEntry={onOpenEntry}
                     onSwitchToTeams={() => setActiveTab('teams')}
+                    scoringMode={pool.scoringMode}
                   />
                 }
               />
@@ -1050,10 +1071,15 @@ function PoolLiveExperience({
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-mono font-bold text-2xl sm:text-3xl text-text-primary leading-none">
-                      {e.totalFantasyPoints != null ? e.totalFantasyPoints.toFixed(1) : '—'}
-                    </div>
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-text-2 mt-1">PTS</div>
+                    {(() => {
+                      const s = formatEntryScore(e, pool.scoringMode)
+                      return (
+                        <>
+                          <div className="font-mono font-bold text-2xl sm:text-3xl text-text-primary leading-none">{s.value}</div>
+                          <div className="font-mono text-[10px] uppercase tracking-wider text-text-2 mt-1">{s.label}</div>
+                        </>
+                      )
+                    })()}
                   </div>
                 </div>
               </button>
@@ -1071,7 +1097,7 @@ function PoolLiveExperience({
   )
 }
 
-function PoolStandingsCard({ entries, yourEntryIds, onOpenEntry, onSwitchToTeams, layout = 'vertical' }) {
+function PoolStandingsCard({ entries, yourEntryIds, onOpenEntry, onSwitchToTeams, layout = 'vertical', scoringMode = 'to_par' }) {
   if (!entries || entries.length === 0) return null
 
   if (layout === 'horizontal') {
@@ -1104,10 +1130,15 @@ function PoolStandingsCard({ entries, yourEntryIds, onOpenEntry, onSwitchToTeams
                   {isYou && <span className="font-mono text-[9px] uppercase tracking-wider text-blaze">you</span>}
                 </div>
                 <div className="text-sm font-display font-bold text-text-primary truncate">{e.teamName}</div>
-                <div className="font-mono font-bold text-text-primary text-lg mt-1">
-                  {e.totalFantasyPoints != null ? e.totalFantasyPoints.toFixed(1) : '—'}
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-text-2 ml-1">pts</span>
-                </div>
+                {(() => {
+                  const s = formatEntryScore(e, scoringMode)
+                  return (
+                    <div className="font-mono font-bold text-text-primary text-lg mt-1">
+                      {s.value}
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-text-2 ml-1 normal-case">{s.label.toLowerCase()}</span>
+                    </div>
+                  )
+                })()}
               </button>
             )
           })}
@@ -1147,7 +1178,7 @@ function PoolStandingsCard({ entries, yourEntryIds, onOpenEntry, onSwitchToTeams
                 </div>
               </div>
               <span className="font-mono font-bold text-sm text-text-primary shrink-0">
-                {e.totalFantasyPoints != null ? e.totalFantasyPoints.toFixed(1) : '—'}
+                {formatEntryScore(e, scoringMode).value}
               </span>
             </button>
           )

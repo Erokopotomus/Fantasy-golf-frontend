@@ -118,7 +118,10 @@ router.get('/:slug/leaderboard', optionalAuth, async (req, res, next) => {
   try {
     const pool = await prisma.pool.findUnique({
       where: { slug: req.params.slug },
-      select: { id: true, status: true, tournamentId: true, commissionerUserId: true },
+      select: {
+        id: true, status: true, tournamentId: true, commissionerUserId: true,
+        scoringMode: true, cutScoreToPar: true, countPicks: true,
+      },
     })
     if (!pool) return res.status(404).json({ error: 'Pool not found' })
 
@@ -146,33 +149,56 @@ router.get('/:slug/leaderboard', optionalAuth, async (req, res, next) => {
       }),
     ])
     const actualWinningScore = winner?.totalToPar ?? null
+    const isToPar = pool.scoringMode === 'to_par'
 
     const picksHidden = tournament?.status === 'UPCOMING'
     const viewerId = req.user?.id || null
     const isCommissioner = viewerId && pool.commissionerUserId === viewerId
 
-    const ranked = entries
-      .map(e => {
-        const isOwnEntry = viewerId && e.userId === viewerId
-        // Hide picks AND tiebreaker while tournament is upcoming, except for
-        // entrant viewing their own entry, or the commissioner viewing the
-        // public leaderboard.
-        const showPicks = !picksHidden || isOwnEntry || isCommissioner
-        return {
-          ...e,
-          picks: showPicks ? e.picks : [],
-          tiebreakerScore: showPicks ? e.tiebreakerScore : null,
-          picksHidden: !showPicks,
-          tiebreakerDiff: actualWinningScore == null ? null : Math.abs((e.tiebreakerScore ?? 0) - actualWinningScore),
-        }
-      })
-      .sort((a, b) => {
+    const mapped = entries.map(e => {
+      const isOwnEntry = viewerId && e.userId === viewerId
+      const showPicks = !picksHidden || isOwnEntry || isCommissioner
+
+      // Compute crossed-out picks if countPicks is set (To Par mode only — lowest N count)
+      let picksWithFlags = e.picks
+      if (isToPar && pool.countPicks && pool.countPicks > 0 && pool.countPicks < e.picks.length) {
+        const sorted = [...e.picks].sort((a, b) => (a.scoreToPar ?? 9999) - (b.scoreToPar ?? 9999))
+        const keepIds = new Set(sorted.slice(0, pool.countPicks).map(p => p.id))
+        picksWithFlags = e.picks.map(p => ({ ...p, excluded: !keepIds.has(p.id) }))
+      }
+
+      return {
+        ...e,
+        picks: showPicks ? picksWithFlags : [],
+        tiebreakerScore: showPicks ? e.tiebreakerScore : null,
+        picksHidden: !showPicks,
+        tiebreakerDiff: actualWinningScore == null ? null : Math.abs((e.tiebreakerScore ?? 0) - actualWinningScore),
+      }
+    })
+
+    // Sort: To Par mode = lowest score wins (ascending). Legacy = highest fantasy pts (descending).
+    const ranked = mapped.sort((a, b) => {
+      if (isToPar) {
+        const av = a.totalScoreToPar ?? 9999
+        const bv = b.totalScoreToPar ?? 9999
+        if (av !== bv) return av - bv
+      } else {
         if (a.totalFantasyPoints !== b.totalFantasyPoints) return b.totalFantasyPoints - a.totalFantasyPoints
-        if (a.tiebreakerDiff != null && b.tiebreakerDiff != null && a.tiebreakerDiff !== b.tiebreakerDiff) {
-          return a.tiebreakerDiff - b.tiebreakerDiff
+      }
+      // Tiebreaker 1: closest tiebreaker guess to winner's actual score
+      if (a.tiebreakerDiff != null && b.tiebreakerDiff != null && a.tiebreakerDiff !== b.tiebreakerDiff) {
+        return a.tiebreakerDiff - b.tiebreakerDiff
+      }
+      // Tiebreaker 2: scorecard playoff (lowest pick beats lowest pick, etc.)
+      if (isToPar) {
+        const aSort = [...a.picks].filter(p => p.scoreToPar != null).sort((x, y) => x.scoreToPar - y.scoreToPar)
+        const bSort = [...b.picks].filter(p => p.scoreToPar != null).sort((x, y) => x.scoreToPar - y.scoreToPar)
+        for (let i = 0; i < Math.min(aSort.length, bSort.length); i++) {
+          if (aSort[i].scoreToPar !== bSort[i].scoreToPar) return aSort[i].scoreToPar - bSort[i].scoreToPar
         }
-        return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
-      })
+      }
+      return new Date(a.submittedAt).getTime() - new Date(b.submittedAt).getTime()
+    })
 
     res.json({
       leaderboard: ranked,
@@ -180,6 +206,11 @@ router.get('/:slug/leaderboard', optionalAuth, async (req, res, next) => {
       tournamentStatus: tournament?.status || null,
       picksHidden,
       actualWinningScore,
+      scoring: {
+        mode: pool.scoringMode || 'to_par',
+        cutScoreToPar: pool.cutScoreToPar,
+        countPicks: pool.countPicks,
+      },
     })
   } catch (e) { next(e) }
 })
@@ -379,6 +410,55 @@ router.get('/:slug/admin', optionalAuth, requireAdmin, async (req, res, next) =>
       },
     })
     res.json({ pool })
+  } catch (e) { next(e) }
+})
+
+// ─── ADMIN: PATCH scoring rules (only while tournament UPCOMING) ───────────
+router.patch('/:slug/admin/scoring', optionalAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { scoringMode, cutScoreToPar, countPicks } = req.body
+    const pool = await prisma.pool.findUnique({
+      where: { id: req.poolId },
+      include: { tournament: { select: { status: true } }, tiers: { select: { picksRequired: true } } },
+    })
+    if (!pool) return res.status(404).json({ error: 'Pool not found' })
+    if (pool.tournament?.status !== 'UPCOMING') {
+      return res.status(409).json({ error: 'Scoring rules are locked once the tournament starts' })
+    }
+
+    const data = {}
+    if (scoringMode !== undefined) {
+      if (!['to_par', 'fantasy_points'].includes(scoringMode)) {
+        return res.status(400).json({ error: 'scoringMode must be "to_par" or "fantasy_points"' })
+      }
+      data.scoringMode = scoringMode
+    }
+    if (cutScoreToPar !== undefined) {
+      const v = parseInt(cutScoreToPar)
+      if (!Number.isFinite(v) || v < -5 || v > 20) {
+        return res.status(400).json({ error: 'cutScoreToPar must be an integer between -5 and 20' })
+      }
+      data.cutScoreToPar = v
+    }
+    if (countPicks !== undefined) {
+      const totalPicks = pool.tiers.reduce((sum, t) => sum + (t.picksRequired || 0), 0)
+      if (countPicks === null) {
+        data.countPicks = null
+      } else {
+        const v = parseInt(countPicks)
+        if (!Number.isFinite(v) || v < 1 || v > totalPicks) {
+          return res.status(400).json({ error: `countPicks must be between 1 and ${totalPicks} (or null for all)` })
+        }
+        data.countPicks = v
+      }
+    }
+
+    const updated = await prisma.pool.update({
+      where: { id: req.poolId },
+      data,
+      select: { scoringMode: true, cutScoreToPar: true, countPicks: true },
+    })
+    res.json({ scoring: updated })
   } catch (e) { next(e) }
 })
 

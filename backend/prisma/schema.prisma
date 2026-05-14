@@ -1630,6 +1630,10 @@ model Pool {
   status             PoolStatus @default(DRAFT)
   locksAt            DateTime?  @map("locks_at")
   scoringPreset      String     @default("standard") @map("scoring_preset")
+  // V2 pool scoring (To Par + cut score). Legacy pools keep scoringPreset.
+  scoringMode        String     @default("to_par") @map("scoring_mode")          // "to_par" | "fantasy_points"
+  cutScoreToPar      Int        @default(2)  @map("cut_score_to_par")            // strokes OVER PAR per missed round (so par-72 course + value of 2 → 74 strokes assigned)
+  countPicks         Int?       @map("count_picks")                              // null = all picks count; N = best N
   createdAt          DateTime   @default(now()) @map("created_at")
   updatedAt          DateTime   @updatedAt @map("updated_at")
 
@@ -1678,7 +1682,8 @@ model PoolEntry {
   entrantEmail       String   @map("entrant_email")
   teamName           String   @map("team_name")
   tiebreakerScore    Int      @map("tiebreaker_score")
-  totalFantasyPoints Float    @default(0) @map("total_fantasy_points")
+  totalFantasyPoints Float    @default(0) @map("total_fantasy_points") // Legacy fantasy-points scoring
+  totalScoreToPar    Float?   @map("total_score_to_par")              // V2 To Par scoring (lower = better)
   submittedAt        DateTime @default(now()) @map("submitted_at")
 
   pool  Pool       @relation(fields: [poolId], references: [id], onDelete: Cascade)
@@ -1695,7 +1700,9 @@ model PoolPick {
   entryId       String @map("entry_id")
   tierId        String @map("tier_id")
   playerId      String @map("player_id")
-  fantasyPoints Float? @map("fantasy_points")
+  fantasyPoints Float? @map("fantasy_points") // Legacy
+  scoreToPar    Float? @map("score_to_par")   // V2: player's cumulative strokes vs par (with cut/WD substitution applied)
+  roundsPlayed  Int?   @map("rounds_played")  // V2: how many rounds the player actually completed (rest filled with cutScore)
 
   entry  PoolEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
   tier   PoolTier  @relation(fields: [tierId], references: [id])

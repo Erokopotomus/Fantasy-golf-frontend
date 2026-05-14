@@ -4,7 +4,7 @@ import { useEffect } from 'react'
  * Slide-in drawer showing a single pool entry's roster with live tournament scoring.
  * Tap any pick to open the player drawer (handled by parent via onPlayerClick).
  */
-export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlayer, isOpen, onClose, onPlayerClick, onEditPicks }) {
+export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlayer, isOpen, onClose, onPlayerClick, onEditPicks, scoringMode = 'to_par' }) {
   // Close on escape
   useEffect(() => {
     if (!isOpen) return
@@ -15,7 +15,12 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
 
   if (!isOpen || !entry) return null
 
-  const totalPts = entry.totalFantasyPoints ?? 0
+  // Mode-aware total + label for the hero number
+  const isToPar = scoringMode === 'to_par'
+  const totalValue = isToPar
+    ? (entry.totalScoreToPar == null ? '—' : entry.totalScoreToPar === 0 ? 'E' : (entry.totalScoreToPar > 0 ? `+${entry.totalScoreToPar}` : `${entry.totalScoreToPar}`))
+    : (entry.totalFantasyPoints != null ? entry.totalFantasyPoints.toFixed(1) : '—')
+  const totalLabel = isToPar ? 'To par' : 'Fantasy pts'
 
   return (
     <>
@@ -44,8 +49,8 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
         {/* Total points hero */}
         <div className="px-5 py-5 border-b border-text-2/10 flex items-center justify-between gap-3">
           <div className="flex items-baseline gap-3">
-            <span className="font-mono font-extrabold text-5xl text-blaze leading-none">{totalPts.toFixed(1)}</span>
-            <span className="font-mono text-xs uppercase tracking-wider text-text-2">Fantasy pts</span>
+            <span className="font-mono font-extrabold text-5xl text-blaze leading-none">{totalValue}</span>
+            <span className="font-mono text-xs uppercase tracking-wider text-text-2">{totalLabel}</span>
           </div>
           {onEditPicks && (
             <button
@@ -75,9 +80,10 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
           </div>
         )}
 
-        {/* Picks list */}
+        {/* Picks list — crossed-out picks (excluded by best-N-of-M) get a strikethrough */}
         <div className="divide-y divide-text-2/10">
           {entry.picks?.map((pick) => {
+            const excluded = pick.excluded === true
             const live = liveByPlayer?.get(pick.player?.id)
             const pos = live?.position
             const posTied = live?.positionTied
@@ -90,7 +96,8 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
               <button
                 key={pick.id || pick.player?.id}
                 onClick={() => onPlayerClick?.(pick.player?.id)}
-                className="w-full text-left px-5 py-3 flex items-center gap-3 hover:bg-bg transition-colors"
+                className={`w-full text-left px-5 py-3 flex items-center gap-3 hover:bg-bg transition-colors ${excluded ? 'opacity-50' : ''}`}
+                title={excluded ? 'Not counting toward your total (best N of M)' : undefined}
               >
                 <PlayerAvatar player={pick.player} size={40} />
                 <div className="flex-1 min-w-0">
@@ -118,10 +125,21 @@ export default function PoolEntryDrawer({ entry, rank, totalEntries, liveByPlaye
                   )}
                 </div>
                 <div className="text-right shrink-0 w-14 border-l border-text-2/10 pl-3">
-                  <div className="font-mono font-bold text-base text-text-primary">
-                    {pick.fantasyPoints != null ? pick.fantasyPoints.toFixed(1) : '—'}
-                  </div>
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-text-2">pts</div>
+                  {isToPar ? (
+                    <>
+                      <div className={`font-mono font-bold text-base ${excluded ? 'line-through text-text-2' : scoreClass(pick.scoreToPar)}`}>
+                        {formatScore(pick.scoreToPar)}
+                      </div>
+                      <div className="font-mono text-[9px] uppercase tracking-wider text-text-2">to par</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-mono font-bold text-base text-text-primary">
+                        {pick.fantasyPoints != null ? pick.fantasyPoints.toFixed(1) : '—'}
+                      </div>
+                      <div className="font-mono text-[9px] uppercase tracking-wider text-text-2">pts</div>
+                    </>
+                  )}
                 </div>
               </button>
             )

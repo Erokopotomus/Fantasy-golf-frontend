@@ -535,7 +535,7 @@ httpServer.listen(PORT, () => {
           select: { id: true, slug: true },
         })
         for (const p of active) {
-          const r = await poolService.recomputePoolScores(p.id, cronPrisma)
+          const r = await poolService.recomputePool(p.id, cronPrisma)
           if (r.entriesUpdated > 0) cronLog('pool-score', `${p.slug}: ${r.entriesUpdated} entries updated`)
         }
       } catch (e) { cronLog('pool-score', `Error: ${e.message}`) }
