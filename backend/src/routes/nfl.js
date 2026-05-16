@@ -313,10 +313,30 @@ router.get('/players/:id', optionalAuth, async (req, res, next) => {
       const vals = games.filter(g => g[key] != null).map(g => g[key])
       return vals.length > 0 ? Math.round((vals.reduce((s, v) => s + v, 0) / vals.length) * 10) / 10 : null
     }
-    // Weighted passer rating (weighted by attempts per game)
+    // Weighted passer rating across the season. We compute from season-total
+    // pass attempts / completions / yards / TDs / INTs rather than averaging
+    // each game's `passerRating` column, because nflverse weekly rows have
+    // that column null for many seasons and the average becomes 0.0.
+    // NFL passer rating formula (each of a/b/c/d clamped to [0, 2.375]):
+    //   a = ((cmp/att) − 0.3) × 5
+    //   b = ((yds/att) − 3)   × 0.25
+    //   c = (td/att)          × 20
+    //   d = 2.375 − ((int/att) × 25)
+    //   rating = ((a + b + c + d) / 6) × 100
     const totalPassAtt = sum('passAttempts')
+    const totalPassCmp = sum('passCompletions')
+    const totalPassYds = sum('passYards')
+    const totalPassTds = sum('passTds')
+    const totalInts = sum('interceptions')
+    const clamp = (x) => Math.max(0, Math.min(2.375, x))
     const weightedPasserRating = totalPassAtt > 0
-      ? Math.round(games.reduce((s, g) => s + (g.passerRating || 0) * (g.passAttempts || 0), 0) / totalPassAtt * 10) / 10
+      ? Math.round((
+          (clamp((totalPassCmp / totalPassAtt - 0.3) * 5)
+            + clamp((totalPassYds / totalPassAtt - 3) * 0.25)
+            + clamp((totalPassTds / totalPassAtt) * 20)
+            + clamp(2.375 - (totalInts / totalPassAtt) * 25)
+          ) / 6
+        ) * 100 * 10) / 10
       : null
     const totalFgAtt = sum('fgAttempts')
     const fgPct = totalFgAtt > 0 ? Math.round(sum('fgMade') / totalFgAtt * 1000) / 10 : null

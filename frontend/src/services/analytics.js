@@ -95,6 +95,18 @@ export function reset() {
   }
 }
 
+// ─── Sport property convention ─────────────────────────────────
+// Pass `sport` as a property on every event that fires inside a
+// sport-specific flow (draft, lineup, waiver, player drawer, etc.).
+// One PostHog filter splits all dashboards by sport — cheaper than
+// duplicating each event with an nfl_/golf_ prefix.
+//
+//   track(Events.DRAFT_PICK_MADE, { ...payload, sport: Sports.NFL })
+export const Sports = {
+  GOLF: 'golf',
+  NFL: 'nfl',
+}
+
 // ─── Event Catalog ──────────────────────────────────────────────
 // Use these constants instead of raw strings so typos are caught at
 // import time and you can grep for all usages of a given event.

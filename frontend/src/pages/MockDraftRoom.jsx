@@ -1060,7 +1060,7 @@ const MockDraftRoom = () => {
   useEffect(() => {
     if (isComplete && !prevIsCompleteRef.current) {
       playDraftComplete()
-      track(Events.MOCK_DRAFT_COMPLETED, { draftType: config?.draftType, teams: config?.teams?.length })
+      track(Events.MOCK_DRAFT_COMPLETED, { draftType: config?.draftType, teams: config?.teams?.length, sport: config?.sport || 'golf' })
     }
     prevIsCompleteRef.current = isComplete
   }, [isComplete, playDraftComplete, config])
@@ -1303,7 +1303,7 @@ const MockDraftRoom = () => {
   const handleStartDraft = () => {
     initSounds()
     playDraftStart()
-    track(Events.MOCK_DRAFT_STARTED, { draftType: config?.draftType, teams: config?.teams?.length, rosterSize: config?.rosterSize })
+    track(Events.MOCK_DRAFT_STARTED, { draftType: config?.draftType, teams: config?.teams?.length, rosterSize: config?.rosterSize, sport: config?.sport || 'golf' })
     setIsStarted(true)
     setIsPaused(false)
     if (config?.draftType === 'auction') {

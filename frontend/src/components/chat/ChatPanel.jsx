@@ -81,7 +81,7 @@ const ChatPanel = ({
           <div>
             <p className="text-text-primary font-medium text-sm">{leagueName || 'League Chat'}</p>
             {memberCount && (
-              <p className="text-text-muted text-xs">{memberCount} members</p>
+              <p className="text-text-muted text-xs">{memberCount} member{memberCount === 1 ? '' : 's'}</p>
             )}
           </div>
         </div>
