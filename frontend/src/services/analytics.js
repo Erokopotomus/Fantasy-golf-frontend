@@ -64,11 +64,20 @@ export function track(event, properties = {}) {
   }
 }
 
+// Internal users get auto-tagged with $internal_or_test_user so they fall into
+// the PostHog "Internal / Test users" cohort and get filtered out of analytics.
+const INTERNAL_USER_EMAILS = new Set([
+  'ericmsaylor@gmail.com',
+])
+
 export function identify(userId, traits = {}) {
   try {
-    if (PROVIDER_ENABLED) posthog.identify(userId, traits)
+    const enriched = INTERNAL_USER_EMAILS.has(traits.email)
+      ? { ...traits, $internal_or_test_user: true }
+      : traits
+    if (PROVIDER_ENABLED) posthog.identify(userId, enriched)
     if (isDev) {
-      console.log('%c[identify]', 'color: #10b981; font-weight: bold', userId, traits)
+      console.log('%c[identify]', 'color: #10b981; font-weight: bold', userId, enriched)
     }
   } catch {
     // never crash
