@@ -1,28 +1,46 @@
 /**
  * Event tracking abstraction layer.
  *
- * Today: logs to console in dev, silent in prod.
- * Tomorrow: swap the `send` function to PostHog, Mixpanel, etc.
+ * Sends events to PostHog when VITE_POSTHOG_KEY is set; otherwise
+ * silent in prod / console-logs in dev. The provider toggles itself
+ * based on env var presence — no manual flag flip needed.
  *
  * Usage:
  *   import { track } from '../services/analytics'
  *   track('draft_pick_made', { leagueId, playerId, round: 3 })
  */
 
+import posthog from 'posthog-js'
+
 // ─── Configuration ──────────────────────────────────────────────
 const isDev = import.meta.env.DEV
+const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
 
-// Set to true when you wire up PostHog (or any provider)
-const PROVIDER_ENABLED = false
+// Provider is enabled whenever a project key is present.
+// No key (e.g. local dev without .env.local) → silent + console only.
+const PROVIDER_ENABLED = Boolean(POSTHOG_KEY)
 
-// ─── Provider (swap this block when ready) ──────────────────────
-// import posthog from 'posthog-js'
-// posthog.init('phc_YOUR_KEY', { api_host: 'https://us.i.posthog.com' })
+// ─── Provider init ──────────────────────────────────────────────
+if (PROVIDER_ENABLED) {
+  posthog.init(POSTHOG_KEY, {
+    api_host: POSTHOG_HOST,
+    capture_pageview: true,            // auto-fire $pageview on load
+    capture_pageleave: true,           // auto-fire $pageleave on unload
+    autocapture: true,                 // capture clicks/forms automatically alongside our explicit track() events
+    persistence: 'localStorage+cookie',
+    disable_session_recording: false,  // session replay opt-in; project-level setting still gates actual recording
+    loaded: (ph) => {
+      // In dev, surface PostHog distinct_id so we can match console events to PostHog records.
+      if (isDev) console.log('%c[posthog]', 'color: #10b981; font-weight: bold', 'ready · distinct_id:', ph.get_distinct_id())
+    },
+  })
+}
 
 function send(event, properties) {
-  // When you enable PostHog, uncomment:
-  // posthog.capture(event, properties)
-
+  if (PROVIDER_ENABLED) {
+    posthog.capture(event, properties)
+  }
   if (isDev) {
     console.log(
       `%c[track] %c${event}`,
@@ -48,10 +66,10 @@ export function track(event, properties = {}) {
 
 export function identify(userId, traits = {}) {
   try {
+    if (PROVIDER_ENABLED) posthog.identify(userId, traits)
     if (isDev) {
       console.log('%c[identify]', 'color: #10b981; font-weight: bold', userId, traits)
     }
-    // posthog.identify(userId, traits)
   } catch {
     // never crash
   }
@@ -59,10 +77,10 @@ export function identify(userId, traits = {}) {
 
 export function reset() {
   try {
+    if (PROVIDER_ENABLED) posthog.reset()
     if (isDev) {
       console.log('%c[reset]', 'color: #10b981; font-weight: bold', 'session cleared')
     }
-    // posthog.reset()
   } catch {
     // never crash
   }
