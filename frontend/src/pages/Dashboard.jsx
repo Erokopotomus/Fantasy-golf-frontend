@@ -128,6 +128,10 @@ const Dashboard = () => {
                   )}
                 </p>
               </div>
+            ) : leaguesLoading ? (
+              // Don't flash the zero-state subhead while leagues are refetching
+              // (e.g. right after league create). Wait for the fetch to settle.
+              <p className="text-sm text-text-secondary">&nbsp;</p>
             ) : (
               <p className="text-sm text-text-secondary">
                 {hasLeagues

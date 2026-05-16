@@ -9,11 +9,13 @@ const ESPN_TEAM_MAP = {
   27: 'TB', 28: 'WAS', 29: 'CAR', 30: 'JAX', 33: 'BAL', 34: 'HOU',
 }
 
-const TRANSACTION_KEYWORDS = [
-  'signs', 'signed', 'signing', 'traded', 'trade', 'released', 'waived',
-  'cut', 'free agent', 'contract', 'franchise tag', 'extension', 'deal',
-  'restructure', 'void', 'opt out',
-]
+// Word-boundary regexes — much more precise than substring matching.
+// Old keyword list ('cut', 'deal', 'signs', 'contract', 'trade') was
+// matching unrelated copy ("cut day", "big deal", "shows signs", "trade
+// deadline preview", "contract year analysis") and tagging most NFL
+// commentary as TRANSACTION. New list requires specific transaction
+// phrasing.
+const TRANSACTION_REGEX = /\b(signed (a|to)|agreed to terms|reportedly signing|released by|waived by|traded to|free agent (signing|deal)|franchise tag(ged)?|contract extension|restructure[ds]?|opt(s|ed) out|placed on (waivers|IR))\b/i
 
 const INJURY_KEYWORDS = [
   'injury', 'injured', 'out for', 'ACL', 'MCL', 'concussion', 'hamstring',
@@ -36,9 +38,9 @@ function categorizeArticle(article, sport) {
   const desc = (article.description || '').toLowerCase()
   const text = headline + ' ' + desc
 
-  // Transaction keywords only apply to team sports (NFL, NBA, MLB) — not golf.
+  // Transaction phrases only apply to team sports (NFL, NBA, MLB) — not golf.
   // Golf uses "cut", "deal" in non-transaction contexts (making the cut, etc.)
-  if (sport !== 'golf' && TRANSACTION_KEYWORDS.some(kw => text.includes(kw))) {
+  if (sport !== 'golf' && TRANSACTION_REGEX.test(text)) {
     return { type: 'transaction', category: 'transaction' }
   }
   if (INJURY_KEYWORDS.some(kw => text.includes(kw))) {

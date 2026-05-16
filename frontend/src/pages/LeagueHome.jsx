@@ -466,26 +466,44 @@ const LeagueHome = () => {
                       <p className="text-text-secondary text-sm">Schedule a draft date for your league.</p>
                     </div>
                     {!showDraftScheduler ? (
-                      <Button onClick={() => setShowDraftScheduler(true)}>
+                      <Button onClick={() => {
+                        // Pre-fill default: one week out at 8pm local time. Drops the
+                        // first-time commissioner straight into a usable suggestion
+                        // instead of an empty mm/dd/yyyy placeholder.
+                        if (!draftDateInput) {
+                          const d = new Date()
+                          d.setDate(d.getDate() + 7)
+                          d.setHours(20, 0, 0, 0)
+                          const tzOffsetMs = d.getTimezoneOffset() * 60000
+                          setDraftDateInput(new Date(d.getTime() - tzOffsetMs).toISOString().slice(0, 16))
+                        }
+                        setShowDraftScheduler(true)
+                      }}>
                         Schedule Draft
                       </Button>
                     ) : (
-                      <div className="flex flex-wrap items-end gap-2">
-                        <input
-                          type="datetime-local"
-                          value={draftDateInput}
-                          onChange={(e) => setDraftDateInput(e.target.value)}
-                          className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-text-primary"
-                        />
-                        <Button size="sm" onClick={handleCreateDraft} disabled={creatingDraft || !draftDateInput}>
-                          {creatingDraft ? 'Scheduling...' : 'Schedule Draft'}
-                        </Button>
-                        <button
-                          onClick={() => setShowDraftScheduler(false)}
-                          className="text-xs text-text-muted hover:text-text-primary"
-                        >
-                          Cancel
-                        </button>
+                      <div className="flex flex-col gap-2 w-full sm:w-auto">
+                        <div className="flex flex-wrap items-end gap-2">
+                          <input
+                            type="datetime-local"
+                            value={draftDateInput}
+                            onChange={(e) => setDraftDateInput(e.target.value)}
+                            className="bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg px-3 py-1.5 text-sm text-text-primary"
+                          />
+                          <Button size="sm" onClick={handleCreateDraft} disabled={creatingDraft || !draftDateInput}>
+                            {creatingDraft ? 'Scheduling...' : 'Schedule Draft'}
+                          </Button>
+                          <button
+                            onClick={() => setShowDraftScheduler(false)}
+                            className="text-xs text-text-muted hover:text-text-primary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                        <p className="text-xs text-text-muted">
+                          Times shown in your local timezone ({Intl.DateTimeFormat().resolvedOptions().timeZone}).
+                          All league members get email + push reminders 24h and 1h before the draft.
+                        </p>
                       </div>
                     )}
                   </div>
@@ -1077,22 +1095,26 @@ const LeagueHome = () => {
                 )}
               </Card>
 
-              {/* Secondary links (only what's not in top nav pills) */}
-              <div className="flex flex-wrap gap-1.5">
-                {!isOneAndDone && (
-                  <Link to={`/leagues/${leagueId}/trades`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
-                    Trades
+              {/* Secondary links — only shown post-draft. Pre-draft these chips
+                  read as greyed placeholders ("are these tabs? coming soon?")
+                  because none of the underlying flows have data yet. */}
+              {isDraftComplete && (
+                <div className="flex flex-wrap gap-1.5">
+                  {!isOneAndDone && (
+                    <Link to={`/leagues/${leagueId}/trades`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                      Trades
+                    </Link>
+                  )}
+                  {isHeadToHead && (
+                    <Link to={`/leagues/${leagueId}/playoffs`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                      Playoffs
+                    </Link>
+                  )}
+                  <Link to={`/leagues/${leagueId}/recap`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
+                    Recap
                   </Link>
-                )}
-                {isHeadToHead && (
-                  <Link to={`/leagues/${leagueId}/playoffs`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
-                    Playoffs
-                  </Link>
-                )}
-                <Link to={`/leagues/${leagueId}/recap`} className="min-h-[44px] inline-flex items-center px-3 rounded-lg text-xs text-text-muted bg-[var(--surface)] border border-[var(--card-border)] hover:text-text-primary hover:border-[var(--crown)]/40 transition-colors">
-                  Recap
-                </Link>
-              </div>
+                </div>
+              )}
 
               {/* Commissioner Blog — full width for rich content */}
               <CommissionerNotes
