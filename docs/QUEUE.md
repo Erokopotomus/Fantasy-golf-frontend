@@ -6763,6 +6763,52 @@ Same opportunity exists on `/login?redirect=...`.
 
 ---
 
+### 183 — Commit + push PostHog wiring (already coded, just needs push) `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Pushed in two commits: `a620e8c` (initial wiring) and `1721a51` (INTERNAL_USER_EMAILS auto-tag). Vercel auto-deployed both. Events confirmed flowing in PostHog Activity tab within minutes of deploy — pageview + web vitals + autocapture all firing from clutchfantasysports.com.
+**Priority:** High — Eric wants analytics on tomorrow's traffic; Vercel env vars + key are already set
+**Source:** Cowork wired PostHog May 12 2026; sandbox can't push.
+
+**What's already done:**
+- `posthog-js@1.373.5` installed in `frontend/`
+- `frontend/src/services/analytics.js` rewritten to auto-toggle PostHog on `VITE_POSTHOG_KEY` env var presence (no manual flag flip). Init config: autocapture on, session replay enabled, $pageview + $pageleave auto-fire, dev console logs `distinct_id` on load.
+- `frontend/.env.example` updated with `VITE_POSTHOG_KEY` + `VITE_POSTHOG_HOST` rows.
+- `frontend/.env.local` written on Eric's filesystem (gitignored) with real key.
+- Vercel: `VITE_POSTHOG_KEY` + `VITE_POSTHOG_HOST` added to Production + Preview as Sensitive vars. A redeploy was triggered but it's rebuilding the previous master commit (no PostHog wiring) — harmless, but doesn't actually turn on analytics until the new code lands.
+- AuthContext already calls `identify()` on login/signup and `reset()` on logout — no change needed.
+
+**What Code needs to do:**
+
+```
+cd ~/Desktop/Clutch
+git add frontend/.env.example frontend/package.json frontend/package-lock.json frontend/src/services/analytics.js
+git commit -m "Wire PostHog analytics
+
+Auto-toggles on VITE_POSTHOG_KEY env var presence — no manual
+PROVIDER_ENABLED flag flip. Adds posthog-js with autocapture,
+session replay, pageview/pageleave. AuthContext identify/reset
+already wired so events tie to users on login/logout."
+git push origin master
+```
+
+That's it. Vercel auto-deploys from master on push. Wait ~2 min, then verify on https://www.clutchfantasysports.com:
+1. Open browser console
+2. Should see `[posthog] ready · distinct_id: <id>` log line
+3. Hit https://us.posthog.com/project/372493 → Activity → should see events flowing within 1 min
+
+**Files changed:**
+- `frontend/.env.example` — added two new env var rows (commented documentation)
+- `frontend/package.json` — added `"posthog-js": "^1.373.5"` to dependencies
+- `frontend/package-lock.json` — lockfile update for posthog-js + its 40 sub-deps
+- `frontend/src/services/analytics.js` — uncommented PostHog calls, added init block, env-var-driven toggle, AND `INTERNAL_USER_EMAILS` Set so ericmsaylor@gmail.com is auto-tagged with `$internal_or_test_user: true` on identify() (drops him into the existing PostHog "Internal / Test users" cohort so his traffic is filtered from analytics by default)
+
+**Files NOT to touch:**
+- `frontend/.env.local` is on Eric's filesystem only (gitignored, never push it)
+- `CLAUDE.md` has Eric's golf-league-standings narrative edit; do NOT include it in this commit (let Eric ship that separately when he wants)
+- The untracked `backend/scripts/*` are also not part of this commit
+
+---
+
 ### 182 — Landing page rebuild: pools-first hero + product gallery + kill Rating section + fake leaderboard `HIGH`
 **Status:** `DONE`
 **Completed:** 2026-05-13 — Full rewrite of Landing.jsx following Cowork's `landing-mockup.html` spec. New hero with live-red eyebrow + "knows your league" headline + 5 feature pills + pool entry card (Aronimink/Scheffler PICKED) replacing the Clutch Rating gauge. New "See the platform" product surface gallery (6 cards: PlayerDrawer, LiveScoring, DraftRecap radar, Pool entry, Vault, AI Coach) replacing the dedicated Rating section. Why Clutch reordered (Pools NEW first, Rating card dropped) + "More pool types coming" dashed strip. Editorial copy → "Send the link. Everyone's in." Final CTA → "Golf is live. Pools open." How It Works step 1 + Two Sports sub-copy updated to mention pools. Removed: dedicated Rating section (~107 lines), It Compounds section (~119 lines), fake leaderboard section (~67 lines), mockLeaderboard array, ClutchRatingGauge import. Build passes. Files: frontend/src/pages/Landing.jsx
