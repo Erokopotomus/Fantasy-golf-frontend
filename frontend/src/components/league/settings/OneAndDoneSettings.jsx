@@ -103,27 +103,29 @@ const OneAndDoneSettings = ({ settings, onChange, sport }) => {
         </div>
       </Card>
 
-      <Card>
-        <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Major Tournament Bonus</h3>
-        <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">
-            Major Championship Multiplier
-          </label>
-          <select
-            value={localSettings.majorMultiplier}
-            onChange={(e) => handleMajorMultiplierChange(e.target.value)}
-            className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
-          >
-            <option value={1.0}>1.0x (No Bonus)</option>
-            <option value={1.25}>1.25x</option>
-            <option value={1.5}>1.5x</option>
-            <option value={2.0}>2.0x</option>
-          </select>
-          <p className="text-xs text-text-muted mt-2">
-            Points earned during The Masters, PGA Championship, US Open, and The Open are multiplied by this amount
-          </p>
-        </div>
-      </Card>
+      {sport === 'golf' && (
+        <Card>
+          <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Major Tournament Bonus</h3>
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-2">
+              Major Championship Multiplier
+            </label>
+            <select
+              value={localSettings.majorMultiplier}
+              onChange={(e) => handleMajorMultiplierChange(e.target.value)}
+              className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
+            >
+              <option value={1.0}>1.0x (No Bonus)</option>
+              <option value={1.25}>1.25x</option>
+              <option value={1.5}>1.5x</option>
+              <option value={2.0}>2.0x</option>
+            </select>
+            <p className="text-xs text-text-muted mt-2">
+              Points earned during The Masters, PGA Championship, US Open, and The Open are multiplied by this amount
+            </p>
+          </div>
+        </Card>
+      )}
 
       <div className="bg-[var(--bg-alt)] rounded-lg p-4 border border-[var(--card-border)]">
         <h4 className="text-sm font-medium text-text-primary mb-2">How One & Done Works</h4>

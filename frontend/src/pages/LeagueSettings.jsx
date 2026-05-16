@@ -43,11 +43,16 @@ const LeagueSettings = () => {
   const [unclaimedOwners, setUnclaimedOwners] = useState([])
   const [selectedOwner, setSelectedOwner] = useState('')
 
+  // Sport-aware defaults: NFL roster is 17 (QB+2RB+3WR+TE+FLEX+K+DEF+6BN+IR), golf is 6.
+  // Compute here so initial mount + the load effect both pick the right default.
+  const isNflLeague = (league?.sport || 'GOLF').toLowerCase() === 'nfl'
+  const sportDefaultRosterSize = isNflLeague ? 17 : 6
+
   const [settings, setSettings] = useState({
     name: league?.name || '',
     maxTeams: league?.maxTeams || 10,
     scoringType: league?.settings?.scoringType || 'standard',
-    rosterSize: league?.settings?.rosterSize || 6,
+    rosterSize: league?.settings?.rosterSize || sportDefaultRosterSize,
     irSlots: league?.settings?.irSlots || 0,
     rosterLockDeadline: league?.settings?.rosterLockDeadline || 'tournament-start',
     maxRosterMoves: league?.settings?.maxRosterMoves || 'unlimited',
@@ -94,7 +99,7 @@ const LeagueSettings = () => {
         name: league.name,
         maxTeams: league.maxTeams || prev.maxTeams,
         scoringType: league.settings?.scoringType || 'standard',
-        rosterSize: league.settings?.rosterSize || 6,
+        rosterSize: league.settings?.rosterSize || sportDefaultRosterSize,
         irSlots: league.settings?.irSlots || 0,
         rosterLockDeadline: league.settings?.rosterLockDeadline || 'tournament-start',
         maxRosterMoves: league.settings?.maxRosterMoves || 'unlimited',
@@ -414,7 +419,7 @@ const LeagueSettings = () => {
                 onChange={(e) => setSettings({ ...settings, rosterSize: parseInt(e.target.value) })}
                 className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               >
-                {[4, 5, 6, 7, 8, 10, 12].map(size => (
+                {(isNflLeague ? [15, 16, 17, 18, 19, 20] : [4, 5, 6, 7, 8, 10, 12]).map(size => (
                   <option key={size} value={size}>{size} players</option>
                 ))}
               </select>
@@ -717,12 +722,23 @@ const LeagueSettings = () => {
                 onChange={(e) => setSettings({ ...settings, rosterLockDeadline: e.target.value })}
                 className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
               >
-                <option value="tournament-start">Tournament Start (Thursday)</option>
-                <option value="first-tee">First Tee Time</option>
-                <option value="individual-tee">Individual Player Tee Times</option>
+                {isNflLeague ? (
+                  <>
+                    <option value="tournament-start">Weekly Lock (Thursday Kickoff)</option>
+                    <option value="first-tee">First Sunday Kickoff (1pm ET)</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="tournament-start">Tournament Start (Thursday)</option>
+                    <option value="first-tee">First Tee Time</option>
+                    <option value="individual-tee">Individual Player Tee Times</option>
+                  </>
+                )}
               </select>
               <p className="text-xs text-text-muted mt-2">
-                When rosters lock for each tournament week
+                {isNflLeague
+                  ? 'When rosters lock for each game week'
+                  : 'When rosters lock for each tournament week'}
               </p>
             </div>
 
@@ -1472,7 +1488,9 @@ const LeagueSettings = () => {
                   <option value="head-to-head">Head-to-Head - Weekly matchups with W/L record</option>
                   <option value="roto">Roto - Category-based rankings</option>
                   <option value="survivor">Survivor - Lowest score eliminated weekly</option>
-                  <option value="one-and-done">One-and-Done - Pick one player per tournament</option>
+                  <option value="one-and-done">
+                    {isNflLeague ? 'One-and-Done - Pick one player per week' : 'One-and-Done - Pick one player per tournament'}
+                  </option>
                 </select>
               </div>
 

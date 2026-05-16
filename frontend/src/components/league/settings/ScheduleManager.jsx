@@ -341,8 +341,9 @@ const ScheduleManager = ({ leagueId, league, notify }) => {
         </Card>
       )}
 
-      {/* Roster Adjustments — Commissioner only */}
-      {isCommissioner && (
+      {/* Roster Adjustments — Golf-only (limited fields in designated/opposite events).
+          NFL has full league participation every week, so this control doesn't apply. */}
+      {isCommissioner && (league?.sport || 'GOLF').toLowerCase() === 'golf' && (
         <Card>
           <h3 className="text-lg font-semibold font-display text-text-primary mb-2">Roster Adjustments</h3>
           <p className="text-text-secondary text-sm mb-4">
