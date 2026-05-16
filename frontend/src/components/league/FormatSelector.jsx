@@ -8,8 +8,11 @@ const FormatIcon = ({ format }) => {
       </svg>
     ),
     swords: (
+      // Two arrows facing each other — reads as "head-to-head" matchup.
+      // Previous design was two crossed diagonals which looks like a delete X.
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h7m-3-4 3 4-3 4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12h-7m3-4-3 4 3 4" />
       </svg>
     ),
     chart: (
