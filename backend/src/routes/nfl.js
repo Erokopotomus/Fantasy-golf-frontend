@@ -204,7 +204,19 @@ router.get('/players', optionalAuth, async (req, res, next) => {
 router.get('/players/:id', optionalAuth, async (req, res, next) => {
   try {
     const { season } = req.query
-    const targetSeason = season ? parseInt(season) : null
+    let targetSeason = season ? parseInt(season) : null
+
+    // Default to the player's most recent season when no season is specified.
+    // Without this, an undefined WHERE clause includes every game across every
+    // season — i.e. the drawer renders career totals instead of season totals.
+    if (!targetSeason) {
+      const latest = await prisma.nflPlayerGame.findFirst({
+        where: { playerId: req.params.id },
+        select: { game: { select: { season: true } } },
+        orderBy: { game: { season: 'desc' } },
+      })
+      targetSeason = latest?.game?.season || null
+    }
 
     const player = await prisma.player.findUnique({
       where: { id: req.params.id },
