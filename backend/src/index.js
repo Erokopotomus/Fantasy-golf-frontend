@@ -47,6 +47,7 @@ const customImportRoutes = require('./routes/customImport')
 const errorRoutes = require('./routes/errors')
 const coachMemoryRoutes = require('./routes/coachMemory')
 const poolRoutes = require('./routes/pools')
+const choppedRoutes = require('./routes/chopped')
 
 const { authLimiter, apiLimiter, heavyLimiter } = require('./middleware/rateLimiter')
 
@@ -159,6 +160,7 @@ app.use('/api/import/custom', customImportRoutes)
 app.use('/api/errors', errorRoutes)
 app.use('/api/coach', coachMemoryRoutes)
 app.use('/api/pools', poolRoutes)
+app.use('/api/leagues/:id/chopped', choppedRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
