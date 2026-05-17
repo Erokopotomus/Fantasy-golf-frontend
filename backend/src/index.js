@@ -706,17 +706,18 @@ httpServer.listen(PORT, () => {
       } catch (e) { cronLog('weeklyRecap', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
-    // Wednesday 12:00 PM ET — Process waiver claims
+    // Per-league waiver close: cron fires every minute, handler filters
+    // leagues whose configured (day, time, timezone) matches current wall clock.
+    // Default for leagues with no explicit setting: WEDNESDAY 12:00 America/New_York
+    // (matches the previous platform-wide schedule).
     const { processAllWaivers } = require('./services/waiverProcessor')
-    cron.schedule('0 12 * * 3', async () => {
-      cronLog('waivers', 'Processing waiver claims')
+    cron.schedule('* * * * *', async () => {
       try {
-        const results = await processAllWaivers(cronPrisma)
-        if (results.length === 0) {
-          cronLog('waivers', 'No pending claims')
-        } else {
+        const results = await processAllWaivers(cronPrisma, { now: new Date() })
+        if (results && results.length > 0) {
+          cronLog('waivers', `Processed ${results.length} league(s)`)
           for (const r of results) {
-            cronLog('waivers', `League ${r.leagueId}: ${r.won} won, ${r.lost} lost, ${r.invalid} invalid`)
+            cronLog('waivers', `  League ${r.leagueId}: ${r.won} won, ${r.lost} lost, ${r.invalid} invalid`)
           }
         }
       } catch (e) { cronLog('waivers', `Error: ${e.message}`) }

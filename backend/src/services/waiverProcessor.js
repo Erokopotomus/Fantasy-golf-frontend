@@ -598,30 +598,63 @@ async function processRollingWaivers(leagueId, prisma) {
 }
 
 /**
- * Process waivers for all active leagues that have pending claims.
+ * Check whether `now` falls within the configured waiver close minute for a
+ * given league's settings. Defaults match the legacy hardcoded schedule:
+ * WEDNESDAY 12:00 America/New_York.
+ *
+ * @param {Date} now
+ * @param {object} settings
+ * @returns {boolean}
+ */
+function isLeagueDueForWaivers(now, settings = {}) {
+  const tz = settings.waiverCloseTimezone || 'America/New_York'
+  const day = settings.waiverCloseDay || 'WEDNESDAY'
+  const time = settings.waiverCloseTime || '12:00'
+
+  const localStr = now.toLocaleString('en-US', { timeZone: tz })
+  const local = new Date(localStr)
+  const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+  if (dayNames[local.getDay()] !== day) return false
+
+  const [hh, mm] = time.split(':').map(Number)
+  // Minute-precision match — cron fires every minute, so we want exactly the configured (HH:MM)
+  return local.getHours() === hh && local.getMinutes() === mm
+}
+
+/**
+ * Process waivers for all leagues whose per-league close time matches `now`.
+ * Defaults (WEDNESDAY 12:00 America/New_York) preserve the legacy platform
+ * schedule for leagues that have no explicit waiver-close settings.
  *
  * @param {import('@prisma/client').PrismaClient} prisma
+ * @param {{ now?: Date }} [opts]
  */
-async function processAllWaivers(prisma) {
+async function processAllWaivers(prisma, { now = new Date() } = {}) {
   // Find leagues with pending waiver claims
-  const leaguesWithClaims = await prisma.waiverClaim.findMany({
+  const claims = await prisma.waiverClaim.findMany({
     where: { status: 'PENDING' },
     select: { leagueId: true },
     distinct: ['leagueId'],
   })
 
-  if (leaguesWithClaims.length === 0) {
-    console.log('[waiverProcessor] No pending claims to process')
-    return []
-  }
+  if (claims.length === 0) return []
+
+  // Pull settings for those leagues so we can filter by per-league timing
+  const leagues = await prisma.league.findMany({
+    where: { id: { in: claims.map(c => c.leagueId) } },
+    select: { id: true, settings: true },
+  })
+
+  const due = leagues.filter(l => isLeagueDueForWaivers(now, l.settings || {}))
+  if (due.length === 0) return []
 
   const results = []
-  for (const { leagueId } of leaguesWithClaims) {
-    const result = await processLeagueWaivers(leagueId, prisma)
-    results.push({ leagueId, ...result })
+  for (const league of due) {
+    const result = await processLeagueWaivers(league.id, prisma)
+    results.push({ leagueId: league.id, ...result })
   }
 
   return results
 }
 
-module.exports = { processLeagueWaivers, processAllWaivers }
+module.exports = { processLeagueWaivers, processAllWaivers, isLeagueDueForWaivers }
