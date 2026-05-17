@@ -48,12 +48,12 @@ router.post('/:leagueId/chopped/chop', authenticate, async (req, res) => {
       return res.status(403).json({ error: 'Commissioner only' })
     }
 
-    const chopConfig = (league.settings && league.settings.chopped) || {}
-    const maxChops = chopConfig.chopsPerWeek || 1
+    const settings = league.settings || {}
+    const maxChops = settings.chopsPerWeek || 1
     if (teamIds.length > maxChops) {
       return res.status(400).json({ error: `Max ${maxChops} chops per week` })
     }
-    if (chopConfig.manualChopEnabled === false) {
+    if (settings.manualChopEnabled === false) {
       return res.status(403).json({ error: 'Manual chop disabled for this league' })
     }
 

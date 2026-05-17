@@ -63,8 +63,7 @@ async function runAutoChopCheck() {
       if (league.teams.length <= 1) continue
 
       const settings = league.settings || {}
-      const chopConfig = settings.chopped || {}
-      if (chopConfig.autoChopFallback === false) continue
+      if (settings.autoChopFallback === false) continue
 
       if (!isPastWaiverClose(now, settings)) continue
 
@@ -79,7 +78,7 @@ async function runAutoChopCheck() {
         mode: 'live',
       })
       const sorted = [...safe].sort((a, b) => a.safePct - b.safePct)
-      const chopsPerWeek = chopConfig.chopsPerWeek || 1
+      const chopsPerWeek = settings.chopsPerWeek || 1
       const targetTeamIds = sorted.slice(0, chopsPerWeek).map(s => s.teamId)
 
       console.log(`[chopped/auto] league ${league.id} week ${week} chopping ${targetTeamIds.join(', ')}`)
