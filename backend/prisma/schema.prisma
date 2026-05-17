@@ -176,6 +176,9 @@ model League {
   // Draft boards linked to this league
   draftBoards DraftBoard[] @relation("LeagueBoards")
 
+  // Chopped format events
+  chopEvents ChopEvent[]
+
   @@map("leagues")
 }
 
@@ -239,6 +242,9 @@ model Team {
 
   // Decision capture (Year 1)
   auctionNominations AuctionNomination[]
+
+  // Chopped format events
+  chopEvents ChopEvent[]
 
   @@unique([userId, leagueId])
   @@map("teams")
@@ -1539,6 +1545,25 @@ model RosterTransaction {
   @@index([teamId])
   @@index([timestamp])
   @@map("roster_transactions")
+}
+
+model ChopEvent {
+  id                String   @id @default(cuid())
+  leagueId          String
+  teamId            String
+  week              Int
+  scoredPoints      Float
+  safePercent       Float
+  triggerType       String   // 'manual' | 'auto_fallback'
+  triggeredByUserId String?
+  tiebreakerUsed    String?  // 'cumulative_pts' | 'point_diff' | 'coinflip' | null
+  reasoning         String?
+  createdAt         DateTime @default(now())
+
+  league League @relation(fields: [leagueId], references: [id])
+  team   Team   @relation(fields: [teamId], references: [id])
+
+  @@index([leagueId, week])
 }
 
 // ============ ANALYTICS (Phase 3) ============
