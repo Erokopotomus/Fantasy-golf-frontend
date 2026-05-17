@@ -207,6 +207,11 @@ model Team {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Chopped format eliminations
+  eliminatedAt    DateTime?
+  eliminationWeek Int?
+  finalRank       Int?
+
   userId   String
   user     User   @relation(fields: [userId], references: [id])
   leagueId String
@@ -1785,6 +1790,7 @@ enum LeagueFormat {
   ROTO
   SURVIVOR
   ONE_AND_DONE
+  CHOPPED
 }
 
 enum DraftType {
