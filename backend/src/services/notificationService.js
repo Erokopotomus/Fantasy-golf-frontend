@@ -32,6 +32,8 @@ const NOTIFICATION_TYPES = {
   WEEKLY_RECAP: 'WEEKLY_RECAP',
   PREDICTION_RESOLVED: 'PREDICTION_RESOLVED',
   ROSTER_PLAYER_ALERT: 'ROSTER_PLAYER_ALERT',
+  TEAM_CHOPPED: 'TEAM_CHOPPED',
+  CHOPPED_SEASON_COMPLETE: 'CHOPPED_SEASON_COMPLETE',
 }
 
 // Map notification types to preference categories
@@ -59,6 +61,8 @@ const TYPE_TO_CATEGORY = {
   WEEKLY_RECAP: 'weekly_recap',
   PREDICTION_RESOLVED: 'prediction_updates',
   ROSTER_PLAYER_ALERT: 'roster_alerts',
+  TEAM_CHOPPED: 'chopped',
+  CHOPPED_SEASON_COMPLETE: 'chopped',
 }
 
 const DEFAULT_PREFERENCES = {
@@ -72,6 +76,7 @@ const DEFAULT_PREFERENCES = {
   weekly_recap: true,
   prediction_updates: true,
   roster_alerts: true,
+  chopped: true,
   push_enabled: true,
   email_enabled: false,
 }
@@ -79,7 +84,7 @@ const DEFAULT_PREFERENCES = {
 // Categories that support email delivery (not all notifications should be emailed)
 const EMAIL_SUPPORTED_CATEGORIES = [
   'trades', 'drafts', 'scores', 'league_activity',
-  'weekly_recap', 'prediction_updates',
+  'weekly_recap', 'prediction_updates', 'chopped',
 ]
 
 /**
