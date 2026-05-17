@@ -5748,7 +5748,8 @@ Cowork already fixed this in `frontend/src/components/league/LiveScoringWidget.j
 ---
 
 ### 154 — Player scorecard drawer (LEFT slide) in LiveScoringWidget `HIGH`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Verified shipped: LiveScoringWidget.jsx has selectedPlayer/scorecardData state, openPlayerScorecard callback, resizable left drawer with leftDrawerWidth state, freshPlayerData auto-refresh on THRU change. Front 9 / Back 9 grids with eagle/birdie/bogey color rules, stale-data guard. Files: LiveScoringWidget.jsx
 **Priority:** HIGH — enhances live scoring UX, symmetric with team roster drawer (RIGHT slide)
 
 **Problem:** Clicking a player name in YOUR TEAM section does nothing. User wants to click any player and see their hole-by-hole scorecard in a drawer that slides in from the LEFT (mirroring the team roster drawer that slides from the RIGHT).
@@ -5885,7 +5886,8 @@ if (deletedStale.count > 0) {
 ---
 
 ### 157 — My Team page redesign: live scoring + two-panel layout `MEDIUM`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Verified shipped via items 159/160 (Phase 1-3): TeamRoster.jsx uses useLeagueLiveScoring hook, builds liveDataByPlayerId map, passes liveData + liveTournamentId to PlayerRow components. Glassmorphic scoreboard header, bigger headshots, front9/back9 scorecard grid, desktop sidebar with mini league leaderboard. Files: TeamRoster.jsx
 **Priority:** MEDIUM — post-draft improvement, enhances in-season experience
 
 **Problem:** The My Team page (`TeamRoster.jsx`) has no live scoring data during tournaments. Every competitor (Sleeper, ESPN, Yahoo) shows live fantasy points per player on the roster page. Currently Clutch only shows static player info (OWGR, SG Total, wins/T5s) — no position, toPar, thru, or fantasy points during live events.
@@ -7131,8 +7133,345 @@ Open `/Users/ericsaylor/Desktop/Clutch/landing-mockup.html` in another tab to co
 
 ---
 
-### 181 — Navbar account dropdown: duplicate "My Profile" entry `LOW`
+## NFL PRE-LAUNCH AUDIT — May 16, 2026
+
+Cowork walked the NFL stack end-to-end as a fresh commissioner creating a new league. Captured below are everything found, in priority order. Most of these are pre-existing bugs (created before this audit, surfaced by it). The good news: the bones are solid — creation flow is sport-aware, settings are comprehensive, NFL Players page is genuinely impressive. The bad news: there are several state-desync bugs that will embarrass us in front of a stranger.
+
+Items 185-198 below.
+
+---
+
+### 185 — CRITICAL: NFL league Roster Size saves wrong value (4 instead of 17) `CRITICAL`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Added isNflLeague helper + sportDefaultRosterSize (17 NFL / 6 golf). Roster Size dropdown options now sport-aware: [15,16,17,18,19,20] for NFL vs [4,5,6,7,8,10,12] for golf. Files: LeagueSettings.jsx (commit 0d76b6b)
+**Priority:** Critical — blocker for NFL launch. Roster size is the foundation of every other roster behavior.
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:**
+1. Dashboard → Create League → select NFL.
+2. Creation form's step 1 shows: "Roster Size: 17 players (QB, 2 RB, 3 WR, TE, FLEX, K, DEF, 6 BN, IR)" — display is correct.
+3. Complete creation (any name, any settings).
+4. New league → Settings → General tab.
+5. **Roster Size dropdown shows "4 players"** — completely wrong.
+
+This means EITHER (a) the creation step is showing a hardcoded display value but persisting a different default, or (b) the Settings page is displaying a different field than it's editing. Either way, draft behavior, lineup slots, waiver logic, and bench size will all be wrong until this is fixed.
+
+**Likely root cause:** Settings page is using the GOLF default (4 starters / 9 roster) regardless of sport. The creation flow correctly switches to NFL composition; the Settings General tab probably reads/writes the same `rosterSize` integer column without translating it for NFL's structured composition.
+
+**Fix:** Settings General tab should either (a) hide the simple "Roster Size" dropdown for NFL leagues and show the structured composition card instead, or (b) translate `rosterSize` correctly when reading/writing for NFL. Probably the right answer is to make Roster Size + IR Slots + Position Limits all behave correctly per sport.
+
+**FILES:**
+- `frontend/src/pages/LeagueSettings.jsx` (or similar — the Settings General tab component)
+- `backend/src/routes/leagues.js` — save handler
+- Possibly `backend/prisma/schema.prisma` — verify how NFL roster composition is currently stored
+
+---
+
+### 186 — CRITICAL: NFL league Settings shows "Tournament" terminology (golf bleed) `CRITICAL`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Roster Lock Deadline dropdown options + help text now sport-aware. NFL shows "Weekly Lock (Thursday Kickoff)"; golf shows "Tournament Start (Thursday)". Files: LeagueSettings.jsx (commit 0d76b6b)
+**Priority:** Critical for NFL launch — instant credibility destroyer
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:**
+1. Any NFL league → Settings → General tab → scroll to "Roster Lock Deadline" section.
+2. Dropdown shows option **"Tournament Start (Thursday)"** — "Tournament" is golf-only terminology.
+3. Help text below the dropdown reads: **"When rosters lock for each tournament week"** — "tournament week" is golf-only.
+
+For NFL leagues this needs to say "Game Start (Thursday)" or "Weekly Lock (Thursday Kickoff)" and "When rosters lock for each game week".
+
+This is the same sport-agnostic terminology pattern that queue items 010 and 011 worked on in March. There's likely a sport-aware util being used inconsistently — Settings is bypassing it.
+
+**Fix:** Use the existing sport-aware terminology util (probably exports `getRosterLockLabel(sport)` or similar) for this dropdown's option labels + help text. If util doesn't exist, add one.
+
+**FILES:**
+- `frontend/src/pages/LeagueSettings.jsx` — the General tab "Roster Lock Deadline" select
+- `frontend/src/utils/sportTerminology.js` (if it exists) — add the missing label
+
+---
+
+### 187 — CRITICAL: NFL PlayerDrawer shows career stats instead of selected-year stats `CRITICAL`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — /players/:id route now defaults targetSeason to player's most recent season via findFirst when not specified (was returning career totals). All season-filtered queries reference targetSeason consistently. Files: nfl.js (commit c3dac53)
+**Priority:** Critical for NFL launch — the player drawer is the highest-trafficked surface during draft prep
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:**
+1. `/nfl/players` → click Lamar Jackson (or any NFL player).
+2. PlayerDrawer opens. Year dropdown defaults to **2024**.
+3. Overview tab shows: **94 Games · 2141.0 Fantasy Pts · 22.8 Pts/Game**.
+4. Season Stats card shows: Pass YDs **20417**, Pass TDs **168**, INTs **52**, Rush YDs **6065**, Rush TDs **31**, Cmp/Att **1711/2628**.
+5. These are career totals across 7 seasons, not 2024-specific. Lamar Jackson played 17 games in 2024 with ~4,172 pass yds and 41 pass TDs.
+
+The year dropdown is decorative — it doesn't actually filter the stats below it.
+
+**Fix:** The Overview tab's stats query needs to scope to the selected year. The card labels can stay generic, or change to "2024 Stats" / "Career Stats" toggle.
+
+**FILES:**
+- `frontend/src/components/players/PlayerDrawer.jsx` (or wherever NFL drawer Overview tab lives) — wire the year selector to the API query
+- Backend: `GET /api/players/:id?year=2024` — verify this is supported, fix if not
+
+---
+
+### 188 — HIGH: NFL PlayerDrawer "Rating" stat shows 0.0 `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Passer rating now computed server-side from season-aggregated cmp/att/yds/td/int using the NFL formula (4 components each clamped to [0, 2.375]) instead of averaging the nullable per-game passerRating column. Files: nfl.js (commit a93854d)
+**Priority:** High — looks broken, undermines data-credibility positioning
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:** Any NFL QB → PlayerDrawer → Season Stats → "Rating: 0.0".
+
+Passer rating for an active starting QB is never 0.0. Either the field isn't being calculated, the wrong column is being read, or the field name doesn't match the source data.
+
+**Fix:** Either calculate passer rating server-side (NFL formula: see nfl.com/help/glossary/q/quarterback_rating) or remove the field from display until it's wired. Half-broken stat displays are worse than missing ones.
+
+**FILES:**
+- `frontend/src/components/players/PlayerDrawer.jsx` — Season Stats card
+- `backend/src/services/nflStatsService.js` or similar — calculate passer rating from existing pass yds / TDs / INTs / Cmp/Att
+
+---
+
+### 189 — HIGH: NFL league home — "1 members" pluralization bug `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Inline ternary `{memberCount} member{memberCount === 1 ? '' : 's'}` in ChatPanel header. Files: ChatPanel.jsx (commit a93854d)
+**Priority:** High — minor but pervasive, makes the app look unpolished
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:**
+1. Create or visit any NFL league with 1 member.
+2. League home page → right-side chat panel header shows **"1 members"** (should be "1 member").
+
+The subtitle under the league title correctly says "1 member" so the pluralization util exists somewhere — this chat panel header just isn't using it.
+
+Queue item 018 fixed this on LeagueHome before; the chat panel is missing the same fix.
+
+**FILES:**
+- `frontend/src/pages/LeagueHome.jsx` — chat panel header
+- Use `pluralize()` or similar util
+
+---
+
+### 190 — HIGH: PostHog event catalog has no NFL-specific events; predictions placeholder won't fire `HIGH`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Added `Sports` enum to analytics.js and the sport-property convention (`track(Events.X, { ...payload, sport: Sports.NFL })`) — cleaner than duplicating events with nfl_* prefixes. One PostHog filter splits dashboards by sport. Wired into MockDraftRoom, WaiverWire, and other surfaces. Files: analytics.js, MockDraftRoom.jsx, WaiverWire.jsx (commit a93854d)
+**Priority:** High — analytics is now live; we want NFL launch events tracked from day 1
+**Source:** Cowork PostHog wiring + audit, May 16 2026
+
+The `Events` catalog in `frontend/src/services/analytics.js` has 42 events but none specifically for NFL flows. Specifically missing:
+- `nfl_league_created`, `nfl_draft_started`, `nfl_draft_pick_made`, `nfl_lineup_saved` — needed to measure the NFL acquisition funnel separately from golf
+- `nfl_waiver_claim` — Tuesday morning waiver activity is the key engagement signal during the season
+- `nfl_player_viewed` — heavy click into the PlayerDrawer is the draft prep signal
+
+Right now NFL flows fire the same events as golf (e.g. `draft_pick_made`). That's fine for total volume but unusable for sport-specific funnels.
+
+**Fix:** Add NFL-prefixed events to the `Events` catalog and update existing `track()` calls in NFL flows to pass a `sport: 'nfl'` property, so a single PostHog filter can split by sport. The `sport` property is cheaper than dedicated events.
+
+**FILES:**
+- `frontend/src/services/analytics.js` — add `sport` enum to event properties, document expected values
+- All league/draft/roster components — pass `sport` in track calls (mostly mechanical)
+
+---
+
+### 191 — MEDIUM: League Home post-create dashboard regresses to zero-state mid-fetch `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Dashboard renders an `<nbsp>` branch when `leaguesLoading` to prevent zero-state flash before useLeagues resolves. Files: Dashboard.jsx (commit 9aa017e)
+**Priority:** Medium — UX papercut, ~3 seconds of confusing state
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:**
+1. Dashboard with N existing leagues. Subhead reads "You have N active leagues."
+2. Click Create League → complete flow → land back on Dashboard.
+3. For ~3 seconds the Dashboard shows the empty-state subhead **"Create or join a league to get started."** even though you have N leagues still.
+4. Then the new league appears with "You have N+1 active leagues."
+
+The Dashboard component is treating "no leagues loaded yet" as "no leagues exist" — same bug pattern.
+
+**Fix:** Show the loading skeleton (which already exists for the cards) with the EXISTING subhead text, not the zero-state one. Or read from cached state instead of triggering a refetch on navigation.
+
+**FILES:**
+- `frontend/src/pages/Dashboard.jsx`
+
+---
+
+### 192 — MEDIUM: League Home "Start building your draft board" callout has no CTA `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Cowork verified the orphan banner string is no longer present anywhere in `frontend/src` (grep for "Start building your draft board" and "your prep is your edge" returned zero matches). The callout was removed at some point between the audit and now. Code shipped this without updating the queue. Flipping to DONE.
+**Priority:** Medium — orphan UI element, looks unfinished
+**Source:** Cowork NFL audit, May 16 2026
+
+The league home page shows a horizontal banner that reads **"Start building your draft board — your prep is your edge"** with a small dotted-decoration on the left. There is no button, no link, no click target. It just sits there.
+
+**Fix:** Either add a "Open the Lab →" CTA that deep-links to `/lab/new?league={id}`, or remove the banner until it has a destination.
+
+**FILES:**
+- `frontend/src/pages/LeagueHome.jsx`
+
+---
+
+### 193 — MEDIUM: League Home "Trades / Playoffs / Recap" chips are greyed placeholders in pre-draft `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Trades/Playoffs/Recap chips now only render when `isDraftComplete`. Pre-draft state hides them entirely instead of showing disabled placeholders. Files: LeagueHome.jsx (commit 9aa017e)
+**Priority:** Medium — visually confusing, what are they?
+**Source:** Cowork NFL audit, May 16 2026
+
+Below the Teams table on League Home there are three small chips: **Trades · Playoffs · Recap**. In a pre-draft league they're greyed out and don't appear interactive. It's unclear what they're meant to be — tabs? Filters? Coming-soon teasers?
+
+**Fix:** Either (a) hide them entirely until they're applicable (e.g., show Trades only when trading is enabled and there's a trade history), (b) make them proper tabs that show the empty state, or (c) tooltip them as "Available once your draft is complete."
+
+**FILES:**
+- `frontend/src/pages/LeagueHome.jsx`
+
+---
+
+### 194 — MEDIUM: Schedule Draft is a bare datetime input with no defaults / no timezone hint `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Schedule Draft input pre-fills with today+7 days at 8pm local, shows timezone hint below. Files: LeagueHome.jsx (commit 9aa017e)
+**Priority:** Medium — first-time commissioner experience
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:** New league → "Schedule Draft" button → opens a single `<input type="datetime-local">` with placeholder `mm/dd/yyyy, --:-- --`. No suggested date. No timezone. No "we'll send reminders" copy. No mock draft suggestion.
+
+**Fix:**
+- Pre-fill with a sensible default (current date + 7 days at 8:00 PM local).
+- Show timezone next to the input ("Times shown in your local timezone").
+- Add a small note: "All league members get email + push reminders 24h and 1h before the draft."
+- Optional: link to "Schedule a mock draft first?" — primes the engagement and tests the draft room.
+
+**FILES:**
+- `frontend/src/pages/LeagueHome.jsx` (or wherever Schedule Draft inline UI lives)
+
+---
+
+### 195 — MEDIUM: NFL hub Latest news section tags everything "TRANSACTION" `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Replaced loose TRANSACTION_KEYWORDS array with word-boundary regex (`/\b(signed (a|to)|agreed to terms|reportedly signing|released by|waived by|traded to|free agent (signing|deal)|franchise tag(ged)?|contract extension|restructure[ds]?|opt(s|ed) out|placed on (waivers|IR))\b/i`). No longer matches "cut day", "big deal", "trade deadline preview", etc. Backfill of mis-classified existing rows still pending as a separate one-shot script. Files: newsSync.js (commit 9aa017e)
+**Priority:** Medium — same bug as queue item 019, still present
+**Source:** Cowork NFL audit, May 16 2026
+
+**Repro:** `/nfl` → Latest section. Examples:
+- "Report: Josh Mauro died from fentanyl, cocaine, ethanol overdose" → tagged TRANSACTION (it's news, not a transaction)
+- "Stephen A. weighs in on Cowboys as Super Bowl contenders" → tagged TRANSACTION (it's commentary)
+- "Peyton Manning scrolls through TV to reveal Broncos schedule" → tagged TRANSACTION (it's a media moment)
+
+Item 019 closed this for golf news. NFL news ingestion is using the same default category for everything.
+
+**Fix:** Re-apply whatever fix shipped for golf news to the NFL news ingestion path. Likely the news classifier service needs to be sport-aware.
+
+**FILES:**
+- `backend/src/services/newsService.js` (or similar) — category classification
+- `backend/src/services/nflNewsSync.js` or equivalent
+
+---
+
+### 196 — MEDIUM: Settings page header still says "Manage Audit Test NFL League settings" but Schedule tab + Danger Zone may not be NFL-aware `MEDIUM`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — "Roster Adjustments" card in ScheduleManager.jsx now golf-only (NFL has full participation every week, no designated-events concept). "Major Tournament Bonus" card in OneAndDoneSettings.jsx gated to `sport === 'golf'`. OneAndDoneSettings periodUnit is now sport-aware ('tournament' for golf, 'week' for NFL). Files: ScheduleManager.jsx, OneAndDoneSettings.jsx, LeagueSettings.jsx (commit 0d76b6b)
+**Priority:** Medium — needs verification, didn't deep-dive Schedule + Danger Zone tabs in this audit
+**Source:** Cowork NFL audit, May 16 2026
+
+The Settings page has 8 tabs (General, Head-to-Head, Scoring, Trades, Waivers, Members, Schedule, Danger Zone). I only audited General + Members. The other six tabs likely have similar sport-awareness bugs.
+
+**Specific things to check:**
+- **Head-to-Head** tab — playoff settings, tiebreakers
+- **Scoring** tab — verify NFL scoring presets show correctly (Half PPR/PPR/Standard); custom scoring editor needs all NFL stat keys (pass yds, pass TDs, INTs, rush yds, rush TDs, rec, rec yds, rec TDs, fumbles, 2pt, return TDs, kicker by distance brackets, DST stats)
+- **Trades** tab — veto threshold, trade deadline (week-based, not "tournament" based)
+- **Waivers** tab — FAAB or rolling, waiver day (Wednesday standard for NFL)
+- **Schedule** tab — does it understand NFL's 18-week regular season? Bye weeks?
+- **Danger Zone** — delete league, transfer commissioner
+
+**Action:** Walk each tab as part of NFL bulletproofing in Phase 2. Capture findings in this same queue.
+
+---
+
+### 197 — LOW: NFL league create — Head-to-Head card icon is an "X" `LOW`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Swapped "swords" crossed-diagonals icon (reads as delete X) for two-arrows-facing-each-other ("head-to-head" matchup). Files: FormatSelector.jsx (commit 40e988a)
+**Priority:** Low — cosmetic
+**Source:** Cowork NFL audit, May 16 2026
+
+In the league creation Step 2, the "Head-to-Head" format card is decorated with an X icon. X means "no" or "delete" in most UI contexts. For H2H, a "vs" or two-arrows-meeting icon would be clearer.
+
+**FILES:**
+- `frontend/src/pages/CreateLeague.jsx` — Step 2 format card
+
+---
+
+### 198 — LOW: NFL hub tiles are static (Players / Leaderboards / Teams / Schedule / Compare / News) with no preview data `LOW`
 **Status:** `TODO`
+**Priority:** Low — cosmetic, but a missed opportunity to be impressive
+**Source:** Cowork NFL audit, May 16 2026
+
+The 6 tiles on `/nfl` are just label cards. A user landing on the NFL hub for the first time sees no data, no top players, no schedule. The Golf Hub by contrast has live tournament intel.
+
+**Fix:** Each tile could show 1-2 lines of live data:
+- Players → "Top this week: Saquon Barkley · 32.4 pts"
+- Leaderboards → "Top manager: ChaseTheTrophy · 94 rating" (real once we have managers)
+- Teams → "Hottest team: Buffalo Bills · 8-1"
+- Schedule → "Next game: KC @ DEN · Thu 8:15 PM"
+- Compare → "Most compared this week: Mahomes vs. Allen"
+- News → "Latest: Stephen A. on Cowboys"
+
+This makes the page feel alive even before users have a league.
+
+**FILES:**
+- `frontend/src/pages/NflHub.jsx`
+
+---
+
+### 184 — Migrate DNS off Netlify → Cloudflare + set up email routing `MEDIUM`
+**Status:** `TODO`
+**Priority:** Medium — execute Monday May 18 after PGA Championship pool closes (Sun May 17 night)
+**Source:** Eric, May 16 2026. Netlify DNS keeps causing friction; site is on Vercel; want clean modern DNS + free email routing.
+
+**Current state (verified via RDAP + DNS queries 2026-05-16):**
+- **Registrar:** Name.com, Inc. — Eric controls this
+- **Registered:** Feb 5, 2026 · expires Feb 5, 2027
+- **DNS nameservers:** `dns{1,2,3,4}.p06.nsone.net` (NS1.com, used by Netlify)
+- **MX records:** none — no email is currently set up
+- **TXT records:** no SPF, DMARC, or verification records present
+
+**Target state:**
+- **Nameservers:** Cloudflare (e.g. `xxx.ns.cloudflare.com`, two of them)
+- **DNS records preserved:** A/CNAME for apex + www → Vercel, plus any Vercel verification TXT
+- **Email routing live:** `eric@clutchfantasysports.com` → `ericmsaylor@gmail.com` via Cloudflare Email Routing (free)
+- **SPF record:** `v=spf1 include:_spf.mx.cloudflare.net ~all`
+- **Netlify account:** can be deleted entirely or left dormant — nothing important left there
+
+**Pre-flight (do this BEFORE changing nameservers — Sunday night or first thing Monday):**
+1. Log into the Netlify dashboard at app.netlify.com → find the domain → screenshot every DNS record. Capture: A records, CNAME (www + any others), TXT (any Vercel/Google verification), MX (none expected). Save the screenshots to a temp folder so you have a recovery reference.
+2. Lower the TTL on the current Netlify DNS records to 300 seconds (5 min) at least 24 hours before the migration if you want faster propagation. If you didn't, no big deal — worst case it takes 24-48h to propagate, but most of the world will see the new nameservers within 1-4 hours.
+3. Create a Cloudflare account if you don't have one (free tier — no payment method required).
+
+**Migration sequence (the actual Monday work, ~30 min active + propagation wait):**
+1. **In Cloudflare:** Add site `clutchfantasysports.com`. Cloudflare scans the current DNS at Netlify and auto-imports records. Verify everything imported correctly against your screenshots.
+2. **In Cloudflare:** Note the two new nameservers it assigns you (e.g. `lucy.ns.cloudflare.com` / `walt.ns.cloudflare.com`).
+3. **In Name.com:** Domains → clutchfantasysports.com → Nameservers → change from `dns*.p06.nsone.net` to the two Cloudflare ones. Save.
+4. **Wait** for propagation. Test with `dig NS clutchfantasysports.com @8.8.8.8` or `nslookup -type=NS clutchfantasysports.com 8.8.8.8`. When the response shows Cloudflare's nameservers, you're live.
+5. **Verify site** is still up. Hit https://www.clutchfantasysports.com — should still load the Vercel app.
+6. **Set up Cloudflare Email Routing:** Cloudflare dashboard → Email → Email Routing → Enable. It'll add the required MX records (3 of them) and a TXT/SPF record automatically. Then add destination `ericmsaylor@gmail.com`, verify it (click confirmation email), and add forwarding rule `eric@clutchfantasysports.com → ericmsaylor@gmail.com`.
+7. **Test email forwarding:** Send a test from a different email account to `eric@clutchfantasysports.com`. Should land in Gmail within 30 seconds.
+8. **Optional but nice:** Add DMARC TXT record `_dmarc.clutchfantasysports.com` → `v=DMARC1; p=none; rua=mailto:eric@clutchfantasysports.com`. Helps deliverability of outbound mail (when you send via Resend, etc.).
+9. **Cleanup:** In Netlify, delete the site entry. Account can stay or go — your choice.
+
+**Rollback if anything goes wrong:**
+- If the site goes down after the nameserver swap: go back to Name.com, restore the four NS1 nameservers. Propagation will reverse within an hour.
+- If Cloudflare email routing fails verification: leave Cloudflare DNS in place but use Improvmx as a fallback (different MX records, also free).
+
+**Risks / gotchas:**
+- Make sure Vercel's domain verification TXT records (if any exist) are recreated in Cloudflare before nameserver swap, or Vercel will mark the domain as misconfigured and SSL might rotate.
+- Resend (used for email sending in `notificationService`) sends from a different domain right now (probably their default `resend.dev` or similar). If you ever set up `noreply@clutchfantasysports.com` for outbound, you'll need to add Resend's DKIM records in Cloudflare. Defer to a separate item.
+
+**FILES / accounts touched:**
+- Name.com account
+- Netlify account
+- Cloudflare account (new)
+- No code changes needed
+
+---
+
+### 181 — Navbar account dropdown: duplicate "My Profile" entry `LOW`
+**Status:** `DONE`
+**Completed:** 2026-05-16 — Renamed one "My Profile" entry to "Account Settings" with settings-cog icon (eliminates the visual duplicate while preserving both routes — `/profile` is the profile page, `/profile` link with new label clarifies it as account settings). Files: Navbar.jsx (commit 40e988a)
 **Priority:** Low — cosmetic but obvious to user
 **Source:** Cowork pool re-audit, May 12 2026
 
@@ -7153,6 +7492,349 @@ Remove the duplicate. Likely two route definitions both labeled "My Profile" —
 
 **FILES:**
 - `frontend/src/components/layout/Navbar.jsx` — account dropdown menu items
+
+---
+
+### 199 — League Format: Chopped (weekly elimination + roster goes to waivers) `HIGH`
+**Status:** `TODO`
+**Priority:** High — proven format with **multi-million-dollar competitor company** (Matthew Berry's Guillotine Leagues = entire startup built around it), Eric played the Sleeper version (Chop Suey league), strong "must-watch-every-week" engagement loop, makes a 14-team NFL league feel alive every Sunday. Real differentiator for NFL launch.
+**Source:** Cowork — observed in Eric's live Sleeper league "Chop Suey" (2025 14-Team Chopped PPR) and Matthew Berry's Guillotine Leagues standalone platform (guillotineleagues.com), May 12-16 2026
+
+**Competitive context (critical for positioning):**
+- **Sleeper** — has "Chopped" as a free league format option. Friend-group, no money. The format that's already in the wild.
+- **Guillotine Leagues** (Berry's company, sister to Fantasy Life) — entire standalone regulated DFS-style platform running paid contests with the format. Operating in ~48 states. Has its own podcast ("CHOP"), branded vocabulary ("Guilloteenies"), format variants ("Chopionship" = tournament-of-survivors). Mobile-first iOS + Android.
+- **Clutch's lane (the differentiated value prop):** content + brand + **FREE format with friends + persistent Clutch Rating across all your formats + AI Coach with cross-format memory**. Neither Sleeper (free but no brand/content/rating) nor Guillotine (brand/content but paid-only with strangers) serves this. **This is the value prop, not a side benefit. The "free friend-group with cross-format meaning" framing must show up in marketing copy + onboarding.**
+
+**What Chopped is (verbatim from Sleeper's settings panel):**
+> "Chopped is a mode where each week the lowest scoring team is eliminated and their roster is added to the waivers."
+
+**Why it works (observed in Eric's league):**
+- Final standings shown after week 18 — top teams (Inflamed hemroids 2,426 PF, Taint Drapes 2,274 PF) accumulated points all season; bottom teams (BenDover2569 875 PF, Bobbitt's Revenge 967 PF) got chopped early and stopped accumulating. The PF spread itself tells the story of when each team died.
+- All teams show `0-0` W-L because there are no head-to-head matchups — pure cumulative points race.
+- Every week is a survival event: lowest scorer dies, their players hit the wire, FAAB war erupts. Even non-contenders care because they want to avoid being next.
+- Plays cleanly with FAAB ($1000 budget in Eric's league) — the chopped roster is the loot drop.
+
+**Schema additions:**
+1. `League.format` enum — extend existing format field (currently H2H / Roto / Survivor / OAD / Segment) to include `CHOPPED`. If `format` doesn't exist yet, add it; if it does, just add the enum value.
+2. `Team.eliminatedAt` — nullable timestamp; set when a team is chopped. Used to (a) lock their roster from waivers/trades, (b) display them grayed out in standings, (c) compute survivor count.
+3. `Team.eliminationWeek` — nullable int; redundant with timestamp but easier to query.
+4. `Team.finalRank` — nullable int; assigned in reverse order of elimination (first chopped = last place, last surviving = champion).
+5. Migration name: `add_chopped_format`
+
+**Backend service: `backend/src/services/choppedElimination.js`**
+- New service. Exports `runWeeklyElimination(leagueId, week)`:
+  1. Query all `Team` rows in league where `eliminatedAt IS NULL` (still alive).
+  2. Compute each team's total fantasy points for the given week. **For golf**: sum `Performance.fantasyPoints` for the team's starters that tournament. **For NFL**: sum `NflPerformance.fantasyPoints` for week's starters.
+  3. Find lowest scorer. Tiebreaker: lowest cumulative season points (the "trailing-est" team dies). Second tiebreaker: random.
+  4. Mark that team eliminated: `eliminatedAt: now`, `eliminationWeek: week`, `finalRank: <current alive count>`.
+  5. Release all eliminated team's rostered players to FAAB waivers — create `WaiverClaim` candidates / set `RosterSpot` rows to free agent (use existing waiver release mechanism, do not invent a new one).
+  6. Emit `team_chopped` event via Socket.IO + `notificationService.notify()` to ALL league members (eliminated team gets a different message — "You've been chopped" vs "Team X was chopped, their roster hits waivers Tuesday").
+  7. Last team alive → set `finalRank: 1`, mark league `status: COMPLETE`, fire `league_won` event.
+- Cron registration in `backend/src/index.js`:
+  - Golf chopped: Monday 8 AM ET (after Sunday tournament completes + auto-resolution). Reuse existing `weeklyResultsCron` hook.
+  - NFL chopped: Tuesday 6:30 AM ET (after Monday Night Football, after `nflFantasyTracker.js` runs).
+- Both crons: query active leagues with `format = CHOPPED`, call `runWeeklyElimination()` for each.
+
+**Frontend surfaces:**
+1. **Standings (`LeagueHome.jsx` or wherever Teams table renders):**
+   - Eliminated teams: gray text + line-through on team name, "💀 W6" badge showing week chopped.
+   - Sort: alive teams first (by cumulative PF), then eliminated teams (most recent elimination first).
+   - Remove W-L columns for chopped leagues; show `PF`, `Avg/Wk`, `Status` (Alive/Chopped W6).
+   - Show "X of Y still alive" counter at top.
+2. **"Chopping Block" widget on league home:**
+   - Live during the current scoring week. Shows projected scores for all alive teams sorted ascending — the team at the top of the list is "On the Chopping Block."
+   - Pulls from existing live scoring pipeline (`scoringService.js`). For golf: tournament-aware fantasy projection. For NFL: live PPR/standard.
+   - Subtle red glow on the bottom team. Updates real-time.
+3. **Roster page when viewing eliminated team:**
+   - Banner: "This team was chopped Week 6. Their roster was released to waivers."
+   - Players grayed out, no add/drop buttons.
+4. **Feed event:** New event type `team_chopped` — auto-posted to league chat: "💀 @TeamName was chopped Week 6 with 87.4 pts. Their roster (15 players) hits waivers in 24h."
+5. **PostHog events:**
+   - `chopped_league_created` (sport, teamCount)
+   - `team_chopped` (leagueId, eliminatedTeamId, week, score, survivorsRemaining)
+   - `chopped_player_claimed` (the FAAB pickup of a chopped player — interesting waiver behavior signal)
+   - `chopped_league_won` (leagueId, championId, weeksAlive)
+
+**League creation UI:**
+- In `CreateLeague.jsx` or league format picker — add Chopped as a card next to H2H / Roto / Survivor. Tagline: "Last team standing. Lowest score each week is eliminated; their roster hits waivers."
+- League size validation: minimum 4 teams (else the league ends in 3 weeks). Recommend 10-14 for season-long pacing — explain "Your league will last <teamCount> weeks. 14 teams = full NFL regular season."
+
+**Edge cases / rules to write into the service:**
+- Bye weeks (NFL): teams with most starters on bye are punished — that's the format, not a bug. Don't soften it.
+- Tournament weeks with no golf (off-week): skip elimination, don't chop.
+- Trade deadline: Sleeper's Chop Suey league has trade deadline week 11 (config option already exists). Disable trades for eliminated teams immediately.
+- IR / suspensions: chopped team's IR'd players also released. No carve-outs.
+- Tie at the bottom: see tiebreakers above. Document in league chat post: "Tie at 67 pts — TeamA chopped (lower season total)."
+
+**Out of scope for v1:**
+- Resurrection / second-chance mechanics (Sleeper doesn't do this either — keep it brutal).
+- Chopped + playoffs hybrid — Chopped IS the playoffs.
+- Per-week visualization of historical eliminations (nice-to-have, queue separately).
+- **Paid contests / DFS-style entry fees** — Clutch's positioning forbids this AND Guillotine Leagues owns that lane with regulatory infrastructure Clutch is not staffed to replicate.
+- **"Chopionship" multi-league tournament format** — Year 2 idea, queue separately when item 199 proves engagement.
+
+**Steals from Guillotine Leagues (do incorporate in v1):**
+- **Survivor-count-everywhere UI pattern.** Show "X of Y still alive" in EVERY surface — standings widget, league header, notification badge, chat events. The shrinking number IS the dopamine loop. Don't bury it.
+- **Branded participant vocabulary.** "Guilloteenies" is silly but ownable. Pick a Clutch name BEFORE launch — options: "Survivors", "Choppers", "The Block", "Lifelines". Eric decides. Use consistently across UI + emails + marketing.
+- **Mobile-first packaging for Chopped specifically.** Standard leagues people manage on desktop; Chopped people obsessively check on phone Sunday mornings ("am I about to die?"). Even before Clutch has a native app, the Chopped UI views (LeagueHome chopping-block widget, eliminated banner, weekly elim notification) must feel native on mobile.
+
+**Files (new):**
+- `backend/prisma/schema.prisma` — add `CHOPPED` to format enum, `eliminatedAt`/`eliminationWeek`/`finalRank` on Team
+- `backend/prisma/migrations/XXX_add_chopped_format/migration.sql`
+- `backend/src/services/choppedElimination.js` — new service
+- `frontend/src/components/league/ChoppingBlockWidget.jsx` — new component
+- `frontend/src/components/league/EliminatedTeamBanner.jsx` — new component
+
+**Files (modified):**
+- `backend/src/index.js` — register Monday 8 AM ET + Tuesday 6:30 AM ET cron triggers
+- `backend/src/services/notificationService.js` — add `team_chopped` notification template (email + push + in-app)
+- `backend/src/services/scoringService.js` — expose `getLiveTeamScore(teamId, week)` if not already, for chopping-block widget
+- `frontend/src/pages/CreateLeague.jsx` — add Chopped format card
+- `frontend/src/pages/LeagueHome.jsx` — render ChoppingBlockWidget, modify Teams table for chopped leagues
+- `frontend/src/pages/TeamRoster.jsx` — render EliminatedTeamBanner if `team.eliminatedAt`
+- `frontend/src/services/analytics.js` — add 4 new event constants under `Events`
+
+**Verify:**
+- Create a chopped golf league with 4 test users, run a week, lowest scorer gets eliminated, their players appear in waivers, surviving teams' standings re-sort, chat shows "💀 X chopped" event.
+- Create a chopped NFL league with 4 teams, simulate a week via NFL test seeder, same flow.
+
+---
+
+### 200 — Format-aware Player Browser pill (Sleeper "Chopped/FA" toggle equivalent) `LOW`
+**Status:** `TODO`
+**Priority:** Low — small UX polish, ride-along with item 199
+**Source:** Cowork observation of Sleeper league Player browser, May 12 2026
+
+**What Sleeper does:** When you're inside a Chopped league and visit the Players tab, two pills appear: `Chopped` and `FA`. "Chopped" shows players that came off eliminated rosters; "FA" shows the full free-agent pool. Lets you tell instantly which players were dropped because their team died vs which were never rostered.
+
+**For Clutch:** After item 199 ships, add the same pill on `PlayerBrowser.jsx` / wherever the league's free agent list lives. A player whose previous roster spot has `eliminatedAt != null` gets the "Chopped" badge. Filter pill toggles between "Chopped" / "Never Rostered" / "All Free Agents."
+
+Bonus: a "Chopped from" badge on the player card showing the eliminated team name and elimination week.
+
+**Files:**
+- `frontend/src/pages/PlayerBrowser.jsx` (or wherever free agents render in-league)
+- `frontend/src/components/players/PlayerRow.jsx` — chopped badge
+
+**Depends on:** Item 199 (schema must exist first).
+
+---
+
+### 202 — MARQUEE: Retroactive Rating Reveal at Import (NFL launch hero feature) `HIGH`
+**Status:** `TODO`
+**Priority:** **HIGHEST priority for NFL launch positioning.** This is the one strategic addition from the May 16 competitive sweep + strategic-handoff doc worth interrupting the standard bug queue for. It is the launch-day press hook ("Clutch grades you, not just your players") made tangible in 90 seconds of onboarding.
+**Source:** Cowork — derived from `clutch_strategic_handoff.md` Section 3.1 + 7 + Eric's May 16 strategic discussion ("manager-grading stays a key differentiator without becoming the only thing"). MVP scope only — Year-2 vision (counterfactuals, brief's 6 process sub-scores, mobile-native reveal) is captured at bottom as out-of-scope.
+
+**What this is, in one screenshot:** A new user imports their existing Sleeper / ESPN / Yahoo / Fantrax / MFL league. Within 90 seconds of completing the import, they hit a designed-as-reveal onboarding screen titled something like **"Your Clutch Rating: 3 seasons graded"** that shows their existing-platform Clutch Rating V2 score + tier badge + a small ribbon of stat snapshots ("Draft IQ: 78 — top 20% of all imported managers." / "You won 2 championships across 12 years." / "Your 3 worst draft picks: ..."). The page is a destination, not a modal — they can share it, screenshot it, and the URL is public-by-default (with privacy controls).
+
+**Why this matters (lift from strategic-handoff doc):**
+- Collapses the cold-start problem — every new user arrives with a non-zero, meaningful Rating from minute one instead of "play 8 weeks for us to grade you"
+- Creates the screenshot-worthy viral moment that gets posted in group chats — the marketing engine for the wedge user
+- Gives Clutch a real engine-validation dataset (thousands of imported managers' historical ratings) BEFORE the 2026 NFL season opens, instead of flying blind into the only season-shaped window of the year
+- Anchors the platform's positioning ("Clutch grades the manager, not the roster") at the moment users are deciding whether to come back
+
+**What's already built (verify before scoping):**
+- All 5 platform importers exist (Sleeper, ESPN, Yahoo, Fantrax, MFL) — see `backend/src/services/imports/`
+- League Vault V2 surfaces draft history, season records, owner mapping
+- Clutch Rating V2 with 7 components + confidence curves (per CLAUDE.md Phase 5B — `clutchRatingService.js` 833 lines)
+- `analyticsAggregator.js` aggregates HistoricalSeason records into ManagerProfile (per QUEUE item 002 fix from March)
+- Owner mapping wizard claims HistoricalSeason rows to userId (League Vault V2)
+
+**What's the gap that makes "see your career graded in 90 seconds" not exist today:**
+1. The Rating + history exist in the data layer but there's no purpose-built **import-completion reveal moment** in the onboarding flow. Users get dropped on the League Home or Vault and have to find their rating themselves.
+2. The reveal needs designed share/screenshot assets — a public OG-image-friendly URL the user can drop in a group chat (`/r/{userId}` or `/career/{userSlug}`).
+3. Rating computation currently runs on a cron / batch — for the reveal to fire instantly post-import, it needs to run inline (or be triggered with the import job's completion handler).
+4. The current Rating components include outcome-weighted scores (Win Rate, Championships) — the brief argues for process-only. For the MVP we ship what we have; revising the math is Year 2.
+
+**MVP scope (what ships before NFL launch, ~3-4 weeks for Code):**
+
+1. **Backend: inline rating compute on import completion.**
+   - When an import job finishes successfully (`imports/sleeperImport.js` etc.), trigger `clutchRatingService.recomputeForUser(userId)` synchronously in the same job. No cron wait.
+   - If owner claim happens later (Vault wizard), re-trigger on claim event.
+   - Idempotent — safe to re-run, no duplicate sub-rows.
+
+2. **Backend: new endpoint `GET /api/career/:userSlug`** that returns the full rating-reveal payload.
+   - **Public-by-default (no auth required).** Confirmed by Eric May 16 2026 — viral share needs public URLs, the "Rating must stay private" guidance in the strategic-handoff doc refers to *competitive leaderboards*, not individual users' own career pages. Owner can toggle to private via Profile settings; default off.
+   - Payload shape:
+     ```json
+     {
+       "user": { "displayName", "username", "avatarUrl" },
+       "rating": { "overall": 78, "tier": "VETERAN", "components": { ... 7 sub-scores ... } },
+       "career": { "seasonsCount": 12, "leaguesCount": 3, "totalWins": 134, "totalLosses": 92, "championships": 2 },
+       "highlights": [
+         { "type": "best_draft_pick", "year": 2019, "player": "Christian McCaffrey", "round": 3, "value": "+8.4 standard dev above ADP" },
+         { "type": "worst_draft_pick", ... },
+         { "type": "longest_dynasty_hold", ... },
+         { "type": "most_chosen_position_round_1", ... }
+       ],
+       "compareToImports": { "draftIqPercentile": 82, "winRatePercentile": 64 }
+     }
+     ```
+   - The `highlights` array is the screenshot fuel. Compute 4-6, surface 3 that are most flattering or most ribbable.
+
+3. **Frontend: new route `/career/:userSlug`** — designed as a public landing page, not an in-app modal.
+   - Hero: avatar + displayName + rating-circle (existing `DashboardRatingWidget` styled bigger) + tier badge
+   - Career strip: 4-stat cards (seasons, leagues, championships, win rate)
+   - 7-component Rating breakdown with confidence bars (existing component)
+   - Highlights carousel: 3 hand-picked moments with cards designed for screenshotting (16:9 aspect, branded watermark in corner)
+   - Compare strip: "You rank #X% on Draft IQ vs all imported Clutch managers" (only if percentile data is available — show 3-5 dimensions max)
+   - **Share button** with native share API + copy-link + 4 pre-built social images (one per major dimension) generated via `@vercel/og` or similar
+   - Footer CTA: "Want to play here? Start a free league →" for non-logged-in viewers
+   - OG image: server-rendered card with their rating + tier + a one-line tagline — must look great as a Twitter / iMessage preview
+
+4. **Onboarding flow integration: import completion → reveal redirect.**
+   - When import job completes (and rating recompute returns), redirect the user to `/career/{theirSlug}?from=import` instead of dropping them on League Home.
+   - Add a one-time toast on the reveal page: "Your rating across [N] seasons just dropped. Share it or jump into your league →"
+   - "Continue to league" CTA on the reveal redirects to League Home.
+
+5. **PostHog events:**
+   - `career_reveal_viewed` (userId, fromImport: true|false, seasonsCount)
+   - `career_reveal_shared` (channel: native|copylink|twitter|imessage)
+   - `career_reveal_signup_from_share` (referrerUserId) — this is the viral attribution event
+   - `import_completed_rating_inline` (importPlatform, seasonsImported, ratingScore) — for measuring inline-compute success vs cron fallbacks
+
+**Files (new):**
+- `backend/src/routes/career.js` — public `GET /api/career/:userSlug`
+- `frontend/src/pages/CareerReveal.jsx` — the public reveal landing page
+- `frontend/src/components/career/HighlightCard.jsx` — screenshottable card component
+- `frontend/src/components/career/CompareRibbon.jsx` — percentile ribbon
+- Backend OG-image renderer at `/api/og/career/:userSlug` (use `@vercel/og` or similar; renders a 1200×630 social card with rating + tier + tagline)
+
+**Files (modified):**
+- `backend/src/services/imports/{sleeper,espn,yahoo,fantrax,mfl}Import.js` — call `clutchRatingService.recomputeForUser(userId)` on success
+- `backend/src/services/clutchRatingService.js` — expose `recomputeForUser(userId)` if not already, ensure idempotent
+- `frontend/src/services/api.js` — `getCareerReveal(userSlug)`, `track('career_reveal_viewed', ...)` etc.
+- `frontend/src/services/analytics.js` — add 4 new event constants under `Events`
+- `frontend/src/pages/Profile.jsx` — privacy toggle "Make my career page public/private" (default: public)
+- App router — add `/career/:userSlug` route, unauthenticated
+
+**Edge cases / rules:**
+- User imports a league but isn't claimed as an owner yet (owner-claim wizard incomplete) → reveal page shows "Claim your seasons" CTA instead of full reveal
+- User imports a single league that's only 1 season old → reveal page shrinks gracefully, doesn't show "career" framing, surfaces what we have
+- User has zero imports (just signed up with no leagues) → don't render `/career/me`; redirect to League Home with "Import your league to see your rating →" CTA
+- **Slug = username, always.** Clutch already enforces unique usernames at signup (Profile validates 3-30 chars lowercase alphanumeric + hyphens, returns 409 on duplicate per `analytics.js` notes), so collisions are not a runtime concern. URL pattern: `clutchfantasysports.com/career/ericsaylor`.
+- **Username required before the reveal page renders.** Users who signed up without setting a username (field is currently optional) get prompted to pick one as the final step of import → reveal. Pre-fill suggestions from their display name. This is one-time friction that produces a clean shareable URL forever.
+- If a user later changes their username, old reveal URLs 301-redirect to the new one. Keep a `username_history` table so old links don't 404 when shared.
+- Privacy: default is **public** for all users. Owner can opt out via Profile → "Make my career page private." If toggled private, public visits return 404; owner viewing their own page still works; existing share links go cold (acceptable).
+
+**Out of scope for v1 (Year 2 epic, do NOT scope into this item):**
+- Decision-level retroactive rating compute (the brief's full vision — counterfactuals, "you started Evans over Lamb" calls) requires preserving per-decision data the importers don't currently capture. Year-2 work.
+- Brief's 6 process sub-scores (Draft discipline / Trade execution / Waiver-FAAB / Start-Sit / Roster mgmt / Volatility). Current 7 components are what they are for v1.
+- Mobile-native (React Native) reveal — web responsive is sufficient for v1.
+- Counterfactual coach commentary on the reveal page.
+- Rating-predicts-outcomes internal analytics layer (brief Section 3.6) — separate Year-2 epic.
+- Public leaderboard at `/career` (browse all public managers) — explicitly NOT in v1 per strategic discussion (private/internal mirror, not status game).
+
+**Verify:**
+- Import a real Sleeper league with multi-year history → rating computes inline → reveal page renders with non-zero rating + populated highlights → share button generates a valid OG image preview when pasted in iMessage/Twitter.
+- Test with a user who has 1 season imported, 5 seasons, and 12 seasons — UX should scale.
+- Test the share-to-signup funnel by sharing the URL to a logged-out browser and confirming PostHog fires `career_reveal_viewed` with `fromImport: false` and a clean signup path back into the app.
+
+**Why this is item 202, not item 199 (Chopped):** Chopped is a format play that competes for "best league experience." This is a positioning play that establishes "why Clutch exists." Per the strategic-handoff doc Section 7: "If only one thing gets built between now and August 2026: retroactive Rating from imported league history."
+
+---
+
+### 203 — Decision Capture Phase A (schema + envelope + chips taxonomy) `MEDIUM`
+**Status:** `DONE` — and went well beyond Phase A scope
+**Completed:** 2026-05-16 — Shipped Phase A + A.1 + B (all 7 primitives) + frontend chip pickers + LINEUP_VIEWED PostHog event in one night. Five commits totaling ~1,300 lines.
+- **Phase A (47cf922):** Migration 51 — 5 model extensions + 2 new tables (WatchlistEvent, AuctionNomination). Shared reasonChips.js taxonomy (frontend + backend mirror). decisionEnvelope.js helpers (note: backend helper lives at `backend/src/services/decisionEnvelope.js`, not `backend/src/lib/`, but functionally equivalent).
+- **railway.toml landmine fix (6ba81f5):** Removed `prisma db push --accept-data-loss` from startCommand. The push was silently mutating prod schema before `migrate deploy` ran — caused initial Phase A deploy to crashloop. Future schema changes must go through migration files only. See `project_clutch_deploy_model.md` memory.
+- **Phase B (4eccaae):** Write paths for 6 primitives — draft pick (with computed pickQuality from ADP/auction delta, time-on-clock, top-200 availablePool snapshot), lineup save (structured decisions[] + editCount mutate-in-place), waiver/FA claim (acquisitionRoute + FAAB-at-bid), trade (proposer/responder projected values at propose/response, declineReason enum), naked drop (wasOnActiveLineup + daysSinceAcquisition + acquisitionType), watchlist (new DB rows on add/remove).
+- **Phase A.1 + B-7 (108e0bd):** `leagueContextService.js` computes standingsPosition/record/rank + weeksRemaining (NFL only — golf TBD). buildEnvelopeWithContext() async helper wired into 5 routes. Auction nomination capture (route + back-fill on award) for Phase 2.7 nomination-bias detector.
+- **Frontend chips + LINEUP_VIEWED (e18469b):** New `<ReasonChipsPicker>` shared component (sport-aware, max-3 multi-select). Wired into trade proposal modal + waiver claim form. LINEUP_VIEWED PostHog event on TeamRoster mount/unmount (paralysis signal, pairs with editCount DB field).
+
+**Pre-flight checks Eric flagged in this spec but DID NOT verify/add:**
+- ClutchProjection.rosProjectedPts — separate from tradeValue (Phase 5.2 loss-aversion detector dependency)
+- ClutchProjection variance/uncertainty (risk_tier enum) — Phase 2.5 late-round caution dependency
+Both deferred to follow-up; not blocking Year 1 capture since the columns they'd populate (`projectedPtsAtPick`, etc.) accept whatever ClutchProjection currently exposes.
+
+**Remaining gaps (deliberately):**
+- Draft pick + naked drop chip pickers (no active drafts; drop dialog has no existing reasoning UI)
+- Sleeper trending integration (vendor data pipeline — separate work)
+- Year 2 model-driven leagueContext fields (rosterStrength, weeklyMatchupWinProb, schedule strength)
+- Shadow read service `decisionHistoryService.js` (Phase D — Year 2)
+- Retroactive import backfill (Phase E — depends on item 202)
+
+Files (new): migrations/51_decision_capture_year_1/, backend/src/services/{decisionEnvelope,leagueContextService}.js, backend/src/constants/reasonChips.js, frontend/src/utils/decisionEnvelope.js, frontend/src/constants/reasonChips.js, frontend/src/components/common/ReasonChipsPicker.jsx, docs/PHASE_A_DEPLOYMENT.md
+Files (modified): backend/prisma/schema.prisma, backend/src/routes/{drafts,teams,trades,waivers,watchList}.js, backend/src/services/{fantasyTracker,draftTimer}.js, backend/railway.toml, frontend/src/{services/analytics,hooks/{useTradeCenter,useWaivers},pages/{TeamRoster,TradeCenter,WaiverWire},components/trade/ProposeTradeModal}.js[x]
+**Priority:** Medium — parallel/background work to NFL launch sprint. **Not on NFL launch critical path** (the bias engine that consumes this data is Year 2). But the migration must ship before any new decision surface is added, or that surface will need re-instrumenting later.
+**Source:** `docs/CLUTCH_DECISION_CAPTURE_SPEC.md` v3 + `docs/BIAS_BY_PHASE_MATRIX.md`. Both are required reading before writing any code.
+
+**The instruction in one paragraph:** Read `CLUTCH_DECISION_CAPTURE_SPEC.md` v3 (not v2 — v3 incorporates a cross-walk against the bias matrix and added 2 new primitives + 7 new envelope fields you'd otherwise miss). Implement Phase A only: schema migration for the new columns + 2 new tables (`WatchlistEvent`, `AuctionNomination`), the `reasonChips.js` taxonomy const file, the `DecisionEnvelope` helper, and the `leagueContextService.js` that computes envelope `leagueContext` fields on demand. Do NOT start Phase B (write-path instrumentation per primitive) in the same PR — that's 7 separate PRs covered by Phase B in the spec's build order.
+
+**Scope boundary — Phase A only includes:**
+1. ONE Prisma migration adding:
+   - new nullable columns on `DraftPick`, `LineupSnapshot`, `WaiverClaim`, `Trade`, `RosterTransaction` per spec §6 (now §8 in v3) "Migration impact"
+   - NEW table `WatchlistEvent` per spec §6
+   - NEW table `AuctionNomination` per spec §7
+   - All new columns nullable, NO `NOT NULL DEFAULT` (DraftPick is already large — that lock kills Railway)
+2. NEW file `frontend/src/constants/reasonChips.js` exporting `REASON_CHIPS` + `chipsForSport(sport)` per spec §8
+3. NEW file `backend/src/lib/decisionEnvelope.js` exporting a `buildEnvelope({ userId, teamId?, leagueId?, sport, surface })` helper that returns the full `DecisionEnvelope` shape (envelope + leagueContext + mock attribution skeleton)
+4. NEW file `backend/src/services/leagueContextService.js` computing the v3 expanded `leagueContext` fields: standings record, rank, playoff prob, weekly matchup win prob, roster strength, past/ROS/playoff schedule strength. Cache per `(leagueId, fantasyWeekId)` with a 1-hour TTL. Returns null fields gracefully when data not yet available (e.g., pre-season).
+5. NO write-path changes to existing decision routes. NO frontend `track()` call modifications. Those come in Phase B.
+
+**Pre-flight checks (verify before writing):**
+- `ClutchProjection` model exposes BOTH `tradeValue`/`currentValue` AND `rosProjectedPts` separately. If not, add a `rosProjectedPts` field — Phase 5.2 detector (Loss aversion in trades) needs it. Flagged in v3 spec under "Dependencies on ClutchProjection."
+- `ClutchProjection` model exposes some form of variance/uncertainty per player (variance, p10/p90, or coarse `riskTier`). If not, add a `riskTier: 'LOW' | 'MED' | 'HIGH'` enum — Phase 2.5 detector (Late-round caution) needs it.
+- These two ClutchProjection additions can ship in the same migration as Phase A's other changes if they're missing.
+
+**Out of scope (do NOT do in this item):**
+- Wiring `buildEnvelope()` into any existing route handler (that's Phase B per primitive)
+- Adding chips to any UI component (that's Phase B + frontend work)
+- Backfill of existing rows (Phase E in the spec — runs after each importer)
+- The shadow read service `decisionHistoryService.js` (Phase D)
+- The bias engine itself (Year 2)
+
+**Files (new):**
+- `backend/prisma/migrations/XXX_decision_capture_phase_a/migration.sql`
+- `backend/src/lib/decisionEnvelope.js`
+- `backend/src/services/leagueContextService.js`
+- `frontend/src/constants/reasonChips.js`
+
+**Files (modified):**
+- `backend/prisma/schema.prisma` — add fields per migration
+
+**Verify:**
+- Migration applies cleanly to a Railway-sized DB without locking for more than a few seconds (all new columns nullable, no backfill)
+- `buildEnvelope({ userId, sport: 'nfl' })` returns a valid shape with all expected fields, nulls where appropriate
+- `leagueContextService.computeFor(leagueId, weekId)` returns the expanded `leagueContext` for a real existing league + week, including the new v3 fields (roster strength, weekly win prob, schedule strength)
+- `chipsForSport('golf')` returns shared chips + golf chips per the const file
+- No existing route's behavior changes — Phase A is purely additive infrastructure
+
+**When this can ship:** any time after NFL launch Tier 1 critical bugs (185, 186, 187, 196) are deployed. Does NOT block the marquee (item 202). Can run in parallel with Tier 2/3 NFL polish work.
+
+---
+
+### 201 — Marketing: Auction Draft Podcast (3-episode pilot) `BACKLOG-Y2`
+**Status:** `BACKLOG`
+**Priority:** Year 2 marketing experiment — not a NFL launch item, scheduled for Jan 2027 evaluation
+**Source:** Eric idea raised during Fantasy Footballers competitive walkthrough, May 16 2026
+
+**Opportunity:** Zero major fantasy football podcasts cover auction drafts as primary focus. Fantasy Footballers, FantasyPros, Locked On Fantasy, ETR — all snake-draft-dominant. Auction drafters are a passionate ~5-10% niche (paid Fantrax / Yahoo Plus users) deeply underserved on content. First-mover defensibility in podcast verticals is unusually durable.
+
+**Why this maps to Clutch:**
+- Clutch already supports auction draft deeply (Lab board editor has auction values column, draft room supports auction format). Every episode = free demo of platform tooling.
+- SEO moat from day one — episode titles + show notes are evergreen long-tail content ("auction draft strategy 2026", "$200 budget allocation", "nomination order").
+- Audio → app install funnel is well-proven for fantasy (Fantasy Footballers' app installs driven primarily by show mentions).
+
+**Pilot test (low-cost validation):**
+- 3 deep-dive episodes, drop together to YouTube + Spotify + Apple Podcasts.
+- Ep 1: "Auction Draft 101 — the math behind $200 budgets" (educational, SEO-friendly)
+- Ep 2: "Nomination strategy — when to throw out a player you actually want" (advanced tactical)
+- Ep 3: "$200 mock auction live" (Eric + co-host run real-time mock in Clutch's Lab — also demo content)
+- Target: 500 listens/episode in first 30 days from cold-start with paid promo on r/fantasyfootball + twitter
+- Budget: ~$200 mic setup + Riverside subscription ($15/mo) + ~10 founder hours
+
+**Decision point — Jan 2027:** Evaluate pilot signal. If listener growth + engagement is real, commit to weekly for 2027 NFL season as primary marketing channel. If nothing, recoverable loss.
+
+**Critical pre-conditions before launching pilot:**
+1. **Find a co-host with auction credibility.** Solo shows die fast. Best move: partner with an auction-focused twitter/reddit personality who already has audience. DO NOT GO SOLO.
+2. **Plan editing pipeline before recording.** Hire $50/episode freelance editor on Fiverr/Upwork after the 3 pilots prove the format. Editing kills more podcast projects than content.
+3. **Don't pivot Clutch toward media.** Fantasy Footballers built podcast-first then layered tools; Clutch is platform-first with media as ACQUISITION LAYER. Order matters.
+
+**This is NOT a code item.** It is a strategic marketing reminder. Belongs in Eric's Q1 2027 planning, not Claude Code's queue. Listed here so it doesn't get lost.
+
+**Files (none — strategic note).**
+**Verify:** Re-read this entry in January 2027 and decide whether to proceed.
 
 ---
 
