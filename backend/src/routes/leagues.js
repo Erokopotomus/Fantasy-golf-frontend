@@ -138,6 +138,15 @@ router.post('/', authenticate, async (req, res, next) => {
       budget: budget || null,
     }
 
+    // Chopped leagues default to TUESDAY 23:59 ET waiver close (matches the
+    // auto-chop cron default and the typical "chop Tuesday morning, waivers
+    // process Tuesday night" flow). Commish can override in League Settings.
+    if (resolvedFormat === 'CHOPPED') {
+      combinedSettings.waiverCloseDay = combinedSettings.waiverCloseDay || 'TUESDAY'
+      combinedSettings.waiverCloseTime = combinedSettings.waiverCloseTime || '23:59'
+      combinedSettings.waiverCloseTimezone = combinedSettings.waiverCloseTimezone || 'America/New_York'
+    }
+
     const league = await prisma.league.create({
       data: {
         name,
