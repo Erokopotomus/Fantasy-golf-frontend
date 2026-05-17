@@ -40,10 +40,26 @@ export const REASON_CHIPS = {
     'Stack',        // QB + WR same team
     'Bring-back',   // correlation against opponent
   ],
+  // Chopped-format elimination reason taxonomy. Standalone (not blended with
+  // shared) — these tag a ChopEvent, not a player decision. Consumed by the
+  // future ChopReasoning UI on CommishChopReview.
+  chop: [
+    'Lowest score',
+    'Bye-week overload',
+    'Injury cascade',
+    'Auto-fallback',
+    'Commish override',
+  ],
 }
 
 export function chipsForSport(sport) {
   return [...REASON_CHIPS.shared, ...(REASON_CHIPS[sport] || [])]
+}
+
+// Chop chips are standalone — not blended with `shared`. They describe WHY a
+// team was eliminated, not the manager's reasoning style.
+export function chipsForChop() {
+  return [...REASON_CHIPS.chop]
 }
 
 /**
@@ -53,6 +69,13 @@ export function chipsForSport(sport) {
 export function sanitizeChips(chips, sport) {
   if (!Array.isArray(chips) || chips.length === 0) return null
   const allowed = new Set(chipsForSport(sport))
+  const cleaned = [...new Set(chips.filter(c => allowed.has(c)))]
+  return cleaned.length > 0 ? cleaned : null
+}
+
+export function sanitizeChopChips(chips) {
+  if (!Array.isArray(chips) || chips.length === 0) return null
+  const allowed = new Set(REASON_CHIPS.chop)
   const cleaned = [...new Set(chips.filter(c => allowed.has(c)))]
   return cleaned.length > 0 ? cleaned : null
 }
