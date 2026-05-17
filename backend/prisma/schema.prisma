@@ -100,6 +100,11 @@ model User {
   poolEntries  PoolEntry[]
   commishPools Pool[]
 
+  // Decision capture (Year 1 — bias engine instrumentation)
+  watchlistEvents              WatchlistEvent[]
+  auctionNominationsBy         AuctionNomination[] @relation("NominatedBy")
+  auctionNominationsAcquired   AuctionNomination[] @relation("AuctionAcquired")
+
   @@map("users")
 }
 
@@ -226,6 +231,9 @@ model Team {
   draftDollarAccounts  DraftDollarAccount[]
   draftDollarsSent     DraftDollarTransaction[] @relation("DollarFrom")
   draftDollarsReceived DraftDollarTransaction[] @relation("DollarTo")
+
+  // Decision capture (Year 1)
+  auctionNominations AuctionNomination[]
 
   @@unique([userId, leagueId])
   @@map("teams")
@@ -408,6 +416,10 @@ model Player {
   labCaptureLinks    LabCapturePlayer[]
   poolTierPlayers    PoolTierPlayer[]
   poolPicks          PoolPick[]
+
+  // Decision capture (Year 1)
+  watchlistEvents     WatchlistEvent[]
+  auctionNominations  AuctionNomination[]
 
   @@index([owgrRank])
   @@index([name])
@@ -933,6 +945,9 @@ model Draft {
   draftGrades  DraftGrade[]
   chatMessages DraftChatMessage[]
 
+  // Decision capture (Year 1)
+  auctionNominations AuctionNomination[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -983,9 +998,27 @@ model DraftPick {
   player   Player @relation(fields: [playerId], references: [id])
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
-  pickTag         String? @db.VarChar(20) // STEAL, REACH, PLAN, FALLBACK, VALUE, PANIC
+  pickTag         String? @db.VarChar(20) // legacy — STEAL, REACH, PLAN, FALLBACK, VALUE, PANIC. Replaced by pickIntent + pickQuality below; kept for back-compat.
   boardRankAtPick Int? // Where this player was on user's board at pick time
   boardId         String? // Which board was active during draft
+
+  // Decision capture (Year 1 — Phase A additions; all nullable for fast migration)
+  pickIntent          String?  @db.VarChar(20) // 'PLAN' | 'FALLBACK' | 'PANIC' | 'COUPLED' — user-tagged at pick time
+  pickQuality         String?  @db.VarChar(20) // 'STEAL' | 'VALUE' | 'PAR' | 'REACH' — computed server-side from ADP/auction delta
+  timeOnClockMs       Int?
+  timeOnClockPctOfMax Float?
+  adpAtPick           Float? // NFL snake only
+  auctionValueAtPick  Float? // auction drafts (golf + NFL auction)
+  projectedPtsAtPick  Float?
+  availablePool       Json? // [{ playerId, tier? }] — full remaining pool at pick time
+  reasonChips         Json? // string[] — validated against chipsForSport(sport)
+  reasonText          String?  @db.VarChar(280)
+  // shared envelope
+  clientVersion       String?  @db.VarChar(40)
+  surface             String?  @db.VarChar(40)
+  leagueContext       Json?
+  isMock              Boolean? @default(false)
+  mockMeta            Json?
 
   // Relations
   draftValueTracker DraftValueTracker?
@@ -1088,6 +1121,17 @@ model Trade {
   // Draft dollar trading
   senderDollars   Json @default("{}") // { current: 0, next: 0 }
   receiverDollars Json @default("{}") // { current: 0, next: 0 }
+
+  // Decision capture (Year 1 — Phase A additions)
+  proposerProjectedValue Float? // snapshot at proposal time
+  responderProjectedValue Float? // snapshot at response time (NOT at proposal — values drift)
+  proposerReasonChips    Json?
+  responderReasonChips   Json?
+  declineReason          String?  @db.VarChar(30) // 'VALUE' | 'POSITIONAL_NEED' | 'DISTRUST_OFFERER' | 'PROTECTING_LEAD' | 'DISLIKE_PLAYER' | 'OTHER'
+  // shared envelope (set at proposal time; responder context written into responderReasonChips/responderReasoning)
+  clientVersion          String?  @db.VarChar(40)
+  surface                String?  @db.VarChar(40)
+  leagueContext          Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1417,7 +1461,16 @@ model LineupSnapshot {
   optimalPoints Float? // Best possible arrangement
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
-  decisionNotes Json? // { "benchedPlayers": [{ "playerId": "x", "reason": "matchup" }], "startedPlayers": [...] }
+  decisionNotes Json? // legacy free-form — kept for back-compat. New code writes the structured `decisions` field below.
+
+  // Decision capture (Year 1 — Phase A additions)
+  decisions     Json? // [{ playerId, action: 'STARTED'|'BENCHED'|'MOVED', fromSlot?, toSlot?, projectedAtLock, reasonChips?, reasonText? }]
+  editCount     Int?     @default(0) // number of saves before final lock; mutated in place
+  lastEditedAt  DateTime?
+  // shared envelope
+  clientVersion String?  @db.VarChar(40)
+  surface       String?  @db.VarChar(40)
+  leagueContext Json?
 
   lockedAt  DateTime @default(now())
   createdAt DateTime @default(now())
@@ -1461,6 +1514,17 @@ model RosterTransaction {
 
   // Computed after the fact
   fantasyPointsGenerated Float? // Total fantasy points this player scored after acquisition
+
+  // Decision capture (Year 1 — Phase A additions; primarily relevant for naked drops)
+  wasOnActiveLineup     Boolean?
+  daysSinceAcquisition  Int?
+  acquisitionType       String?  @db.VarChar(20) // 'DRAFTED' | 'TRADED' | 'WAIVER' | 'FREE_AGENT'
+  reasonChips           Json?
+  reasonText            String?  @db.VarChar(280)
+  // shared envelope
+  clientVersion         String?  @db.VarChar(40)
+  surface               String?  @db.VarChar(40)
+  leagueContext         Json?
 
   timestamp DateTime @default(now())
   createdAt DateTime @default(now())
@@ -2170,6 +2234,18 @@ model WaiverClaim {
 
   // Decision reasoning (Phase 6A — feeds Decision Graph)
   reasoning String? @db.VarChar(280)
+
+  // Decision capture (Year 1 — Phase A additions)
+  acquisitionRoute    String?  @db.VarChar(20) // 'WAIVER_FAAB' | 'WAIVER_PRIORITY' | 'FREE_AGENT'
+  faabRemainingAtBid  Float?
+  faabPctAtBid        Float? // bid / (faabRemaining + bid)
+  trendingSources     Json? // string[] — e.g. ['sleeper', 'clutch']; vendor-neutral
+  trendingRank        Int? // 1-N if on any trending list, null otherwise
+  reasonChips         Json?
+  // shared envelope
+  clientVersion       String?  @db.VarChar(40)
+  surface             String?  @db.VarChar(40)
+  leagueContext       Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3382,4 +3458,85 @@ model AppError {
   @@index([userId])
   @@index([createdAt])
   @@index([resolved])
+}
+
+// ============ DECISION CAPTURE — YEAR 1 INSTRUMENTATION ============
+// Two new primitives that don't fit on an existing model.
+// Spec: docs/CLUTCH_DECISION_CAPTURE_SPEC.md (v3).
+// All envelope columns mirror those added to DraftPick/Trade/etc.
+
+model WatchlistEvent {
+  id      String @id @default(cuid())
+  userId  String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playerId String
+  player  Player @relation(fields: [playerId], references: [id])
+  sport   String @db.VarChar(10) // 'golf' | 'nfl'
+  action  String @db.VarChar(10) // 'ADD' | 'REMOVE'
+
+  // state at decision time
+  adpAtAction             Float?
+  projectedPtsAtAction    Float?
+  contentVelocityAtAction Int? // mentions in fantasy media last 7d — null in v1 until pipeline ships
+  watchlistSizeBefore     Int?
+  isMockTarget            Boolean? // was the player just drafted in a recent mock?
+
+  reasonChips Json?
+  reasonText  String? @db.VarChar(280)
+
+  // shared envelope
+  clientVersion String?  @db.VarChar(40)
+  surface       String?  @db.VarChar(40)
+  leagueContext Json?
+
+  occurredAt DateTime @default(now())
+
+  @@index([userId, occurredAt])
+  @@index([userId, playerId, occurredAt])
+  @@index([playerId, occurredAt])
+  @@map("watchlist_events")
+}
+
+model AuctionNomination {
+  id      String @id @default(cuid())
+  draftId String
+  draft   Draft  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  nominatedByUserId String
+  nominatedBy       User   @relation("NominatedBy", fields: [nominatedByUserId], references: [id])
+  nominatedByTeamId String
+  nominatorTeam     Team   @relation(fields: [nominatedByTeamId], references: [id])
+
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id])
+
+  openingBid           Float
+  nominationOrderIndex Int
+
+  // state at decision time
+  wasOnNominatorWatchlist   Boolean @default(false) // CRITICAL signal — nominating own target leaks preference
+  remainingBudgetAtNom      Float?
+  remainingRosterSlotsAtNom Int?
+  marketValueAtNom          Float? // ClutchProjection.auctionValue snapshot
+
+  // resolved at auction-complete (back-fill pass)
+  finalPrice         Float?
+  acquiredByUserId   String?
+  acquiredBy         User?    @relation("AuctionAcquired", fields: [acquiredByUserId], references: [id])
+  wasNominatorTarget Boolean? // derived: wasOnNominatorWatchlist AND acquiredBy === nominator
+
+  reasonChips Json?
+  reasonText  String? @db.VarChar(280)
+
+  // shared envelope
+  clientVersion String?  @db.VarChar(40)
+  surface       String?  @db.VarChar(40)
+  leagueContext Json?
+
+  occurredAt DateTime @default(now())
+
+  @@index([draftId, occurredAt])
+  @@index([nominatedByUserId, occurredAt])
+  @@index([playerId, occurredAt])
+  @@map("auction_nominations")
 }
