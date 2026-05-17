@@ -22,3 +22,6 @@ npm-debug.log*
 # Build
 dist/
 build/
+
+# Manager Intelligence — match miss audit dumps
+backend/scripts/intelligence/_misses/
