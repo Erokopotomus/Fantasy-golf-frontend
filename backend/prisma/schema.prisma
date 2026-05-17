@@ -105,6 +105,9 @@ model User {
   auctionNominationsBy         AuctionNomination[] @relation("NominatedBy")
   auctionNominationsAcquired   AuctionNomination[] @relation("AuctionAcquired")
 
+  // Manager Intelligence (retroactive characteristic extraction)
+  managerCharacteristics ManagerCharacteristic[]
+
   @@map("users")
 }
 
@@ -2108,6 +2111,48 @@ model ManagerProfile {
   @@unique([userId, sportId])
   @@index([userId])
   @@map("manager_profiles")
+}
+
+model ManagerCharacteristic {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  characteristicType  String   @db.VarChar(50)
+  value               Json
+  sampleSize          Int
+  consistencyPct      Float
+  effectSize          Float
+  confidenceScore     Float
+  confidenceLabel     String   @db.VarChar(10) // 'HIGH' | 'MEDIUM' | 'LOW'
+
+  rawEvidence         Json
+  sourceImportIds     String[] @default([])
+  computedAt          DateTime @default(now())
+
+  @@unique([userId, characteristicType])
+  @@index([characteristicType, confidenceScore(sort: Desc)])
+  @@index([userId])
+  @@map("manager_characteristics")
+}
+
+model CharacteristicAggregate {
+  id                    String   @id @default(cuid())
+  characteristicType    String   @unique @db.VarChar(50)
+  totalUsers            Int
+  usersWithData         Int
+  highConfidenceCount   Int      @default(0)
+  medConfidenceCount    Int      @default(0)
+  lowConfidenceCount    Int      @default(0)
+  noDataCount           Int      @default(0)
+  avgConfidenceScore    Float    @default(0)
+  promoteToCoach        Boolean  @default(false)
+  suppressed            Boolean  @default(false)
+  thresholdsOverride    Json?
+  adminNotes            String?
+  computedAt            DateTime @default(now())
+
+  @@map("characteristic_aggregates")
 }
 
 model HeadToHeadRecord {
