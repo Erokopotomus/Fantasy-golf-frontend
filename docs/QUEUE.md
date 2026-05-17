@@ -6693,7 +6693,8 @@ One player is in the tournament field but isn't in any tier (so unpickable). Pos
 ---
 
 ### 177 — Pool: PlayerDrawer Recent Tournaments — filter out UPCOMING events `MEDIUM`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-05-12 — PlayerDrawer.jsx now filters `player.performances` to `tournament?.status !== 'UPCOMING'` before rendering the Recent Tournaments list, with explanatory comment. Files: PlayerDrawer.jsx (commit 4cdc628)
 **Priority:** Medium — finishes the second half of 173
 **Source:** Cowork pool re-audit, May 12 2026
 
@@ -6751,7 +6752,8 @@ Cons: link is sticky-sensitive. If commish forwards admin link by accident, full
 ---
 
 ### 180 — Pool: signup gate copy is generic, not pool-aware `LOW`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** Earlier session — Both Signup.jsx and Login.jsx detect `?redirect=/pools/:slug` via regex, fetch the pool via `api.getPool(slug)`, and render pool-aware headline: "Create an account to enter [Pool Name]" with optional tournament name in the subhead. Falls back to generic copy when redirect is not a pool URL. Files: Signup.jsx, Login.jsx
 **Priority:** Low — copy enhancement
 **Source:** Cowork pool re-audit, May 12 2026
 
