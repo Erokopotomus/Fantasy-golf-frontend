@@ -1163,7 +1163,7 @@ router.get('/:id/live-scoring', authenticate, async (req, res, next) => {
 // GET /api/leagues/:id/available-players - Free agents (players not rostered in this league)
 router.get('/:id/available-players', authenticate, async (req, res, next) => {
   try {
-    const { search, tour, limit = 50, offset = 0 } = req.query
+    const { search, tour, limit = 50, offset = 0, recentlyChopped } = req.query
 
     const league = await prisma.league.findUnique({
       where: { id: req.params.id },
@@ -1186,9 +1186,54 @@ router.get('/:id/available-players', authenticate, async (req, res, next) => {
     })
     const rosteredIds = rosteredEntries.map((r) => r.playerId)
 
+    // "Recently Chopped" filter — surface players released from chopped
+    // teams in the last 7 days. Only meaningful for CHOPPED-format leagues;
+    // for other formats we just return an empty array if the flag is set.
+    let recentlyChoppedIds = null
+    if (recentlyChopped === 'true') {
+      if (league.format !== 'CHOPPED') {
+        return res.json({ players: [], total: 0, limit: parseInt(limit), offset: parseInt(offset) })
+      }
+      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      const recentChops = await prisma.chopEvent.findMany({
+        where: { leagueId: req.params.id, createdAt: { gte: cutoff } },
+        select: { teamId: true, createdAt: true },
+      })
+      if (recentChops.length === 0) {
+        return res.json({ players: [], total: 0, limit: parseInt(limit), offset: parseInt(offset) })
+      }
+      // Earliest chop in window — anyone dropped after their team was
+      // chopped lands here. ChopEvent.createdAt vs RosterEntry.droppedAt
+      // is the linkage; we use the earliest cutoff so all 7d chops contribute.
+      const earliestChop = recentChops.reduce(
+        (min, c) => (c.createdAt < min ? c.createdAt : min),
+        recentChops[0].createdAt
+      )
+      const choppedTeamIds = recentChops.map(c => c.teamId)
+      const choppedEntries = await prisma.rosterEntry.findMany({
+        where: {
+          teamId: { in: choppedTeamIds },
+          isActive: false,
+          droppedAt: { gte: earliestChop },
+        },
+        select: { playerId: true },
+      })
+      recentlyChoppedIds = [...new Set(choppedEntries.map(e => e.playerId))]
+      if (recentlyChoppedIds.length === 0) {
+        return res.json({ players: [], total: 0, limit: parseInt(limit), offset: parseInt(offset) })
+      }
+    }
+
     // Build player filter
     const where = {
       id: { notIn: rosteredIds },
+    }
+
+    if (recentlyChoppedIds) {
+      // Intersect with the recently-chopped allow-list. notIn (rostered)
+      // stays as a safety belt — a chopped player who's been re-rostered
+      // shouldn't show up.
+      where.id = { notIn: rosteredIds, in: recentlyChoppedIds }
     }
 
     if (search) {

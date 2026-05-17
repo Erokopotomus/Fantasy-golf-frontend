@@ -12,6 +12,9 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
   const [error, setError] = useState(null)
   const [search, setSearch] = useState('')
   const [tour, setTour] = useState('All')
+  // Chopped-format only: surface players released from chopped teams in
+  // the last 7 days. Backend returns empty array if league.format != CHOPPED.
+  const [recentlyChopped, setRecentlyChopped] = useState(false)
 
   // Waiver-specific state
   const [pendingClaims, setPendingClaims] = useState([])
@@ -41,6 +44,7 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
       if (search) params.search = search
       if (!isNfl && tour !== 'All') params.tour = tour
       if (isNfl && tour !== 'All') params.position = tour
+      if (recentlyChopped) params.recentlyChopped = 'true'
       params.limit = '100'
 
       let data
@@ -55,7 +59,7 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
     } finally {
       setLoading(false)
     }
-  }, [leagueId, search, tour, isNfl, leagueLoading])
+  }, [leagueId, search, tour, isNfl, recentlyChopped, leagueLoading])
 
   const fetchClaims = useCallback(async () => {
     if (!leagueId || !isWaiverMode) return
@@ -171,6 +175,8 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
     setSearch,
     tour,
     setTour,
+    recentlyChopped,
+    setRecentlyChopped,
     refetch: fetchAvailable,
     // Instant add
     claimPlayer,

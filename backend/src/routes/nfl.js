@@ -1053,7 +1053,7 @@ router.get('/scoring-schema', async (req, res, next) => {
 router.get('/leagues/:leagueId/available-players', authenticate, async (req, res, next) => {
   try {
     const { leagueId } = req.params
-    const { search, position, limit = 100, offset = 0 } = req.query
+    const { search, position, limit = 100, offset = 0, recentlyChopped } = req.query
 
     // Verify league exists and user is a member
     const league = await prisma.league.findUnique({
@@ -1071,9 +1071,45 @@ router.get('/leagues/:leagueId/available-players', authenticate, async (req, res
     })
     const rosteredIds = rostered.map(r => r.playerId)
 
+    // "Recently Chopped" filter — players released from chopped teams in the
+    // last 7 days. Only meaningful for CHOPPED-format leagues.
+    let recentlyChoppedIds = null
+    if (recentlyChopped === 'true') {
+      if (league.format !== 'CHOPPED') {
+        return res.json({ players: [], total: 0, limit: parseInt(limit), offset: parseInt(offset) })
+      }
+      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      const recentChops = await prisma.chopEvent.findMany({
+        where: { leagueId, createdAt: { gte: cutoff } },
+        select: { teamId: true, createdAt: true },
+      })
+      if (recentChops.length === 0) {
+        return res.json({ players: [], total: 0, limit: parseInt(limit), offset: parseInt(offset) })
+      }
+      const earliestChop = recentChops.reduce(
+        (min, c) => (c.createdAt < min ? c.createdAt : min),
+        recentChops[0].createdAt
+      )
+      const choppedTeamIds = recentChops.map(c => c.teamId)
+      const choppedEntries = await prisma.rosterEntry.findMany({
+        where: {
+          teamId: { in: choppedTeamIds },
+          isActive: false,
+          droppedAt: { gte: earliestChop },
+        },
+        select: { playerId: true },
+      })
+      recentlyChoppedIds = [...new Set(choppedEntries.map(e => e.playerId))]
+      if (recentlyChoppedIds.length === 0) {
+        return res.json({ players: [], total: 0, limit: parseInt(limit), offset: parseInt(offset) })
+      }
+    }
+
     const where = {
       nflPosition: { not: null },
-      id: { notIn: rosteredIds },
+      id: recentlyChoppedIds
+        ? { notIn: rosteredIds, in: recentlyChoppedIds }
+        : { notIn: rosteredIds },
     }
     if (search) {
       where.name = { contains: search, mode: 'insensitive' }

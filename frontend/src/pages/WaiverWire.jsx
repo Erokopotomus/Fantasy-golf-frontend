@@ -23,12 +23,15 @@ const WaiverWire = () => {
   const {
     availablePlayers, loading, claimLoading, error,
     search, setSearch, tour, setTour,
+    recentlyChopped, setRecentlyChopped,
     claimPlayer, refetch,
     // Waiver-specific
     submitClaim, cancelClaim, updateClaim,
     pendingClaims, recentResults, budget,
     isWaiverMode, waiverPriority, isNfl,
   } = useWaivers(leagueId, teamId, waiverType)
+
+  const isChoppedLeague = league?.format === 'CHOPPED'
 
   const { roster: rawRoster, refetch: refetchRoster } = useRoster(teamId)
 
@@ -225,7 +228,7 @@ const WaiverWire = () => {
                 className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm placeholder:text-text-muted focus:outline-none focus:border-field-bright/50"
               />
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-wrap">
               {tours.map(t => (
                 <button
                   key={t}
@@ -239,6 +242,20 @@ const WaiverWire = () => {
                   {t}
                 </button>
               ))}
+              {isChoppedLeague && (
+                <button
+                  onClick={() => setRecentlyChopped(!recentlyChopped)}
+                  title="Players released from chopped teams in the last 7 days"
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors inline-flex items-center gap-1 ${
+                    recentlyChopped
+                      ? 'bg-live-red/20 text-live-red border border-live-red/30'
+                      : 'bg-[var(--surface)] text-text-muted hover:text-text-primary border border-transparent'
+                  }`}
+                >
+                  <span>💀</span>
+                  <span>Recently Chopped</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -379,7 +396,11 @@ const WaiverWire = () => {
 
               {availablePlayers.length === 0 && (
                 <div className="text-center py-12 text-text-muted">
-                  {search ? `No players matching "${search}"` : 'No available players'}
+                  {recentlyChopped
+                    ? 'No players released from chopped teams in the last 7 days'
+                    : search
+                      ? `No players matching "${search}"`
+                      : 'No available players'}
                 </div>
               )}
             </div>
