@@ -6708,7 +6708,8 @@ After 173's timezone half landed, the date now reads correctly ("May 14"), but t
 ---
 
 ### 178 — Pool admin: DQ button deletes entry with zero confirmation `HIGH`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-05-13 — Branded DQ confirmation modal added in PoolAdmin.jsx. Clicking DQ now sets `dqTarget` state which renders a modal with the entry's team name, entrant name, email, and a "This can't be undone" warning. User must click "Yes, DQ entry" to proceed; Cancel or backdrop click aborts. Files: PoolAdmin.jsx (commit a028325)
 **Priority:** High — destructive action with no guard
 **Source:** Cowork pool re-audit, May 12 2026, pool `t6c9h2`
 
@@ -6723,7 +6724,8 @@ Clicking the "DQ" cell in the Entries table on PoolAdmin immediately deletes the
 ---
 
 ### 179 — Pool admin: any token holder can manage pool (no auth required) `DISCUSS`
-**Status:** `TODO`
+**Status:** `DONE` — chose Option A (commissioner-only)
+**Completed:** 2026-05-13 — Pool admin endpoints now require signed-in commissioner. Backend `assertAdminAccess()` checks `req.user.id === pool.commissionerUserId`; token URL still works as a fallback but is being phased out. Frontend: PoolAdmin gracefully handles signed-out users (sign-in CTA) and non-commissioner signed-in users ("not your pool" panel). PoolsLanding "Manage →" routes to /pools/:slug/admin without a token. Files: backend/src/routes/pools.js, frontend/src/pages/{PoolAdmin,PoolCreate,PoolsLanding}.jsx, frontend/src/services/api.js (commit 7f28c4c)
 **Priority:** Discuss — by-design tradeoff but security/UX implications worth a call
 **Source:** Cowork pool re-audit, May 12 2026
 
