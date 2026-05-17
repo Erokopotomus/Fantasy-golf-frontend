@@ -1,16 +1,17 @@
 const express = require('express')
-const router = express.Router({ mergeParams: true }) // parent mount injects :id
+const router = express.Router()
 const { authenticate } = require('../middleware/auth')
 const prisma = require('../lib/prisma.js')
 const { computeSafePercents } = require('../services/chopped/safePercentService')
 const { executeChop } = require('../services/chopped/survivalService')
 
-router.use(authenticate)
+// Mount: app.use('/api/leagues', choppedRoutes) — leagueId is path param on each route
+// (Matches the waiverRoutes pattern in waivers.js)
 
-// GET /api/leagues/:id/chopped/safe-percents?week=N&mode=preweek|live
-router.get('/safe-percents', async (req, res) => {
+// GET /api/leagues/:leagueId/chopped/safe-percents?week=N&mode=preweek|live
+router.get('/:leagueId/chopped/safe-percents', authenticate, async (req, res) => {
   try {
-    const leagueId = req.params.id
+    const { leagueId } = req.params
     const week = parseInt(req.query.week, 10)
     const mode = req.query.mode === 'live' ? 'live' : 'preweek'
     if (!week || week < 1 || week > 18) {
@@ -24,11 +25,11 @@ router.get('/safe-percents', async (req, res) => {
   }
 })
 
-// POST /api/leagues/:id/chopped/chop
+// POST /api/leagues/:leagueId/chopped/chop
 // Body: { week: number, teamIds: string[], reasoning?: string }
-router.post('/chop', async (req, res) => {
+router.post('/:leagueId/chopped/chop', authenticate, async (req, res) => {
   try {
-    const leagueId = req.params.id
+    const { leagueId } = req.params
     const { week, teamIds, reasoning } = req.body
 
     if (!week || !Array.isArray(teamIds) || teamIds.length === 0) {
@@ -71,11 +72,11 @@ router.post('/chop', async (req, res) => {
   }
 })
 
-// GET /api/leagues/:id/chopped/events
-router.get('/events', async (req, res) => {
+// GET /api/leagues/:leagueId/chopped/events
+router.get('/:leagueId/chopped/events', authenticate, async (req, res) => {
   try {
     const events = await prisma.chopEvent.findMany({
-      where: { leagueId: req.params.id },
+      where: { leagueId: req.params.leagueId },
       include: { team: { select: { id: true, name: true, avatar: true, avatarUrl: true } } },
       orderBy: { week: 'desc' },
     })

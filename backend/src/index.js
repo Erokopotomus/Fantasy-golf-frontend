@@ -160,7 +160,7 @@ app.use('/api/import/custom', customImportRoutes)
 app.use('/api/errors', errorRoutes)
 app.use('/api/coach', coachMemoryRoutes)
 app.use('/api/pools', poolRoutes)
-app.use('/api/leagues/:id/chopped', choppedRoutes)
+app.use('/api/leagues', choppedRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {
