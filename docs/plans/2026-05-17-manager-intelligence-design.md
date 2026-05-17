@@ -8,9 +8,11 @@
 
 ## Goal
 
-Build a backward-looking pipeline that extracts behavioral characteristics from imported league history and surfaces them in an internal admin dashboard for Eric to study. Pairs with Decision Capture Year 1 (already shipped) — forward-looking decision data plus backward-looking historical signal feeds the eventual Bias Engine.
+Build a backward-looking pipeline that extracts behavioral characteristics from imported league history and surfaces them in an internal admin dashboard for Eric to study. This is the **backward-looking twin of Decision Capture Year 1** (already shipped) — same bias dimensions, same vocabulary, same engine consumer. Imports provide the historical bootstrap; forward decision capture provides the live stream.
 
-**Critical framing:** this is about US learning what's extractable, not about showing the user. Public-facing surfaces (career page, OG image shares, Clutch Rating in the wild) are deferred until extracted signal has earned credibility. The risk of premature exposure ("look how dumb their rating is") is real — we don't ship to users until we trust what we're saying.
+**Why this matters — defeating the cold-start problem.** A new user signing up today has zero behavioral signal in our system. They have to play a season or two before our coach can say anything personalized. With this pipeline, the moment they complete an import, we extract the equivalent of years of decision history — pick quality patterns, roster endowment habits, FAAB recency, sunk-cost drop behavior — and the bias engine treats them as a managed user with a real history. From day one of NFL 2026 season they get coaching that's calibrated to who they actually are, not the average of who everyone is.
+
+**Critical framing for this build:** this is about US learning what's extractable, not about showing the user. Public-facing surfaces (career page, OG image shares, Clutch Rating in the wild) are deferred until extracted signal has earned credibility. The risk of premature exposure ("look how dumb their rating is") is real — we don't ship to users until we trust what we're saying.
 
 ## Confidence promotion model
 
@@ -75,30 +77,57 @@ Where each weight maps to [0, 1] via simple curves (sigmoid-ish), tunable from t
 
 The composite score lets the UI sort and threshold-tweak. The label is for at-a-glance scanning.
 
-## Initial characteristic set (v1)
+## Initial characteristic set (v1) — bias-vocab aligned
 
-Cheap to compute from existing imported data. All derive from `DraftPick`, `HistoricalSeason`, `LeagueImport` records.
+Every extracted characteristic is the backward-looking twin of a forward decision capture signal (see `docs/CLUTCH_DECISION_CAPTURE_SPEC.md` v3 — 8 primitives, shared chips taxonomy, computed `pickQuality`). Same labels (REACH / VALUE / PAR / STEAL), same thresholds, same engine consumer.
 
-**Draft-based (most platforms have this):**
-1. **`position_round_preference`** — what round does this manager typically draft each position? Value: `{ QB: avgRound, RB: avgRound, ... }` plus league-baseline delta.
-2. **`adp_discipline`** — average ADP delta per pick (negative = reach, positive = value). Value: `{ avgDelta, stdDev }`.
-3. **`first_round_position_bias`** — distribution of R1 picks across positions. Value: `{ RB: 0.5, WR: 0.3, QB: 0.1, Other: 0.1 }`.
-4. **`auction_spend_distribution`** — for auction drafts only: how concentrated is spend? Value: `{ topPickShare, balanceCoefficient }`. NULL when no auction history.
+**Pick quality** (forward: `draft_pick_made.pickQuality`)
+1. `pick_reach_rate` — % of historical picks classified REACH (same ≤-3 spot ADP delta threshold as the server-side computation)
+2. `pick_steal_rate` — % classified STEAL (≥+10 delta)
+3. `pick_par_rate` — % PAR (±2)
+4. `pick_value_rate` — % VALUE (+3 to +9)
 
-**Outcome-based (universal):**
-5. **`finish_volatility`** — std dev of regular-season finish across imported seasons.
-6. **`championship_rate`** — championships / total seasons.
-7. **`playoff_rate`** — playoff appearances / total seasons.
-8. **`career_trajectory`** — slope of finish across years (improving / declining / flat). Value: `{ slope, r2 }`.
+**Auction discipline** (forward: `auctionValueAtPick` + `auction_nomination` primitive — only computed when auction history exists)
+5. `auction_overpay_rate` — % auction wins above market value
+6. `auction_bargain_rate` — % below market
+7. `auction_spend_concentration` — top-3 spend as % of total budget (top-heavy vs balanced)
 
-**Transaction-based (partial coverage — will show as NO_DATA for unsupported platforms):**
-9. **`trade_frequency`** — trades per season. Sleeper/ESPN/Yahoo only.
-10. **`waiver_aggression`** — claims per season + FAAB spend distribution. Sleeper/ESPN/Yahoo only.
+**Positional anchoring**
+8. `r1_position_distribution` — historical first-round pick distribution: `{ RB: 0.5, WR: 0.3, QB: 0.1, Other: 0.1 }`
+9. `position_round_profile` — per-position avg draft round + league-baseline delta
 
-Including #9 and #10 even with uneven coverage is intentional — the admin will surface coverage as a first-class signal, so Eric can see "this characteristic has data on 312 of 1,000 users" and decide whether it's worth pursuing more aggressive import enrichment.
+**Trade behavior** (forward: `trade_event` primitive)
+10. `trade_frequency` — trades per season
+11. `roster_endowment_ratio` — avg roster tenure of drafted players vs traded-in players (proxy for endowment effect — do they hold their own picks longer than acquired pieces?)
+
+**Waiver behavior** (forward: `waiver_or_fa_claim` primitive)
+12. `faab_front_load_pct` — % of FAAB spent in first 4 weeks (recency / chase-the-shiny signal)
+13. `top_bid_rate` — % of claims won as the top bidder
+
+**Drop behavior** (forward: `roster_drop` primitive — naked drops are the strongest sunk-cost signal)
+14. `naked_drop_frequency` — drops with no replacement add per season
+15. `drop_lag_games` — avg games of underperformance before drop (sunk cost lag)
+
+**Outcome baseline** (NOT bias signals — these are the correlation targets the bias engine measures biases AGAINST. "Does this user's high reach_rate correlate with their finish_volatility?")
+16. `finish_volatility` — std dev of regular-season finish across imported seasons
+17. `championship_rate` — championships / total seasons
+18. `playoff_rate` — playoff appearances / total seasons
+19. `career_trajectory_slope` — slope of finish across years (improving / declining / flat) + `r²`
+
+**Each characteristic is a separate row in `ManagerCharacteristic`** — so each is independently queryable, sortable, indexable in the admin. The Library page groups them visually by bias theme but the underlying storage is granular.
+
+### Primitives unreachable from imports
+
+Three of the 8 forward primitives have no historical equivalent in import data. They stay forward-only (Decision Capture Year 1 covers them going forward):
+
+- `lineup_decision` — most platforms don't expose historical weekly lineups. Yahoo exposes some; Sleeper not really.
+- `watchlist_event` — no platform exposes historical watchlist behavior. Watchlists are a Clutch-only concept.
+- `auction_nomination` (behavior) — auction final values come through for most platforms, but the nomination sequence (who nominated whom, in what order) is generally lost.
+
+These three biases (availability, narrative bias, nomination bias) will have **cold-start gaps for imported users.** Decision Capture Year 1 fills them in over the first season of forward play.
 
 **Out of scope for v1:**
-- Decision-level retroactive analysis (counterfactuals — "you started Evans over Lamb"). Requires per-decision data the importers don't capture today. Year-2 work.
+- Decision-level retroactive counterfactuals ("you started Evans over Lamb"). Requires per-decision data the importers don't capture. Year-2 work.
 - Comparison vs. league-peer baselines (per-league relative ranking).
 - Multi-year drift tracking (how characteristics change over time for the same user).
 
@@ -239,9 +268,23 @@ None for v1. Characteristics are purely retroactive (from imports). When the Bia
 
 ## Success criteria
 
+- Every extracted characteristic uses the same vocabulary as the forward Decision Capture Year 1 spec (REACH / VALUE / PAR / STEAL labels, same primitives, same chips taxonomy). The bias engine treats backward + forward data as one corpus.
+- A newly imported user has 15+ characteristics computed within 5 seconds of import completion, with reasonable confidence labels reflecting how much historical data they brought.
 - Eric can open `/admin/intelligence`, scan the Library, and within 30 seconds identify which characteristics are well-covered, which need more data, and which feel like noise.
 - For any imported user, Eric can drill into User Profile and see their extracted characteristics with the evidence backing each one.
 - Eric can adjust HIGH/MED/LOW thresholds and watch distributions re-bucket live.
 - Once Eric flips "promote to coach" on a characteristic class, the Coach Vault starts receiving that signal on next memory writer run.
 - No regressions to existing import flows. Extraction failures don't block imports.
 - 1,000 users worth of characteristic extraction completes in under 2 hours.
+
+## Why this beats a cold start
+
+Without this pipeline, a new Clutch user arrives at the platform with zero behavioral signal. Our coach defaults to generic advice for the first 8-12 weeks of play until enough decisions accumulate. Many users churn before that horizon.
+
+With this pipeline:
+- User imports a 5-year Sleeper league → 19 characteristics computed in seconds
+- The bias engine sees a managed user with `pick_reach_rate: 38% (HIGH confidence, N=42)`, `roster_endowment_ratio: 1.8 (HIGH confidence, N=63)`, `drop_lag_games: 4.2 (HIGH confidence, N=12)` etc.
+- Day 1 coaching is calibrated: "you've historically reached on QBs in round 5 — the projection model says wait until round 8 this year." That's a personalized intervention earned from imports, not from playing on Clutch.
+- The forward Decision Capture stream from their actual Clutch play layers on top, refining the picture every week.
+
+This is the engine moat. Sleeper, Yahoo, ESPN have years of decision data on every user — but they don't apply it as personalized coaching. Clutch will, and imports are how we get there without making users wait two seasons.
