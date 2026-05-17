@@ -3,6 +3,10 @@ builder = "nixpacks"
 buildCommand = "npm run build"
 
 [deploy]
-startCommand = "npx prisma db push --accept-data-loss && npm start"
+# Migrations are the only schema authority. Schema changes must go through
+# prisma/migrations/ files — npm start runs `prisma migrate deploy` first.
+# Do NOT add `prisma db push` here; it bypasses migrations and with
+# --accept-data-loss it will silently drop columns/tables.
+startCommand = "npm start"
 healthcheckPath = "/api/health"
 restartPolicyType = "on_failure"
