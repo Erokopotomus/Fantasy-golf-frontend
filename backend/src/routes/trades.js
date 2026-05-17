@@ -4,7 +4,7 @@ const { recordTransaction } = require('../services/fantasyTracker')
 const { createNotification } = require('../services/notificationService')
 const { validatePositionLimits } = require('../services/positionLimitValidator')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
-const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { buildServerEnvelope, buildEnvelopeWithContext } = require('../services/decisionEnvelope')
 const { sanitizeChips } = require('../constants/reasonChips')
 
 const router = express.Router()
@@ -169,7 +169,13 @@ router.post('/', authenticate, async (req, res, next) => {
         // Decision capture
         proposerProjectedValue,
         proposerReasonChips: sanitizeChips(reasonChips, sport),
-        ...buildServerEnvelope({ req, surface: 'trade_proposal' }),
+        ...(await buildEnvelopeWithContext({
+          req,
+          surface: 'trade_proposal',
+          leagueId,
+          teamId: senderTeam.id,
+          prisma,
+        })),
       },
       include: {
         initiator: {

@@ -13,7 +13,7 @@ const { recordTransaction } = require('../services/fantasyTracker')
 const { initializeLeagueSeason } = require('../services/seasonSetup')
 const { createNotification, notifyLeague } = require('../services/notificationService')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
-const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { buildServerEnvelope, buildEnvelopeWithContext } = require('../services/decisionEnvelope')
 const { sanitizeChips } = require('../constants/reasonChips')
 
 // Compute pickQuality bucket from ADP or auction-value delta. The bias engine
@@ -681,7 +681,13 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
         timeOnClockPctOfMax,
         reasonChips: sanitizeChips(reasonChips, sportSlug),
         reasonText: typeof reasonText === 'string' ? reasonText.slice(0, 280) : null,
-        ...buildServerEnvelope({ req, surface: 'draft_room' }),
+        ...(await buildEnvelopeWithContext({
+          req,
+          surface: 'draft_room',
+          leagueId: draft.leagueId,
+          teamId: userTeam.id,
+          prisma,
+        })),
       },
       include: {
         player: {
@@ -1008,7 +1014,7 @@ router.post('/:id/pause', authenticate, async (req, res, next) => {
 // POST /api/drafts/:id/nominate - Nominate a player (auction draft)
 router.post('/:id/nominate', authenticate, async (req, res, next) => {
   try {
-    const { playerId, startingBid } = req.body
+    const { playerId, startingBid, reasonChips, reasonText } = req.body
 
     const draft = await prisma.draft.findUnique({
       where: { id: req.params.id },
@@ -1026,6 +1032,66 @@ router.post('/:id/nominate', authenticate, async (req, res, next) => {
 
     const io = req.app.get('io')
     const nomination = await startNomination(draft.id, playerId, startingBid, userTeam.id, io)
+
+    // Decision capture: write AuctionNomination row with state-at-nomination
+    // snapshot. Powers Phase 2.7 nomination-bias detector. finalPrice and
+    // acquiredByUserId get back-filled by awardPlayer() when the auction
+    // resolves.
+    ;(async () => {
+      try {
+        const sportSlug = (draft.league?.sport?.slug || draft.league?.sport || 'golf').toLowerCase()
+        const [orderIdx, watchListed, proj, budget] = await Promise.all([
+          prisma.auctionNomination.count({ where: { draftId: draft.id } }),
+          prisma.watchListEntry.findUnique({
+            where: { userId_playerId: { userId: req.user.id, playerId } },
+            select: { id: true },
+          }).catch(() => null),
+          prisma.clutchProjection.findFirst({
+            where: { playerId, sport: sportSlug },
+            orderBy: { computedAt: 'desc' },
+            select: { tradeValue: true },
+          }).catch(() => null),
+          (async () => {
+            const currentSeason = await prisma.season.findFirst({ where: { isCurrent: true }, select: { id: true } })
+            if (!currentSeason) return null
+            const ls = await prisma.leagueSeason.findFirst({
+              where: { leagueId: draft.leagueId, seasonId: currentSeason.id },
+              select: { id: true },
+            })
+            if (!ls) return null
+            return prisma.teamBudget.findUnique({
+              where: { teamId_leagueSeasonId: { teamId: userTeam.id, leagueSeasonId: ls.id } },
+              select: { remaining: true },
+            })
+          })().catch(() => null),
+        ])
+
+        await prisma.auctionNomination.create({
+          data: {
+            draftId: draft.id,
+            nominatedByUserId: req.user.id,
+            nominatedByTeamId: userTeam.id,
+            playerId,
+            openingBid: startingBid,
+            nominationOrderIndex: orderIdx + 1,
+            wasOnNominatorWatchlist: Boolean(watchListed),
+            remainingBudgetAtNom: budget?.remaining ?? null,
+            marketValueAtNom: proj?.tradeValue ?? null,
+            reasonChips: sanitizeChips(reasonChips, sportSlug),
+            reasonText: typeof reasonText === 'string' ? reasonText.slice(0, 280) : null,
+            ...(await buildEnvelopeWithContext({
+              req,
+              surface: 'draft_room',
+              leagueId: draft.leagueId,
+              teamId: userTeam.id,
+              prisma,
+            })),
+          },
+        })
+      } catch (err) {
+        console.error('[drafts] AuctionNomination log failed:', err.message)
+      }
+    })()
 
     res.json({ nomination })
   } catch (error) {

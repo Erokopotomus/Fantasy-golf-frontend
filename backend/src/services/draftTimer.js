@@ -474,6 +474,47 @@ async function awardPlayer(draftId, io) {
       auctionAmount: currentBid,
     }, prisma).catch(err => console.error('[Auction] Transaction log failed:', err.message))
 
+    // Decision capture: back-fill the AuctionNomination row with the final
+    // resolution. wasNominatorTarget = nominator had the player on their
+    // watchlist AND ended up winning them — the cleanest nomination-bias
+    // signature per spec Phase 2.7.
+    ;(async () => {
+      try {
+        const winningTeam = await prisma.team.findUnique({
+          where: { id: highBidderTeamId },
+          select: { userId: true },
+        })
+        const acquiredByUserId = winningTeam?.userId || null
+
+        // There can be multiple historical nominations of the same player
+        // (e.g. failed earlier nomination, re-nominated later). Update only
+        // the most recent un-resolved one.
+        const pendingNom = await prisma.auctionNomination.findFirst({
+          where: { draftId, playerId, finalPrice: null },
+          orderBy: { occurredAt: 'desc' },
+          select: { id: true, nominatedByUserId: true, wasOnNominatorWatchlist: true },
+        })
+        if (!pendingNom) return
+
+        const wasNominatorTarget = Boolean(
+          pendingNom.wasOnNominatorWatchlist &&
+          acquiredByUserId &&
+          pendingNom.nominatedByUserId === acquiredByUserId
+        )
+
+        await prisma.auctionNomination.update({
+          where: { id: pendingNom.id },
+          data: {
+            finalPrice: currentBid,
+            acquiredByUserId,
+            wasNominatorTarget,
+          },
+        })
+      } catch (err) {
+        console.error('[Auction] AuctionNomination back-fill failed:', err.message)
+      }
+    })()
+
     // Update draft pick counter
     const newPickNumber = draft.currentPick + 1
     const totalPicks = totalTeams * rosterSize

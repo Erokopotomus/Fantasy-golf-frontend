@@ -1,7 +1,7 @@
 const express = require('express')
 const { authenticate } = require('../middleware/auth')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
-const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { buildServerEnvelope, buildEnvelopeWithContext } = require('../services/decisionEnvelope')
 const { sanitizeChips } = require('../constants/reasonChips')
 
 const router = express.Router()
@@ -110,7 +110,13 @@ router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => 
         // trendingSources / trendingRank: forward-only, requires Sleeper-trending
         // integration which isn't shipped yet. Stay null in v1.
         reasonChips: sanitizeChips(reasonChips, sport),
-        ...buildServerEnvelope({ req, surface: 'waiver_wire' }),
+        ...(await buildEnvelopeWithContext({
+          req,
+          surface: 'waiver_wire',
+          leagueId,
+          teamId: team.id,
+          prisma,
+        })),
       },
       include: {
         player: { select: { id: true, name: true, owgrRank: true, headshotUrl: true } },

@@ -5,7 +5,7 @@ const { notifyLeague } = require('../services/notificationService')
 const { getCurrentFantasyWeek, getEffectiveStarterCount } = require('../services/fantasyWeekHelper')
 const { validatePositionLimits } = require('../services/positionLimitValidator')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
-const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { buildServerEnvelope, buildEnvelopeWithContext } = require('../services/decisionEnvelope')
 const { sanitizeChips } = require('../constants/reasonChips')
 
 const router = express.Router()
@@ -400,7 +400,13 @@ router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
       acquisitionType,
       reasonChips: sanitizeChips(reasonChips, sport),
       reasonText: typeof reasonText === 'string' ? reasonText.slice(0, 280) : null,
-      ...buildServerEnvelope({ req, surface: 'team_roster' }),
+      ...(await buildEnvelopeWithContext({
+        req,
+        surface: 'team_roster',
+        leagueId: team.leagueId,
+        teamId: team.id,
+        prisma,
+      })),
     }, prisma).catch(err => console.error('Transaction log failed:', err.message))
 
     // Record opinion event (legacy decision capture — sport computed above)
@@ -602,7 +608,13 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
           slot: newStatus(e.playerId),
         }))
 
-        const envelope = buildServerEnvelope({ req, surface: 'team_roster' })
+        const envelope = await buildEnvelopeWithContext({
+          req,
+          surface: 'team_roster',
+          leagueId: team.leagueId,
+          teamId: team.id,
+          prisma,
+        })
         await prisma.lineupSnapshot.upsert({
           where: {
             leagueSeasonId_fantasyWeekId_teamId: {

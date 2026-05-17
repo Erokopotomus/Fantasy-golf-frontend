@@ -74,4 +74,43 @@ function buildServerEnvelope({
   }
 }
 
-module.exports = { buildServerEnvelope, SERVER_VERSION_TAG }
+/**
+ * Async variant that computes leagueContext on demand.
+ *
+ * Use this when the caller has leagueId + teamId. If either is missing
+ * (mock drafts, board edits), falls back to the sync envelope with
+ * leagueContext: null.
+ *
+ * Wired into the Phase B decision routes so the leagueContext column
+ * stops being null on every captured row.
+ */
+async function buildEnvelopeWithContext({
+  req = null,
+  surface,
+  leagueId = null,
+  teamId = null,
+  prisma = null,
+  isMock = false,
+  mockMeta = null,
+  clientVersionOverride = null,
+} = {}) {
+  let leagueContext = null
+  if (leagueId && teamId && prisma) {
+    const { buildLeagueContext } = require('./leagueContextService')
+    leagueContext = await buildLeagueContext({ leagueId, teamId, prisma })
+  }
+  return buildServerEnvelope({
+    req,
+    surface,
+    leagueContext,
+    isMock,
+    mockMeta,
+    clientVersionOverride,
+  })
+}
+
+module.exports = {
+  buildServerEnvelope,
+  buildEnvelopeWithContext,
+  SERVER_VERSION_TAG,
+}
