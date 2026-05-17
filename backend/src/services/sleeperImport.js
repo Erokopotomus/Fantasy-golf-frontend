@@ -16,6 +16,7 @@
  */
 
 const opinionTimeline = require('./opinionTimelineService')
+const { matchAndLink } = require('./playerMatcher')
 
 const prisma = require('../lib/prisma.js')
 const BASE = 'https://api.sleeper.app/v1'
@@ -261,23 +262,42 @@ async function importSeason(sleeperLeagueId, seasonYear) {
     for (const r of rosterData) {
       if (r.rosterId != null) rosterIdToOwner[r.rosterId] = r.ownerName
     }
+    const builtPicks = picks.map(p => ({
+      round: p.round,
+      pick: p.pick_no,
+      rosterId: p.roster_id,
+      playerId: p.player_id,
+      playerName: p.metadata?.first_name && p.metadata?.last_name
+        ? `${p.metadata.first_name} ${p.metadata.last_name}`
+        : null,
+      position: p.metadata?.position,
+      amount: p.metadata?.amount ? parseInt(p.metadata.amount) : null,
+      isKeeper: p.is_keeper || false,
+      ownerName: rosterIdToOwner[p.roster_id] || null,
+      metadata: p.metadata || null,
+    }))
+
+    // Side-effect: enrich Player.sleeperId mappings as imports run.
+    // Pick shape stays raw — we just match each pick to a canonical Player.
+    for (const pick of builtPicks) {
+      if (!pick.playerId) continue
+      try {
+        await matchAndLink({
+          name: pick.playerName,
+          platform: 'sleeper',
+          platformId: pick.playerId,
+          position: pick.position,
+          sport: 'nfl',
+        }, prisma, { createIfMissing: false })
+      } catch (e) {
+        console.warn(`[playerMatcher] sleeper pick ${pick.playerName} (${pick.playerId}) failed:`, e.message)
+      }
+    }
+
     draftData = {
       type: drafts[0].type,
       rounds: drafts[0].settings?.rounds,
-      picks: picks.map(p => ({
-        round: p.round,
-        pick: p.pick_no,
-        rosterId: p.roster_id,
-        playerId: p.player_id,
-        playerName: p.metadata?.first_name && p.metadata?.last_name
-          ? `${p.metadata.first_name} ${p.metadata.last_name}`
-          : null,
-        position: p.metadata?.position,
-        amount: p.metadata?.amount ? parseInt(p.metadata.amount) : null,
-        isKeeper: p.is_keeper || false,
-        ownerName: rosterIdToOwner[p.roster_id] || null,
-        metadata: p.metadata || null,
-      })),
+      picks: builtPicks,
     }
   }
 

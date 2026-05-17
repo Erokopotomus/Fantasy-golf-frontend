@@ -19,6 +19,7 @@
  */
 
 const opinionTimeline = require('./opinionTimelineService')
+const { matchAndLink } = require('./playerMatcher')
 
 const prisma = require('../lib/prisma.js')
 const BASE = 'https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl/seasons'
@@ -256,6 +257,23 @@ async function importSeason(espnLeagueId, year, cookies = {}) {
         playerName: p.playerName || null,
         keeper: p.keeper || false,
       })),
+    }
+
+    // Side-effect: enrich Player.espnId mappings as imports run.
+    // Pick shape stays raw — we just match each pick to a canonical Player.
+    for (const pick of parsedDraft.picks) {
+      if (!pick.playerId) continue
+      try {
+        await matchAndLink({
+          name: pick.playerName,
+          platform: 'espn',
+          platformId: pick.playerId,
+          position: null,
+          sport: 'nfl',
+        }, prisma, { createIfMissing: false })
+      } catch (e) {
+        console.warn(`[playerMatcher] espn pick ${pick.playerName} (${pick.playerId}) failed:`, e.message)
+      }
     }
   }
 

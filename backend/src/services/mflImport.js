@@ -28,6 +28,7 @@
  */
 
 const opinionTimeline = require('./opinionTimelineService')
+const { matchAndLink } = require('./playerMatcher')
 
 const prisma = require('../lib/prisma.js')
 const BASE_HOST = 'api.myfantasyleague.com'
@@ -267,6 +268,23 @@ async function importSeason(mflLeagueId, year, apiKey) {
     // Detect auction draft — if any pick has a salary value
     if (parsedDraft.picks.some(p => p.salary != null && parseFloat(p.salary) > 0)) {
       parsedDraft.type = 'auction'
+    }
+
+    // Side-effect: enrich Player.mflId mappings as imports run.
+    // MFL picks have no playerName, so the matcher relies on exact mflId lookup.
+    for (const pick of parsedDraft.picks) {
+      if (!pick.playerId) continue
+      try {
+        await matchAndLink({
+          name: pick.playerName,
+          platform: 'mfl',
+          platformId: pick.playerId,
+          position: null,
+          sport: 'nfl',
+        }, prisma, { createIfMissing: false })
+      } catch (e) {
+        console.warn(`[playerMatcher] mfl pick (${pick.playerId}) failed:`, e.message)
+      }
     }
   }
 
