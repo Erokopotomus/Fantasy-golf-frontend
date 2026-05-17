@@ -63,6 +63,9 @@ const LeagueSettings = () => {
     waiverPriority: 'reverse-standings',
     waiverClearDay: 'wednesday',
     waiverClearTime: '12:00',
+    waiverCloseDay: league?.settings?.waiverCloseDay || (league?.format === 'CHOPPED' ? 'TUESDAY' : 'WEDNESDAY'),
+    waiverCloseTime: league?.settings?.waiverCloseTime || (league?.format === 'CHOPPED' ? '23:59' : '12:00'),
+    waiverCloseTimezone: league?.settings?.waiverCloseTimezone || 'America/New_York',
     faabBudget: 100,
     waiverPeriodHours: 24,
     playoffTeams: league?.settings?.playoffTeams || 4,
@@ -110,6 +113,9 @@ const LeagueSettings = () => {
         waiverPriority: league.settings?.waiverPriority || 'reverse-standings',
         waiverClearDay: league.settings?.waiverClearDay || 'wednesday',
         waiverClearTime: league.settings?.waiverClearTime || '12:00',
+        waiverCloseDay: league.settings?.waiverCloseDay || (league.format === 'CHOPPED' ? 'TUESDAY' : 'WEDNESDAY'),
+        waiverCloseTime: league.settings?.waiverCloseTime || (league.format === 'CHOPPED' ? '23:59' : '12:00'),
+        waiverCloseTimezone: league.settings?.waiverCloseTimezone || 'America/New_York',
         faabBudget: league.settings?.faabBudget || 100,
         waiverPeriodHours: league.settings?.waiverPeriodHours || 24,
         playoffTeams: league.settings?.playoffTeams || 4,
@@ -203,6 +209,9 @@ const LeagueSettings = () => {
           waiverPriority: settings.waiverPriority,
           waiverClearDay: settings.waiverClearDay,
           waiverClearTime: settings.waiverClearTime,
+          waiverCloseDay: settings.waiverCloseDay,
+          waiverCloseTime: settings.waiverCloseTime,
+          waiverCloseTimezone: settings.waiverCloseTimezone,
           faabBudget: settings.faabBudget,
           waiverPeriodHours: settings.waiverPeriodHours,
           playoffTeams: settings.playoffTeams,
@@ -1145,6 +1154,64 @@ const LeagueSettings = () => {
                 <p className="text-text-muted text-xs">
                   All times are in Eastern Time (ET). Waiver claims submitted before this time will be processed.
                 </p>
+              </div>
+            </Card>
+          )}
+
+          {/* Per-league Waiver Close (canonical — read by the cron) */}
+          {settings.waiverType !== 'none' && (
+            <Card>
+              <h3 className="text-lg font-semibold font-display text-text-primary mb-4">Waiver Processing Time</h3>
+              <p className="text-text-muted text-xs mb-4">
+                Waivers process at this exact time each week. Chopped auto-fallback (if enabled) fires at the same time.
+              </p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Day
+                    </label>
+                    <select
+                      value={settings.waiverCloseDay}
+                      onChange={(e) => setSettings({ ...settings, waiverCloseDay: e.target.value })}
+                      className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                    >
+                      <option value="SUNDAY">Sunday</option>
+                      <option value="MONDAY">Monday</option>
+                      <option value="TUESDAY">Tuesday</option>
+                      <option value="WEDNESDAY">Wednesday</option>
+                      <option value="THURSDAY">Thursday</option>
+                      <option value="FRIDAY">Friday</option>
+                      <option value="SATURDAY">Saturday</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Time (24h HH:MM)
+                    </label>
+                    <input
+                      type="time"
+                      value={settings.waiverCloseTime}
+                      onChange={(e) => setSettings({ ...settings, waiverCloseTime: e.target.value })}
+                      className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Timezone
+                    </label>
+                    <select
+                      value={settings.waiverCloseTimezone}
+                      onChange={(e) => setSettings({ ...settings, waiverCloseTimezone: e.target.value })}
+                      className="w-full p-3 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                    >
+                      <option value="America/New_York">Eastern (ET)</option>
+                      <option value="America/Chicago">Central (CT)</option>
+                      <option value="America/Denver">Mountain (MT)</option>
+                      <option value="America/Los_Angeles">Pacific (PT)</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </Card>
           )}
