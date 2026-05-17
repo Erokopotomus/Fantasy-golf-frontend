@@ -370,6 +370,22 @@ class ApiService {
     return this.request(`/leagues/${leagueId}/activity?limit=${limit}`)
   }
 
+  // Chopped (Survivor format)
+  async getChoppedSafePercents(leagueId, { week, mode = 'live' }) {
+    return this.request(`/leagues/${leagueId}/chopped/safe-percents?week=${week}&mode=${mode}`)
+  }
+
+  async getChoppedEvents(leagueId) {
+    return this.request(`/leagues/${leagueId}/chopped/events`)
+  }
+
+  async chopTeams(leagueId, { week, teamIds, reasoning }) {
+    return this.request(`/leagues/${leagueId}/chopped/chop`, {
+      method: 'POST',
+      body: JSON.stringify({ week, teamIds, reasoning }),
+    })
+  }
+
   // Commissioner - Matchup Management
   async generateMatchups(leagueId) {
     return this.request(`/leagues/${leagueId}/matchups/generate`, { method: 'POST' })

@@ -16,6 +16,7 @@ import DraftCountdown from '../components/DraftCountdown'
 import LeagueChat from '../components/ai/LeagueChat'
 import CommissionerNotes from '../components/league/CommissionerNotes'
 import LiveScoringWidget from '../components/league/LiveScoringWidget'
+import ChopZoneWidget from '../components/league/ChopZoneWidget'
 import TournamentHeader from '../components/tournament/TournamentHeader'
 import PhaseActionRow from '../components/league/PhaseActionRow'
 import { useLeaguePhase } from '../hooks/useLeaguePhase'
@@ -696,6 +697,17 @@ const LeagueHome = () => {
 
           {/* Phase-Aware Action Row */}
           <PhaseActionRow phase={leaguePhase} league={league} existingBoardId={existingBoardId} />
+
+          {/* Chop Zone Widget (CHOPPED format only) */}
+          {league?.format === 'CHOPPED' && (
+            <div className="mb-6">
+              <ChopZoneWidget
+                leagueId={league.id}
+                week={league.currentWeek || league.settings?.currentWeek || 1}
+                leagueFormat={league.format}
+              />
+            </div>
+          )}
 
           {/* Live / Final Tournament Scoring Widget (golf leagues only) */}
           {!isNflLeague && currentTournament && (currentTournament.status === 'IN_PROGRESS' || currentTournament.status === 'COMPLETED') && (

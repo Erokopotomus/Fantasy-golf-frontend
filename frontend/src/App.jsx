@@ -31,6 +31,7 @@ const WaiverWire = lazy(() => import('./pages/WaiverWire'))
 const Players = lazy(() => import('./pages/Players'))
 const Leagues = lazy(() => import('./pages/Leagues'))
 const LeagueHome = lazy(() => import('./pages/LeagueHome'))
+const ChopZone = lazy(() => import('./pages/ChopZone'))
 const Draft = lazy(() => import('./pages/Draft'))
 const Profile = lazy(() => import('./pages/Profile'))
 const Tournaments = lazy(() => import('./pages/Tournaments'))
@@ -217,6 +218,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <LeagueHome />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leagues/:leagueId/chop"
+            element={
+              <ProtectedRoute>
+                <ChopZone />
               </ProtectedRoute>
             }
           />
