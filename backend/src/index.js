@@ -1260,6 +1260,10 @@ httpServer.listen(PORT, () => {
   }, { timezone: 'America/New_York' })
   console.log('[Cron] Error cleanup scheduled (Sun 2 AM)')
 
+  // ── Chopped auto-chop fallback (Mon-Wed waiver window) ──
+  const { registerAutoChopCron } = require('./services/chopped/autoChopCron')
+  registerAutoChopCron()
+
   // Trade review processor — runs every 15 minutes
   const tradePrisma = require('./lib/prisma')
   const { processExpiredReviews } = require('./services/tradeReviewProcessor')
