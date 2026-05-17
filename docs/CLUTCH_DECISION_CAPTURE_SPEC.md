@@ -38,7 +38,7 @@ type DecisionEnvelope = {
 
   // NEW — surface attribution
   clientVersion: string          // e.g. "web-2026.05.16" (set in build)
-  surface: string                // 'draft_room' | 'waiver_wire' | 'team_roster' | 'lab_editor' | 'mock_room' | 'prove_it' | ...
+  surface: string                // 'draft_room' | 'waiver_wire' | 'team_roster' | 'lab_editor' | 'mock_room' | 'prove_it' | 'chop_zone' | ...
 
   // NEW — league state at decision time (v3 expanded)
   leagueContext?: {
@@ -528,6 +528,8 @@ These are model-side, not capture-side, but the capture spec depends on both. Fl
 ---
 
 *This spec is the gate: any new decision surface (NFL waiver page, weekly start/sit modal, lineup builder, etc.) must conform to these shapes before shipping. Pre-launch NFL items 187/195/202 should all snapshot-test against this doc.*
+
+**Chopped format note (May 17 2026):** `chop_zone` is now a recognized `surface` value, emitted by `/leagues/:id/chop` and the LeagueHome embed widget. **For v1, the `ChopEvent` table is the canonical decision-capture audit for elimination events** — one row per chop with `triggerType` (`manual` | `auto_fallback`), `triggeredByUserId`, `safePercent`, `tiebreakerUsed`, and free-text `reasoning`. Per-player `RosterTransactions` are **NOT** written when a chopped roster releases to waivers; the downstream FAAB pickups are captured through the existing `waiver_or_fa_claim` primitive. Revisit roster-release transaction logging when the Bias Engine starts consuming this data (Year 2).
 
 ---
 

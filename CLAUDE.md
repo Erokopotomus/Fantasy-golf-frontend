@@ -78,6 +78,8 @@ Three agents work in parallel: **Cowork** (audit/fix/queue), **Claude Code** (bu
 
 **Same day — Queue audit cleanup.** 17 stale-DONE items closed (154, 157, 177, 178, 179, 180, 181, 185-191, 193-197, 203) — work that had shipped in prior sessions but never got the queue status flip. 8 genuine TODOs remain.
 
+**May 17 update — Chopped Format (NFL v1) COMPLETE.** NFL league format where lowest-scoring team is chopped each week. Reuses existing waiver/FAAB infra. Commissioner manual control + Tuesday auto-fallback. Analytical pairwise Safe % math (microseconds-per-call, runs every 60s on live page). Provider abstraction: ESPN free scoreboard + SportsDataIO stub, flip via `LIVE_STATS_PROVIDER=sportsdataio` env once paid subscription is active. Schema migration 52 (additive: `LeagueFormat.CHOPPED` + `Team.eliminatedAt/eliminationWeek/finalRank` + `ChopEvent` table). 12 backend services/routes + 6 frontend components shipped. Test seed: `node backend/scripts/chopped/seed-test-league.js` (idempotent; cleanup script in same dir). Item 199 DONE. Task 19 (per-league waiver-close config) deferred to a future session. Spec: `docs/plans/2026-05-17-chopped-format-design.md`. Plan: `docs/plans/2026-05-17-chopped-format-plan.md`.
+
 ---
 
 ### Phase 5 — IN PROGRESS (First Season Live)

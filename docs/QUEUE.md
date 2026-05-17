@@ -7500,7 +7500,8 @@ Remove the duplicate. Likely two route definitions both labeled "My Profile" —
 ---
 
 ### 199 — League Format: Chopped (weekly elimination + roster goes to waivers) `HIGH`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-05-17 — Shipped Chopped NFL v1. NFL-only league format with weekly eliminations, FAAB blind auction reusing existing waiver infra, commissioner manual chop + Tuesday auto-fallback, analytical Safe % math, provider abstraction (ESPN free + SDIO stub). All frontend surfaces shipped: league creation Chopped card, League Home embed widget, /leagues/:id/chop dedicated page, CommishChopReview panel, Standings variant, Waiver "Recently Chopped" filter, vocabulary file. Schema migration 52 live on Railway. Test seed: `node backend/scripts/chopped/seed-test-league.js`. Design + plan in `docs/plans/2026-05-17-chopped-format-*.md`. Task 19 (per-league waiver-close config) deferred.
 **Priority:** High — proven format with **multi-million-dollar competitor company** (Matthew Berry's Guillotine Leagues = entire startup built around it), Eric played the Sleeper version (Chop Suey league), strong "must-watch-every-week" engagement loop, makes a 14-team NFL league feel alive every Sunday. Real differentiator for NFL launch.
 **Source:** Cowork — observed in Eric's live Sleeper league "Chop Suey" (2025 14-Team Chopped PPR) and Matthew Berry's Guillotine Leagues standalone platform (guillotineleagues.com), May 12-16 2026
 
