@@ -163,6 +163,26 @@ const TeamRoster = () => {
 
   const isLineupsLocked = lockInfo?.isLocked || false
 
+  // Decision capture: fire LINEUP_VIEWED on unmount with elapsed time.
+  // Pairs with editCount on the LineupSnapshot DB row — together they detect
+  // paralysis ("user opened lineup 5x same week without editing once").
+  useEffect(() => {
+    if (!leagueId || !teamId) return
+    const mountedAt = Date.now()
+    return () => {
+      const viewDurationMs = Date.now() - mountedAt
+      // Filter out trivial mounts (<1s) — likely route-prefetch or instant nav-away.
+      if (viewDurationMs < 1000) return
+      track(Events.LINEUP_VIEWED, {
+        leagueId,
+        teamId,
+        viewDurationMs,
+        sport: isNflLeague ? 'nfl' : 'golf',
+        // openedSlots: deferred — would need per-slot click tracking
+      })
+    }
+  }, [leagueId, teamId, isNflLeague])
+
   const defaultMaxActive = league?.settings?.maxActiveLineup || 4
   const maxActive = lockInfo?.effectiveStarterCount || defaultMaxActive
   const rosterSize = league?.settings?.rosterSize || 6

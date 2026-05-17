@@ -246,6 +246,7 @@ const TradeCenter = () => {
         leagueMembers={leagueMembers}
         onPropose={proposeTrade}
         draftDollarSettings={league?.settings?.draftDollarSettings}
+        sport={(league?.sport || 'GOLF').toLowerCase() === 'nfl' ? 'nfl' : 'golf'}
       />
     </div>
   )

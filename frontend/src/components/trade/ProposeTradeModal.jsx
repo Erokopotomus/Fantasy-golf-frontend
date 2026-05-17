@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import Card from '../common/Card'
+import ReasonChipsPicker from '../common/ReasonChipsPicker'
 
-const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose, draftDollarSettings }) => {
+const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose, draftDollarSettings, sport = 'golf' }) => {
   const [selectedTeam, setSelectedTeam] = useState('')
   const [myPlayersToSend, setMyPlayersToSend] = useState([])
   const [theirPlayersToReceive, setTheirPlayersToReceive] = useState([])
   const [message, setMessage] = useState('')
   const [reasoning, setReasoning] = useState('')
+  const [reasonChips, setReasonChips] = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [senderCurrentDollars, setSenderCurrentDollars] = useState(0)
   const [senderNextDollars, setSenderNextDollars] = useState(0)
@@ -48,6 +50,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
         playersRequested: theirPlayersToReceive,
         message: message || undefined,
         reasoning: reasoning || undefined,
+        reasonChips: reasonChips.length > 0 ? reasonChips : undefined,
       }
       if (dollarsEnabled) {
         tradeData.senderDollars = { current: senderCurrentDollars || 0, next: senderNextDollars || 0 }
@@ -60,6 +63,7 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
       setTheirPlayersToReceive([])
       setMessage('')
       setReasoning('')
+      setReasonChips([])
       setSenderCurrentDollars(0)
       setSenderNextDollars(0)
       setReceiverCurrentDollars(0)
@@ -318,16 +322,25 @@ const ProposeTradeModal = ({ isOpen, onClose, myRoster, leagueMembers, onPropose
           )}
         </div>
 
-        {/* Optional reasoning */}
+        {/* Optional reasoning + chips */}
         {canSubmit && (
-          <div className="px-4 pb-2">
-            <label className="block text-[11px] text-text-primary/30 mb-1">Pitch / reasoning <span className="text-text-primary/15">(optional, private to you)</span></label>
-            <input
-              value={reasoning}
-              onChange={e => setReasoning(e.target.value.substring(0, 280))}
-              placeholder="e.g. Buying low after a bad week"
-              className="w-full px-3 py-2 text-xs bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+          <div className="px-4 pb-2 space-y-3">
+            <ReasonChipsPicker
+              value={reasonChips}
+              onChange={setReasonChips}
+              sport={sport}
+              label="Why this trade? (optional)"
+              compact
             />
+            <div>
+              <label className="block text-[11px] text-text-primary/30 mb-1">Pitch / reasoning <span className="text-text-primary/15">(optional, private to you)</span></label>
+              <input
+                value={reasoning}
+                onChange={e => setReasoning(e.target.value.substring(0, 280))}
+                placeholder="e.g. Buying low after a bad week"
+                className="w-full px-3 py-2 text-xs bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+              />
+            </div>
           </div>
         )}
 

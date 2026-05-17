@@ -104,7 +104,7 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
   }, [teamId, notify])
 
   // Submit waiver claim (FAAB/rolling)
-  const submitClaim = useCallback(async (playerId, bidAmount = 0, dropPlayerId = null, reasoning = null) => {
+  const submitClaim = useCallback(async (playerId, bidAmount = 0, dropPlayerId = null, reasoning = null, reasonChips = null) => {
     if (!leagueId) return
 
     try {
@@ -118,6 +118,7 @@ export const useWaivers = (leagueId, teamId, waiverType) => {
         dropPlayerId,
         priority: nextPriority,
         reasoning: reasoning || undefined,
+        reasonChips: Array.isArray(reasonChips) && reasonChips.length > 0 ? reasonChips : undefined,
       })
 
       notify.success('Claim Submitted', `Waiver claim placed${bidAmount > 0 ? ` ($${bidAmount})` : ''}`)

@@ -137,6 +137,7 @@ export const Events = {
 
   // ── Roster / Lineup ────────────────────────────────────────
   LINEUP_SAVED:         'lineup_saved',
+  LINEUP_VIEWED:        'lineup_viewed',      // user opened lineup page (paralysis signal; pairs with editCount on DB row)
   LINEUP_OPTIMIZED:     'lineup_optimized',
   PLAYER_ADDED:         'player_added',
   PLAYER_DROPPED:       'player_dropped',

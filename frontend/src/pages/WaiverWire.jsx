@@ -6,6 +6,7 @@ import { useLeague } from '../hooks/useLeague'
 import { useAuth } from '../context/AuthContext'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import ReasonChipsPicker from '../components/common/ReasonChipsPicker'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 import { track, Events } from '../services/analytics'
 import api from '../services/api'
@@ -41,6 +42,7 @@ const WaiverWire = () => {
   const [dropTarget, setDropTarget] = useState(null)
   const [bidAmount, setBidAmount] = useState(0)
   const [claimReasoning, setClaimReasoning] = useState('')
+  const [claimChips, setClaimChips] = useState([])
   const [drawerPlayerId, setDrawerPlayerId] = useState(null)
   const [activeTab, setActiveTab] = useState('players') // players | claims | results
 
@@ -74,7 +76,13 @@ const WaiverWire = () => {
     if (!claimTarget) return
     try {
       if (isWaiverMode) {
-        await submitClaim(claimTarget.id, bidAmount, dropTarget?.id || null, claimReasoning || null)
+        await submitClaim(
+          claimTarget.id,
+          bidAmount,
+          dropTarget?.id || null,
+          claimReasoning || null,
+          claimChips.length > 0 ? claimChips : null,
+        )
         track(Events.WAIVER_CLAIM, { leagueId, playerId: claimTarget.id, playerName: claimTarget.name, bidAmount, waiverType, sport: isNfl ? 'nfl' : 'golf' })
       } else {
         await claimPlayer(claimTarget.id, dropTarget?.id || null)
@@ -85,6 +93,7 @@ const WaiverWire = () => {
       setDropTarget(null)
       setBidAmount(0)
       setClaimReasoning('')
+      setClaimChips([])
     } catch {
       // handled by hook
     }
@@ -552,16 +561,25 @@ const WaiverWire = () => {
               </div>
             )}
 
-            {/* Optional reasoning */}
+            {/* Optional reasoning + chips */}
             {isWaiverMode && (
-              <div className="mb-4">
-                <label className="block text-[11px] text-text-primary/30 mb-1">Why this move? <span className="text-text-primary/15">(optional)</span></label>
-                <input
-                  value={claimReasoning}
-                  onChange={e => setClaimReasoning(e.target.value.substring(0, 280))}
-                  placeholder="e.g. Starter went down, volume opportunity"
-                  className="w-full px-3 py-2 text-xs bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+              <div className="mb-4 space-y-3">
+                <ReasonChipsPicker
+                  value={claimChips}
+                  onChange={setClaimChips}
+                  sport={isNfl ? 'nfl' : 'golf'}
+                  label="Why? (optional)"
+                  compact
                 />
+                <div>
+                  <label className="block text-[11px] text-text-primary/30 mb-1">Notes <span className="text-text-primary/15">(optional)</span></label>
+                  <input
+                    value={claimReasoning}
+                    onChange={e => setClaimReasoning(e.target.value.substring(0, 280))}
+                    placeholder="e.g. Starter went down, volume opportunity"
+                    className="w-full px-3 py-2 text-xs bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary placeholder-text-muted outline-none focus:border-gold/50"
+                  />
+                </div>
               </div>
             )}
 
@@ -569,7 +587,7 @@ const WaiverWire = () => {
               <Button
                 variant="secondary"
                 className="flex-1"
-                onClick={() => { setClaimTarget(null); setDropTarget(null); setBidAmount(0); setClaimReasoning('') }}
+                onClick={() => { setClaimTarget(null); setDropTarget(null); setBidAmount(0); setClaimReasoning(''); setClaimChips([]) }}
               >
                 Cancel
               </Button>
