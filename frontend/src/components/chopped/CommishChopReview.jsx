@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import api from '../../services/api'
+import { CHOPPED_VOCAB } from '../../lib/chopped/vocabulary'
 
 export default function CommishChopReview({ leagueId, week, block, maxChops }) {
   // Pre-select the bottom team(s) up to maxChops
@@ -41,7 +42,7 @@ export default function CommishChopReview({ leagueId, week, block, maxChops }) {
   return (
     <section className="rounded-lg border-2 border-blaze bg-blaze/5 p-4 space-y-3">
       <div>
-        <h2 className="font-display text-lg text-text-primary">Commissioner — Manual Chop</h2>
+        <h2 className="font-display text-lg text-text-primary">Commissioner — {CHOPPED_VOCAB.manualCut}</h2>
         <p className="text-xs text-text-muted">
           Auto-chop fires at waiver close if no action. Recommended pick pre-selected.
         </p>

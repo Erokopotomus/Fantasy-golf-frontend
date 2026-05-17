@@ -2,6 +2,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import api from '../services/api'
 import CommishChopReview from '../components/chopped/CommishChopReview'
+import { CHOPPED_VOCAB } from '../lib/chopped/vocabulary'
 
 export default function ChopZone() {
   const { leagueId } = useParams()
@@ -66,7 +67,7 @@ export default function ChopZone() {
     <div className="max-w-5xl mx-auto p-4 sm:p-6 space-y-6">
       <header className="flex items-baseline justify-between flex-wrap gap-3">
         <div>
-          <h1 className="font-display text-3xl text-text-primary">Chop Zone</h1>
+          <h1 className="font-display text-3xl text-text-primary">{CHOPPED_VOCAB.pageTitle}</h1>
           <p className="text-text-muted text-sm font-editorial italic">{league.name} · Week {week}</p>
         </div>
         <div className="flex gap-3 font-mono text-sm">
@@ -81,10 +82,10 @@ export default function ChopZone() {
         </div>
       </header>
 
-      <Section title="Survivors" colorClass="text-field" teams={survivors} kind="alive" />
-      <Section title="The Block" colorClass="text-crown" teams={block} kind="alive" warn />
+      <Section title={CHOPPED_VOCAB.survivorsHeader} colorClass="text-field" teams={survivors} kind="alive" />
+      <Section title={CHOPPED_VOCAB.blockHeader} colorClass="text-crown" teams={block} kind="alive" warn />
       {chopped.length > 0 && (
-        <Section title="Chopped" colorClass="text-text-muted" teams={chopped} kind="chopped" />
+        <Section title={CHOPPED_VOCAB.choppedHeader} colorClass="text-text-muted" teams={chopped} kind="chopped" />
       )}
 
       {isCommish && block.length > 0 && (

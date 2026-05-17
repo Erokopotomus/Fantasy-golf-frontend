@@ -266,6 +266,10 @@ async function calculateLeagueStandings(leagueId, prisma) {
       totalPoints: Math.round(totalPoints * 100) / 100,
       tournamentResults: teamTournamentResults,
       rosterCount: team.roster.length,
+      // Chopped-format elimination fields (null for non-chopped or alive teams)
+      eliminatedAt: team.eliminatedAt || null,
+      eliminationWeek: team.eliminationWeek || null,
+      finalRank: team.finalRank || null,
     })
   }
 

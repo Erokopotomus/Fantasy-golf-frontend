@@ -191,6 +191,7 @@ export const useLeagueFormat = (league) => {
   const isSurvivor = normalizedFormat === 'survivor'
   const isOneAndDone = normalizedFormat === 'one-and-done'
   const isFullLeague = normalizedFormat === 'full-league'
+  const isChopped = normalizedFormat === 'chopped'
 
   // Get the appropriate nav items based on format
   const formatNavItems = useMemo(() => {
@@ -212,8 +213,12 @@ export const useLeagueFormat = (league) => {
       items.push({ path: 'picks', label: 'Pick Center', icon: 'target' })
     }
 
+    if (isChopped) {
+      items.push({ path: 'chop', label: 'Chop Zone', icon: 'skull' })
+    }
+
     return items
-  }, [isHeadToHead, isRoto, isSurvivor, isOneAndDone])
+  }, [isHeadToHead, isRoto, isSurvivor, isOneAndDone, isChopped])
 
   return {
     format,
@@ -225,6 +230,7 @@ export const useLeagueFormat = (league) => {
     isSurvivor,
     isOneAndDone,
     isFullLeague,
+    isChopped,
     formatNavItems,
   }
 }

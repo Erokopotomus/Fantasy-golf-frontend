@@ -10,6 +10,7 @@ import H2HStandings from '../components/standings/H2HStandings'
 import RotoStandings from '../components/standings/RotoStandings'
 import SurvivorStandings from '../components/standings/SurvivorStandings'
 import OADStandings from '../components/standings/OADStandings'
+import ChoppedStandings from '../components/standings/ChoppedStandings'
 import Card from '../components/common/Card'
 import SegmentStandings from '../components/standings/SegmentStandings'
 import LeagueChat from '../components/ai/LeagueChat'
@@ -22,7 +23,7 @@ const Standings = () => {
   const { leagueId } = useParams()
   const { user } = useAuth()
   const { league, loading: leagueLoading } = useLeague(leagueId)
-  const { format, isHeadToHead, isRoto, isSurvivor, isOneAndDone, isFullLeague } = useLeagueFormat(league)
+  const { format, isHeadToHead, isRoto, isSurvivor, isOneAndDone, isFullLeague, isChopped } = useLeagueFormat(league)
   const isNflLeague = (league?.sport || 'GOLF').toUpperCase() === 'NFL'
 
   const { standings, weeklyResults, loading, error, refetch } = useStandings(leagueId)
@@ -83,6 +84,10 @@ const Standings = () => {
     ties: s.ties || 0,
     avgPoints: weeklyResults.length > 0 ? Math.round((s.totalPoints / weeklyResults.length) * 10) / 10 : 0,
     trend: s.trend || 0,
+    // Chopped elimination fields (null/undefined for non-chopped or alive teams)
+    eliminatedAt: s.eliminatedAt || null,
+    eliminationWeek: s.eliminationWeek || null,
+    finalRank: s.finalRank || null,
   }))
 
   // Map weeklyResults for WeeklyBreakdown
@@ -230,6 +235,25 @@ const Standings = () => {
         </div>
       )}
 
+      {isChopped && (
+        <div className="space-y-6">
+          <ChoppedStandings
+            standings={mappedStandings}
+            leagueId={leagueId}
+            currentWeek={league?.currentWeek || league?.settings?.currentWeek || 1}
+            currentUserId={user?.id}
+          />
+          <div className="text-center">
+            <Link
+              to={`/leagues/${leagueId}/chop`}
+              className="text-field hover:underline"
+            >
+              Open Chop Zone
+            </Link>
+          </div>
+        </div>
+      )}
+
       {isFullLeague && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -255,7 +279,7 @@ const Standings = () => {
       )}
 
       {/* Fallback for unknown format */}
-      {!isHeadToHead && !isRoto && !isSurvivor && !isOneAndDone && !isFullLeague && (
+      {!isHeadToHead && !isRoto && !isSurvivor && !isOneAndDone && !isFullLeague && !isChopped && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <StandingsTable standings={mappedStandings} currentUserId={user?.id} />
