@@ -9,6 +9,7 @@ import HeadToHeadSettings from './settings/HeadToHeadSettings'
 import RotoSettings from './settings/RotoSettings'
 import SurvivorSettings from './settings/SurvivorSettings'
 import OneAndDoneSettings from './settings/OneAndDoneSettings'
+import ChoppedSettings from './settings/ChoppedSettings'
 import { LEAGUE_FORMATS, DEFAULT_FORMAT_SETTINGS } from '../../hooks/useLeagueFormat'
 import api from '../../services/api'
 
@@ -188,6 +189,8 @@ const LeagueForm = ({ onSubmit, loading }) => {
         return <RotoSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} />
       case 'survivor':
         return <SurvivorSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} sport={formData.sport} />
+      case 'chopped':
+        return <ChoppedSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} sport={formData.sport} />
       case 'one-and-done':
         return <OneAndDoneSettings settings={formData.formatSettings} onChange={handleFormatSettingsChange} sport={formData.sport} />
       default:

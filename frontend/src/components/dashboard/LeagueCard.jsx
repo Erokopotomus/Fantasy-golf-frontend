@@ -8,6 +8,7 @@ const formatMap = {
   ROTO: 'Roto',
   SURVIVOR: 'Survivor',
   ONE_AND_DONE: 'One & Done',
+  CHOPPED: 'Chopped',
 }
 
 const draftTypeMap = {

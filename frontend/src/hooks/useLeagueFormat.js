@@ -42,6 +42,14 @@ export const LEAGUE_FORMATS = {
     hasDraft: false,
     features: ['No draft required', 'Tier multipliers', 'Strategic player usage'],
   },
+  'chopped': {
+    id: 'chopped',
+    name: 'Chopped',
+    description: 'Last team standing — lowest-scoring team is Chopped each week',
+    icon: 'skull',
+    hasDraft: true,
+    features: ['Weekly chops', 'Commish override', 'FAAB blind auction'],
+  },
 }
 
 export const DRAFT_TYPES = {
@@ -104,6 +112,12 @@ export const DEFAULT_FORMAT_SETTINGS = {
     ],
     majorMultiplier: 1.5,
   },
+  'chopped': {
+    chopsPerWeek: 1,
+    manualChopEnabled: true,
+    autoChopFallback: true,
+    minTeamsToStart: 4,
+  },
 }
 
 // Available roto categories
@@ -126,6 +140,7 @@ const FORMAT_ENUM_MAP = {
   'ROTO': 'roto',
   'SURVIVOR': 'survivor',
   'ONE_AND_DONE': 'one-and-done',
+  'CHOPPED': 'chopped',
 }
 
 const DRAFT_ENUM_MAP = {

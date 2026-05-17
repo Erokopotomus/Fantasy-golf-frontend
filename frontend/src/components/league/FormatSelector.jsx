@@ -34,7 +34,7 @@ const FormatIcon = ({ format }) => {
   return icons[format] || icons.trophy
 }
 
-const NFL_FORMATS = ['head-to-head', 'full-league']
+const NFL_FORMATS = ['head-to-head', 'full-league', 'chopped']
 
 const FormatSelector = ({ selectedFormat, onSelectFormat, selectedDraftType, onSelectDraftType, showDraftType = true, sport = 'golf' }) => {
   const allFormats = Object.values(LEAGUE_FORMATS)
