@@ -409,6 +409,17 @@ async function recordTransaction(data, prisma) {
       auctionAmount: data.auctionAmount || null,
       waiverBid: data.waiverBid || null,
       tradeId: data.tradeId || null,
+      // Decision capture (Year 1) — passthrough optional snapshot fields.
+      // Callers that don't pass these get null, which is the expected
+      // "missing not at random" behavior for the bias engine.
+      wasOnActiveLineup: data.wasOnActiveLineup ?? null,
+      daysSinceAcquisition: data.daysSinceAcquisition ?? null,
+      acquisitionType: data.acquisitionType ?? null,
+      reasonChips: data.reasonChips ?? null,
+      reasonText: data.reasonText ?? null,
+      clientVersion: data.clientVersion ?? null,
+      surface: data.surface ?? null,
+      leagueContext: data.leagueContext ?? undefined,
     },
   })
 

@@ -4,9 +4,45 @@ const { recordTransaction } = require('../services/fantasyTracker')
 const { createNotification } = require('../services/notificationService')
 const { validatePositionLimits } = require('../services/positionLimitValidator')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
+const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { sanitizeChips } = require('../constants/reasonChips')
 
 const router = express.Router()
 const prisma = require('../lib/prisma.js')
+
+// Snapshot the sum of ClutchProjection.tradeValue for a set of players at the
+// moment the decision is being made. Bias engine reads this to detect "user
+// repeatedly accepts trades where their side has lower projected value."
+//
+// Important: this MUST be called at decision time (proposal for proposer side,
+// response for responder side). Re-computing later loses the original signal
+// because trade values drift between propose and accept.
+async function snapshotTradeValue(playerIds, sport) {
+  if (!Array.isArray(playerIds) || playerIds.length === 0) return 0
+  try {
+    const projections = await prisma.clutchProjection.findMany({
+      where: { playerId: { in: playerIds }, sport },
+      select: { playerId: true, tradeValue: true, computedAt: true },
+      orderBy: { computedAt: 'desc' },
+    })
+    // Keep the most recent projection per player only.
+    const seen = new Set()
+    let sum = 0
+    for (const p of projections) {
+      if (seen.has(p.playerId)) continue
+      seen.add(p.playerId)
+      sum += p.tradeValue || 0
+    }
+    return sum
+  } catch {
+    return null
+  }
+}
+
+const VALID_DECLINE_REASONS = new Set([
+  'VALUE', 'POSITIONAL_NEED', 'DISTRUST_OFFERER',
+  'PROTECTING_LEAD', 'DISLIKE_PLAYER', 'OTHER',
+])
 
 // GET /api/trades - Get user's trades
 router.get('/', authenticate, async (req, res, next) => {
@@ -75,15 +111,23 @@ router.get('/', authenticate, async (req, res, next) => {
 // POST /api/trades - Propose a trade
 router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { leagueId, receiverId, senderPlayers, receiverPlayers, message, senderDollars, receiverDollars, reasoning } = req.body
+    const { leagueId, receiverId, senderPlayers, receiverPlayers, message, senderDollars, receiverDollars, reasoning, reasonChips } = req.body
 
-    // Check trade deadline
-    const league = await prisma.league.findUnique({ where: { id: leagueId }, select: { settings: true } })
+    // Check trade deadline + grab sport for chip validation/snapshot
+    const league = await prisma.league.findUnique({
+      where: { id: leagueId },
+      select: { settings: true, sport: true },
+    })
     if (league?.settings?.tradeDeadline && league.settings.tradeDeadlineDate) {
       if (new Date() > new Date(league.settings.tradeDeadlineDate)) {
         return res.status(403).json({ error: { message: 'The trade deadline has passed for this league' } })
       }
     }
+    const sport = (league?.sport || 'golf').toLowerCase()
+
+    // Decision capture: snapshot proposer-side value at proposal time. Responder
+    // side gets snapshotted at response time (NOT here — values drift).
+    const proposerProjectedValue = await snapshotTradeValue(senderPlayers || [], sport)
 
     // Get teams
     const senderTeam = await prisma.team.findUnique({
@@ -121,7 +165,11 @@ router.post('/', authenticate, async (req, res, next) => {
         receiverDollars: receiverDollars || {},
         message,
         proposerReasoning: reasoning ? String(reasoning).substring(0, 280) : null,
-        status: 'PENDING'
+        status: 'PENDING',
+        // Decision capture
+        proposerProjectedValue,
+        proposerReasonChips: sanitizeChips(reasonChips, sport),
+        ...buildServerEnvelope({ req, surface: 'trade_proposal' }),
       },
       include: {
         initiator: {
@@ -165,7 +213,7 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
       include: {
         senderTeam: true,
         receiverTeam: true,
-        league: { select: { settings: true } }
+        league: { select: { settings: true, sport: true } }
       }
     })
 
@@ -232,6 +280,13 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
       }
     }
 
+    // Decision capture: snapshot responder-side value at RESPONSE time, not
+    // proposal time. Trade values drift; we want the value the responder was
+    // actually staring at when they clicked accept.
+    const sport = (trade.league?.sport || 'golf').toLowerCase()
+    const responderProjectedValue = await snapshotTradeValue(receiverPlayerIds, sport)
+    const responderChipsClean = sanitizeChips(req.body.reasonChips, sport)
+
     await prisma.$transaction([
       // Move sender's players to receiver's team
       ...senderPlayerIds.map(playerId =>
@@ -257,12 +312,14 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
           data: { teamId: trade.senderTeamId }
         })
       ),
-      // Update trade status
+      // Update trade status + decision capture
       prisma.trade.update({
         where: { id: trade.id },
         data: {
           status: 'ACCEPTED',
           responderReasoning: req.body.reasoning ? String(req.body.reasoning).substring(0, 280) : null,
+          responderProjectedValue,
+          responderReasonChips: responderChipsClean,
         }
       })
     ])
@@ -463,7 +520,8 @@ router.post('/:id/accept', authenticate, async (req, res, next) => {
 router.post('/:id/reject', authenticate, async (req, res, next) => {
   try {
     const trade = await prisma.trade.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: { league: { select: { sport: true } } },
     })
 
     if (!trade) {
@@ -474,9 +532,26 @@ router.post('/:id/reject', authenticate, async (req, res, next) => {
       return res.status(403).json({ error: { message: 'Not authorized' } })
     }
 
+    // Decision capture on decline:
+    //   - declineReason: structured enum (validated against allow-list)
+    //   - responderReasoning: free-text "why" (280ch)
+    //   - responderReasonChips: chip taxonomy
+    //   - responderProjectedValue: what the responder was looking at when declining
+    const sport = (trade.league?.sport || 'golf').toLowerCase()
+    const declineReason = VALID_DECLINE_REASONS.has(req.body.declineReason)
+      ? req.body.declineReason
+      : null
+    const responderProjectedValue = await snapshotTradeValue(trade.receiverPlayers, sport)
+
     await prisma.trade.update({
       where: { id: trade.id },
-      data: { status: 'REJECTED' }
+      data: {
+        status: 'REJECTED',
+        responderReasoning: req.body.reasoning ? String(req.body.reasoning).substring(0, 280) : null,
+        responderReasonChips: sanitizeChips(req.body.reasonChips, sport),
+        responderProjectedValue,
+        declineReason,
+      }
     })
 
     // Notify initiator

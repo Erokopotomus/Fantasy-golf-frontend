@@ -13,6 +13,33 @@ const { recordTransaction } = require('../services/fantasyTracker')
 const { initializeLeagueSeason } = require('../services/seasonSetup')
 const { createNotification, notifyLeague } = require('../services/notificationService')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
+const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { sanitizeChips } = require('../constants/reasonChips')
+
+// Compute pickQuality bucket from ADP or auction-value delta. The bias engine
+// queries this as user-vs-baseline, NOT user-claimed sentiment. Spec §1.
+function computePickQuality({ sport, pickNumber, adpAtPick, amount, auctionValueAtPick }) {
+  // NFL snake: positive delta means user picked LATER than ADP (steal — player
+  // should have been gone). Negative means earlier (reach).
+  if (sport === 'nfl' && adpAtPick != null && pickNumber != null) {
+    const delta = pickNumber - adpAtPick
+    if (delta >= 10) return 'STEAL'
+    if (delta >= 3) return 'VALUE'
+    if (delta >= -2) return 'PAR'
+    return 'REACH'
+  }
+  // Auction (golf + NFL auction): negative delta means user paid LESS than value.
+  if (amount != null && auctionValueAtPick != null && auctionValueAtPick > 0) {
+    const pctDiff = (amount - auctionValueAtPick) / auctionValueAtPick
+    if (pctDiff <= -0.20) return 'STEAL'
+    if (pctDiff <= -0.05) return 'VALUE'
+    if (pctDiff <= 0.20) return 'PAR'
+    return 'REACH'
+  }
+  return null
+}
+
+const VALID_PICK_INTENTS = new Set(['PLAN', 'FALLBACK', 'PANIC', 'COUPLED'])
 
 const router = express.Router()
 const prisma = require('../lib/prisma.js')
@@ -490,7 +517,7 @@ router.post('/:id/start', authenticate, async (req, res, next) => {
 // POST /api/drafts/:id/pick - Make a draft pick
 router.post('/:id/pick', authenticate, async (req, res, next) => {
   try {
-    const { playerId, amount, pickTag } = req.body
+    const { playerId, amount, pickTag, pickIntent, reasonChips, reasonText } = req.body
 
     const draft = await prisma.draft.findUnique({
       where: { id: req.params.id },
@@ -549,13 +576,15 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       return res.status(400).json({ error: { message: 'Player already drafted' } })
     }
 
+    const sport = draft.league?.sport?.slug || draft.league?.sport || 'golf'
+    const sportSlug = typeof sport === 'string' ? sport.toLowerCase() : 'golf'
+
     // Auto-lookup board rank if user has an active draft board
     let boardRankAtPick = null
     let activeBoardId = null
     try {
-      const sport = draft.league?.sport?.slug || 'golf'
       const activeBoard = await prisma.draftBoard.findFirst({
-        where: { userId: req.user.id, sport },
+        where: { userId: req.user.id, sport: sportSlug },
         orderBy: { updatedAt: 'desc' },
         select: { id: true },
       })
@@ -569,9 +598,65 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       }
     } catch {}
 
-    // Validate pickTag
-    const validTags = ['STEAL', 'REACH', 'PLAN', 'FALLBACK', 'VALUE', 'PANIC']
-    const safePickTag = pickTag && validTags.includes(pickTag) ? pickTag : null
+    // Validate pickTag (legacy) + pickIntent (new — user-stated intent only)
+    const validLegacyTags = ['STEAL', 'REACH', 'PLAN', 'FALLBACK', 'VALUE', 'PANIC']
+    const safePickTag = pickTag && validLegacyTags.includes(pickTag) ? pickTag : null
+    const safePickIntent = pickIntent && VALID_PICK_INTENTS.has(pickIntent) ? pickIntent : null
+
+    // Decision capture: snapshot state at pick time. Fire-and-forget-ish — if
+    // these subqueries throw, default to null and let the bias engine treat
+    // them as "missing not at random." Never block the pick itself.
+    let adpAtPick = null
+    let auctionValueAtPick = null
+    let projectedPtsAtPick = null
+    let availablePool = null
+    let timeOnClockMs = null
+    let timeOnClockPctOfMax = null
+    try {
+      // Projection snapshot for the picked player
+      const proj = await prisma.clutchProjection.findFirst({
+        where: { playerId, sport: sportSlug },
+        orderBy: { computedAt: 'desc' },
+        select: { adpRank: true, projectedPts: true, tradeValue: true },
+      })
+      if (proj) {
+        adpAtPick = sportSlug === 'nfl' && proj.adpRank != null ? Number(proj.adpRank) : null
+        projectedPtsAtPick = proj.projectedPts ?? null
+        // Auction value: tradeValue is the canonical proxy
+        auctionValueAtPick = proj.tradeValue ?? null
+      }
+
+      // Available pool snapshot — top 200 by projection minus drafted players.
+      // Compressed array of { playerId, tier? }. Tier is null in v1 (no model).
+      const drafted = new Set(draft.picks.map(p => p.playerId).concat([playerId]))
+      const poolCandidates = await prisma.clutchProjection.findMany({
+        where: { sport: sportSlug, playerId: { notIn: Array.from(drafted) } },
+        orderBy: [{ projectedPts: 'desc' }],
+        take: 200,
+        select: { playerId: true },
+      })
+      availablePool = poolCandidates.map(p => ({ playerId: p.playerId, tier: null }))
+
+      // Time on clock — derived from the same logic as getPickDeadline().
+      const clockStart = draft.picks.length > 0
+        ? draft.picks[draft.picks.length - 1].pickedAt
+        : draft.startTime
+      if (clockStart) {
+        const maxMs = (draft.timePerPick || 90) * 1000
+        timeOnClockMs = Math.max(0, Date.now() - clockStart.getTime())
+        timeOnClockPctOfMax = maxMs > 0 ? Math.min(1, timeOnClockMs / maxMs) : null
+      }
+    } catch (err) {
+      console.error('[drafts] pick snapshot failed:', err.message)
+    }
+
+    const pickQuality = computePickQuality({
+      sport: sportSlug,
+      pickNumber: draft.currentPick,
+      adpAtPick,
+      amount: amount || null,
+      auctionValueAtPick,
+    })
 
     // Create the pick
     const pick = await prisma.draftPick.create({
@@ -585,6 +670,18 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
         pickTag: safePickTag,
         boardRankAtPick,
         boardId: activeBoardId,
+        // Decision capture
+        pickIntent: safePickIntent,
+        pickQuality,
+        adpAtPick,
+        auctionValueAtPick,
+        projectedPtsAtPick,
+        availablePool,
+        timeOnClockMs,
+        timeOnClockPctOfMax,
+        reasonChips: sanitizeChips(reasonChips, sportSlug),
+        reasonText: typeof reasonText === 'string' ? reasonText.slice(0, 280) : null,
+        ...buildServerEnvelope({ req, surface: 'draft_room' }),
       },
       include: {
         player: {
@@ -673,9 +770,8 @@ router.post('/:id/pick', authenticate, async (req, res, next) => {
       auctionAmount: amount || null,
     }, prisma).catch(err => console.error('Draft transaction log failed:', err.message))
 
-    // Fire-and-forget: opinion timeline
-    const sport = draft.league?.sport?.slug || 'golf'
-    recordOpinionEvent(req.user.id, playerId, sport, 'DRAFT_PICK', {
+    // Fire-and-forget: opinion timeline (sportSlug computed at top of handler)
+    recordOpinionEvent(req.user.id, playerId, sportSlug, 'DRAFT_PICK', {
       round: draft.currentRound, pick: draft.currentPick,
       auctionAmount: amount || null, pickTag: safePickTag, boardRank: boardRankAtPick,
     }, pick.id, 'DraftPick').catch(() => {})

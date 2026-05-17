@@ -1,6 +1,8 @@
 const express = require('express')
 const { authenticate } = require('../middleware/auth')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
+const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { sanitizeChips } = require('../constants/reasonChips')
 
 const router = express.Router()
 const prisma = require('../lib/prisma.js')
@@ -8,7 +10,7 @@ const prisma = require('../lib/prisma.js')
 // POST /api/leagues/:leagueId/waivers/claim - Submit a waiver claim
 router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => {
   try {
-    const { playerId, bidAmount = 0, dropPlayerId, priority = 0, reasoning } = req.body
+    const { playerId, bidAmount = 0, dropPlayerId, priority = 0, reasoning, reasonChips } = req.body
     const { leagueId } = req.params
 
     if (!playerId) {
@@ -59,6 +61,37 @@ router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => 
       return res.status(400).json({ error: { message: 'You already have a pending claim on this player' } })
     }
 
+    // Decision capture: snapshot FAAB remaining BEFORE the claim is recorded
+    // so the bias engine can later compute "user bid 60% of remaining budget."
+    let faabRemainingAtBid = null
+    let faabPctAtBid = null
+    if (waiverType === 'faab') {
+      try {
+        const currentSeason = await prisma.season.findFirst({ where: { isCurrent: true }, select: { id: true } })
+        if (currentSeason) {
+          const ls = await prisma.leagueSeason.findFirst({
+            where: { leagueId, seasonId: currentSeason.id },
+            select: { id: true },
+          })
+          if (ls) {
+            const budget = await prisma.teamBudget.findUnique({
+              where: { teamId_leagueSeasonId: { teamId: team.id, leagueSeasonId: ls.id } },
+              select: { remaining: true },
+            })
+            if (budget) {
+              faabRemainingAtBid = budget.remaining
+              const denom = budget.remaining + (bidAmount || 0)
+              faabPctAtBid = denom > 0 ? (bidAmount || 0) / denom : null
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[waivers] FAAB snapshot failed:', err.message)
+      }
+    }
+
+    const sport = (league.sport || 'golf').toLowerCase()
+
     const claim = await prisma.waiverClaim.create({
       data: {
         leagueId,
@@ -70,14 +103,21 @@ router.post('/:leagueId/waivers/claim', authenticate, async (req, res, next) => 
         priority,
         status: 'PENDING',
         reasoning: reasoning ? String(reasoning).substring(0, 280) : null,
+        // Decision capture
+        acquisitionRoute: waiverType === 'faab' ? 'WAIVER_FAAB' : 'WAIVER_PRIORITY',
+        faabRemainingAtBid,
+        faabPctAtBid,
+        // trendingSources / trendingRank: forward-only, requires Sleeper-trending
+        // integration which isn't shipped yet. Stay null in v1.
+        reasonChips: sanitizeChips(reasonChips, sport),
+        ...buildServerEnvelope({ req, surface: 'waiver_wire' }),
       },
       include: {
         player: { select: { id: true, name: true, owgrRank: true, headshotUrl: true } },
       },
     })
 
-    // Record opinion event (decision capture)
-    const sport = (league.sport || 'golf').toLowerCase()
+    // Record opinion event (legacy decision capture)
     recordOpinionEvent(req.user.id, playerId, sport, 'WAIVER_ADD', {
       playerName: claim.player?.name,
       leagueId,

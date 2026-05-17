@@ -5,6 +5,8 @@ const { notifyLeague } = require('../services/notificationService')
 const { getCurrentFantasyWeek, getEffectiveStarterCount } = require('../services/fantasyWeekHelper')
 const { validatePositionLimits } = require('../services/positionLimitValidator')
 const { recordEvent: recordOpinionEvent } = require('../services/opinionTimelineService')
+const { buildServerEnvelope } = require('../services/decisionEnvelope')
+const { sanitizeChips } = require('../constants/reasonChips')
 
 const router = express.Router()
 const prisma = require('../lib/prisma.js')
@@ -341,7 +343,7 @@ router.post('/:id/roster/add', authenticate, async (req, res, next) => {
 // POST /api/teams/:id/roster/drop - Drop player from roster (soft-delete)
 router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
   try {
-    const { playerId } = req.body
+    const { playerId, reasonChips, reasonText } = req.body
 
     const team = await prisma.team.findUnique({
       where: { id: req.params.id },
@@ -355,6 +357,20 @@ router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
     if (team.userId !== req.user.id) {
       return res.status(403).json({ error: { message: 'Not authorized' } })
     }
+
+    const sport = (team.league?.sport || 'golf').toLowerCase()
+
+    // Decision capture: snapshot BEFORE soft-delete so wasOnActiveLineup
+    // reflects whether the user was starting this player at drop time.
+    const preDropEntry = await prisma.rosterEntry.findUnique({
+      where: { teamId_playerId: { teamId: req.params.id, playerId } },
+      select: { rosterStatus: true, acquiredAt: true, acquiredVia: true },
+    })
+    const wasOnActiveLineup = preDropEntry?.rosterStatus === 'ACTIVE'
+    const daysSinceAcquisition = preDropEntry?.acquiredAt
+      ? Math.floor((Date.now() - preDropEntry.acquiredAt.getTime()) / 86400000)
+      : null
+    const acquisitionType = preDropEntry?.acquiredVia || null // 'DRAFT' | 'WAIVER' | 'TRADE' | 'FREE_AGENT'
 
     // Soft-delete: mark as inactive with timestamp
     const entry = await prisma.rosterEntry.update({
@@ -371,17 +387,23 @@ router.post('/:id/roster/drop', authenticate, async (req, res, next) => {
       include: { player: { select: { name: true } } }
     })
 
-    // Log transaction
+    // Log transaction + decision capture
     await recordTransaction({
       type: 'FREE_AGENT_DROP',
       teamId: req.params.id,
       playerId,
       playerName: entry.player.name,
       leagueId: team.leagueId,
+      // Decision capture snapshot
+      wasOnActiveLineup,
+      daysSinceAcquisition,
+      acquisitionType,
+      reasonChips: sanitizeChips(reasonChips, sport),
+      reasonText: typeof reasonText === 'string' ? reasonText.slice(0, 280) : null,
+      ...buildServerEnvelope({ req, surface: 'team_roster' }),
     }, prisma).catch(err => console.error('Transaction log failed:', err.message))
 
-    // Record opinion event (decision capture)
-    const sport = (team.league?.sport || 'golf').toLowerCase()
+    // Record opinion event (legacy decision capture — sport computed above)
     recordOpinionEvent(req.user.id, playerId, sport, 'WAIVER_DROP', {
       playerName: entry.player.name,
       leagueId: team.leagueId,
@@ -443,7 +465,7 @@ router.patch('/:id/roster/:playerId', authenticate, async (req, res, next) => {
 // POST /api/teams/:id/lineup - Batch set active/bench/IR positions
 router.post('/:id/lineup', authenticate, async (req, res, next) => {
   try {
-    const { activePlayerIds, irPlayerIds = [] } = req.body
+    const { activePlayerIds, irPlayerIds = [], decisionsReasonChips, decisionsReasonText } = req.body
 
     if (!Array.isArray(activePlayerIds)) {
       return res.status(400).json({ error: { message: 'activePlayerIds must be an array' } })
@@ -451,7 +473,10 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
 
     const team = await prisma.team.findUnique({
       where: { id: req.params.id },
-      include: { roster: { where: { isActive: true } }, league: { include: { sportRef: { select: { slug: true } } } } }
+      include: {
+        roster: { where: { isActive: true }, include: { player: { select: { id: true } } } },
+        league: { include: { sportRef: { select: { slug: true } } } },
+      }
     })
 
     if (!team) {
@@ -521,20 +546,94 @@ router.post('/:id/lineup', authenticate, async (req, res, next) => {
     )
 
     // Fire-and-forget: opinion timeline for lineup changes
+    const sportSlug = team.league?.sportRef?.slug || team.league?.sport?.slug || 'unknown'
     const lineupOpinionLog = async () => {
-      const sport = team.league?.sportRef?.slug || team.league?.sport?.slug || 'unknown'
       for (const pid of activePlayerIds) {
         if (previousStatuses.get(pid) !== 'ACTIVE') {
-          recordOpinionEvent(req.user.id, pid, sport, 'LINEUP_START', {}, null, 'RosterEntry').catch(() => {})
+          recordOpinionEvent(req.user.id, pid, sportSlug, 'LINEUP_START', {}, null, 'RosterEntry').catch(() => {})
         }
       }
       for (const [pid, prevStatus] of previousStatuses) {
         if (prevStatus === 'ACTIVE' && !activePlayerIds.includes(pid)) {
-          recordOpinionEvent(req.user.id, pid, sport, 'LINEUP_BENCH', {}, null, 'RosterEntry').catch(() => {})
+          recordOpinionEvent(req.user.id, pid, sportSlug, 'LINEUP_BENCH', {}, null, 'RosterEntry').catch(() => {})
         }
       }
     }
     lineupOpinionLog().catch(() => {})
+
+    // Fire-and-forget: decision capture — upsert LineupSnapshot mutating in place.
+    // Spec discipline: ONE row per (teamId, fantasyWeekId), bumped on every save.
+    // Do NOT create a new row per save — table would balloon.
+    const lineupDecisionLog = async () => {
+      try {
+        const currentSeason = await prisma.season.findFirst({ where: { isCurrent: true }, select: { id: true } })
+        if (!currentSeason || !weekInfo?.fantasyWeek?.id) return
+        const ls = await prisma.leagueSeason.findFirst({
+          where: { leagueId: team.leagueId, seasonId: currentSeason.id },
+          select: { id: true },
+        })
+        if (!ls) return
+
+        // Compute structured per-player decisions from the diff
+        const sportForChips = sportSlug === 'unknown' ? 'nfl' : sportSlug
+        const chips = sanitizeChips(decisionsReasonChips, sportForChips)
+        const reasonText = typeof decisionsReasonText === 'string' ? decisionsReasonText.slice(0, 280) : null
+        const decisions = []
+        const newStatus = (pid) => {
+          if (activePlayerIds.includes(pid)) return 'ACTIVE'
+          if (irPlayerIds.includes(pid)) return 'IR'
+          return 'BENCH'
+        }
+        for (const [pid, prev] of previousStatuses) {
+          const next = newStatus(pid)
+          if (prev === next) continue
+          decisions.push({
+            playerId: pid,
+            action: next === 'ACTIVE' ? 'STARTED' : next === 'IR' ? 'MOVED' : 'BENCHED',
+            fromSlot: prev,
+            toSlot: next,
+            // projectedAtLock: filled by Phase A.1 leagueContextService snapshot later
+          })
+        }
+
+        const lineup = team.roster.map(e => ({
+          playerId: e.playerId,
+          position: newStatus(e.playerId),
+          slot: newStatus(e.playerId),
+        }))
+
+        const envelope = buildServerEnvelope({ req, surface: 'team_roster' })
+        await prisma.lineupSnapshot.upsert({
+          where: {
+            leagueSeasonId_fantasyWeekId_teamId: {
+              leagueSeasonId: ls.id,
+              fantasyWeekId: weekInfo.fantasyWeek.id,
+              teamId: team.id,
+            },
+          },
+          create: {
+            leagueSeasonId: ls.id,
+            fantasyWeekId: weekInfo.fantasyWeek.id,
+            teamId: team.id,
+            lineup,
+            decisions,
+            editCount: 1,
+            lastEditedAt: new Date(),
+            ...envelope,
+          },
+          update: {
+            lineup,
+            decisions,
+            editCount: { increment: 1 },
+            lastEditedAt: new Date(),
+            ...envelope,
+          },
+        })
+      } catch (err) {
+        console.error('[teams] lineup decision capture failed:', err.message)
+      }
+    }
+    lineupDecisionLog().catch(() => {})
 
     // Return updated roster
     const updatedTeam = await prisma.team.findUnique({
