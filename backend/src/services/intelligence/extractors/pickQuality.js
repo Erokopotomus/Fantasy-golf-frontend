@@ -1,12 +1,17 @@
 const { registerExtractor } = require('../extractor')
 const {
   getDraftPicksForUser,
+  batchResolvePicks,
   classifyPick,
 } = require('../lib/draftPickParser')
 
 /**
  * Internal: classify every snake pick the user has made. Returns paired
  * { pick, classification } records, filtering out unclassifiable ones.
+ *
+ * Perf: uses batchResolvePicks to fold ~600 serial DB queries (3/pick × 200
+ * picks/season × N seasons) into 2 bulk queries per user. ~300x speedup at
+ * the pickQuality bottleneck.
  */
 async function classifyAllPicks(userId, db) {
   const allPicks = await getDraftPicksForUser(userId, db)
@@ -14,8 +19,11 @@ async function classifyAllPicks(userId, db) {
   if (snakePicks.length === 0) {
     return { paired: [], totalPicks: 0, classifiablePicks: 0 }
   }
+  // One bulk resolve up front; classifyPick reads from the map instead of
+  // issuing per-pick queries.
+  const prebuiltMap = await batchResolvePicks(snakePicks, db)
   const classifications = await Promise.all(
-    snakePicks.map((p) => classifyPick(p, db))
+    snakePicks.map((p) => classifyPick(p, db, prebuiltMap))
   )
   const paired = snakePicks
     .map((p, i) => ({ pick: p, classification: classifications[i] }))

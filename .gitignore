@@ -23,5 +23,6 @@ npm-debug.log*
 dist/
 build/
 
-# Manager Intelligence — match miss audit dumps
+# Manager Intelligence — match miss audit dumps + backfill error dumps
 backend/scripts/intelligence/_misses/
+backend/scripts/intelligence/_errors/
