@@ -439,7 +439,96 @@ async function computeNflClutchRankings(scoringFormat = 'ppr', season = 2026) {
     console.log(`  #${i + 1} ${pl?.name} (${p.position}${p.positionRank}) — VBD: ${p.vbd.toFixed(1)}, PPG: ${p.ppg.toFixed(1)}`)
   })
 
-  return { success: true, count: upsertData.length }
+  // DS-5: Also write into prep-feature canonical table NflPlayerProjection.
+  // Source = 'sleeper_consensus' since adp/projectedPts come from Sleeper's API.
+  // adp here is the actual numeric ADP value (not the rank).
+  const sleeperAdpMap = new Map() // clutchPlayerId → numeric ADP
+  for (const [sleeperId, proj] of Object.entries(sleeperProjections)) {
+    const adpVal = proj?.stats?.[adpFormatKey] || proj?.stats?.adp_dd_ppr
+    const clutchId = sleeperIdToClutch.get(sleeperId)
+    if (clutchId && adpVal && adpVal < 500) sleeperAdpMap.set(clutchId, adpVal)
+  }
+
+  // Sleeper's `adp_dd_*` is empty until they publish the season's ADP feed.
+  // Fall back to Fantasy Football Calculator's public ADP API and match by name+team.
+  if (sleeperAdpMap.size === 0) {
+    try {
+      const ffcData = await fetchFfcAdp(scoringFormat, 12, season)
+      const ffcPlayers = ffcData?.players || []
+      console.log(`[projectionSync] Sleeper ADP empty — falling back to FFC (${ffcPlayers.length} rows)`)
+      const nameTeamMap = new Map()
+      const nameOnlyMap = new Map()
+      for (const cp of clutchPlayers) {
+        const key = `${normalizeName(cp.name)}|${normalizeTeam(cp.nflTeamAbbr)}`
+        nameTeamMap.set(key, cp.id)
+        const nkey = normalizeName(cp.name)
+        if (!nameOnlyMap.has(nkey)) nameOnlyMap.set(nkey, cp.id)
+      }
+      let matched = 0
+      for (const fp of ffcPlayers) {
+        if (!fp?.adp) continue
+        const key = `${normalizeName(fp.name)}|${normalizeTeam(fp.team)}`
+        let clutchId = nameTeamMap.get(key) || nameOnlyMap.get(normalizeName(fp.name))
+        if (clutchId) {
+          sleeperAdpMap.set(clutchId, fp.adp)
+          matched++
+        }
+      }
+      console.log(`[projectionSync] FFC ADP matched ${matched}/${ffcPlayers.length} → Clutch players`)
+    } catch (err) {
+      console.warn('[projectionSync] FFC ADP fallback failed:', err.message)
+    }
+  }
+
+  const nflProjRows = blendedRankings.map((p) => ({
+    playerId: p.clutchPlayerId,
+    season,
+    scoringType: scoringFormat,
+    projectedPoints: p.projectedPts,
+    adp: sleeperAdpMap.get(p.clutchPlayerId) ?? null,
+    positionRank: p.positionRank,
+    source: 'sleeper_consensus',
+  }))
+
+  let nflProjUpserted = 0
+  for (let i = 0; i < nflProjRows.length; i += batchSize) {
+    const chunk = nflProjRows.slice(i, i + batchSize)
+    await Promise.all(
+      chunk.map((r) =>
+        prisma.nflPlayerProjection
+          .upsert({
+            where: {
+              playerId_season_scoringType_source: {
+                playerId: r.playerId,
+                season: r.season,
+                scoringType: r.scoringType,
+                source: r.source,
+              },
+            },
+            create: r,
+            update: {
+              projectedPoints: r.projectedPoints,
+              adp: r.adp,
+              positionRank: r.positionRank,
+            },
+          })
+          .then(() => {
+            nflProjUpserted++
+          })
+          .catch((e) => {
+            console.error(
+              `[projectionSync] NflPlayerProjection upsert failed (player=${r.playerId}):`,
+              e.message
+            )
+          })
+      )
+    )
+  }
+  console.log(
+    `[projectionSync] Upserted ${nflProjUpserted}/${nflProjRows.length} NflPlayerProjection rows (${scoringFormat}, ${season})`
+  )
+
+  return { success: true, count: upsertData.length, nflProjUpserted }
 }
 
 /**
