@@ -1119,6 +1119,17 @@ class ApiService {
     })
   }
 
+  // MI-17: User Profile drill-down (full per-user characteristic state)
+  async getIntelligenceUserProfile(userId) {
+    return this.request(`/admin/intelligence/users/${encodeURIComponent(userId)}`)
+  }
+
+  async recomputeIntelligenceUser(userId) {
+    return this.request(`/admin/intelligence/users/${encodeURIComponent(userId)}/recompute`, {
+      method: 'POST',
+    })
+  }
+
   // Error Dashboard (Admin)
   async getErrorSummary() {
     return this.request('/errors/summary')
