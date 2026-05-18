@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
+import IntelligenceLibrary from '../components/admin/intelligence/IntelligenceLibrary'
 import api from '../services/api'
 
 const FEATURE_LABELS = {
@@ -342,7 +343,7 @@ const AdminDashboard = () => {
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
-        {['users', 'leagues', 'tournaments', 'errors', 'ai'].map(tab => (
+        {['users', 'leagues', 'tournaments', 'errors', 'ai', 'intelligence'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -352,7 +353,13 @@ const AdminDashboard = () => {
                 : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
             }`}
           >
-            {tab === 'ai' ? 'AI Engine' : tab === 'errors' ? `Errors${errorSummary?.unresolvedCount ? ` (${errorSummary.unresolvedCount})` : ''}` : tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'ai'
+              ? 'AI Engine'
+              : tab === 'errors'
+                ? `Errors${errorSummary?.unresolvedCount ? ` (${errorSummary.unresolvedCount})` : ''}`
+                : tab === 'intelligence'
+                  ? 'Intelligence'
+                  : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -922,6 +929,9 @@ const AdminDashboard = () => {
           )}
         </div>
       )}
+
+      {/* Manager Intelligence Tab */}
+      {activeTab === 'intelligence' && <IntelligenceLibrary />}
     </div>
   )
 }

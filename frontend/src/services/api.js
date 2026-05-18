@@ -1076,6 +1076,17 @@ class ApiService {
     return this.request('/admin/ai-spend')
   }
 
+  // Admin — Manager Intelligence (MI-15+)
+  async getIntelligenceLibrary() {
+    return this.request('/admin/intelligence/library')
+  }
+
+  async refreshIntelligenceAggregates() {
+    return this.request('/admin/intelligence/aggregate-now', {
+      method: 'POST',
+    })
+  }
+
   // Error Dashboard (Admin)
   async getErrorSummary() {
     return this.request('/errors/summary')
