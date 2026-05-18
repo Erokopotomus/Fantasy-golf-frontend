@@ -1177,6 +1177,22 @@ httpServer.listen(PORT, () => {
     console.log('[Cron] Intelligence profile regeneration scheduled (Wed 4 AM)')
   }
 
+  // ── Manager Intelligence Aggregate Snapshot (MI-13) ──
+  // Daily 3:00 AM ET — recompute CharacteristicAggregate distribution counts for Library page
+  // Does NOT re-run extractors (those fire on import/claim events). Cheap groupBy snapshot.
+  {
+    const { aggregateAll } = require('./services/intelligence/aggregateCron')
+    cron.schedule('0 3 * * *', async () => {
+      console.log('[intelligence aggregate] starting nightly run')
+      try {
+        await aggregateAll()
+      } catch (e) {
+        console.error('[intelligence aggregate] cron failed:', e.message)
+      }
+    }, { timezone: 'America/New_York' })
+    console.log('[Cron] Intelligence aggregate snapshot scheduled (daily 3 AM)')
+  }
+
   // ── Coaching Memory Writer (after Pattern Engine at 4 AM) ──
   // Wednesday 4:30 AM ET — Coaching Memory Writer
   cron.schedule('30 4 * * 3', async () => {
