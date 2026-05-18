@@ -411,12 +411,16 @@ async function syncWeeklyStatsRaw(prisma, season) {
     const fpPpr = num(row.fantasy_points_ppr)
     const fpHalf = (fpStd !== null && fpPpr !== null) ? (fpStd + fpPpr) / 2 : null
 
+    // 2025+ nflverse files use renamed columns: passing_interceptions,
+    // sacks_suffered, sack_yards_lost. Fall back to legacy names for 2016-2024.
     eligible.push({
       playerId, gameId, teamAbbr,
       passAttempts: num(row.attempts), passCompletions: num(row.completions),
       passYards: num(row.passing_yards), passTds: num(row.passing_tds),
-      interceptions: num(row.interceptions), sacked: num(row.sacks),
-      sackYards: num(row.sack_yards), passerRating: num(row.passer_rating),
+      interceptions: num(row.passing_interceptions ?? row.interceptions),
+      sacked: num(row.sacks_suffered ?? row.sacks),
+      sackYards: num(row.sack_yards_lost ?? row.sack_yards),
+      passerRating: num(row.passer_rating),
       rushAttempts: num(row.carries), rushYards: num(row.rushing_yards),
       rushTds: num(row.rushing_tds), fumbles, fumblesLost,
       targets: num(row.targets), receptions: num(row.receptions),

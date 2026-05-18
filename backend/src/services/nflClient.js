@@ -98,8 +98,19 @@ async function getSchedule() {
  * This is the KEY data source — pre-aggregated, includes fantasy points
  */
 async function getWeeklyStats(season) {
-  const url = `${NFLVERSE_BASE}/player_stats/player_stats_${season}.csv`
-  const rows = await rateLimitedFetch(url)
+  // nflverse migrated to a new release tag (stats_player) in late 2025 with
+  // a wider schema. Old `player_stats/player_stats_YYYY.csv` is still
+  // published for 2016-2024 but 2025+ only lives at the new path.
+  // Try the new path first, fall back to the old one.
+  const newUrl = `${NFLVERSE_BASE}/stats_player/stats_player_week_${season}.csv`
+  const oldUrl = `${NFLVERSE_BASE}/player_stats/player_stats_${season}.csv`
+  let rows
+  try {
+    rows = await rateLimitedFetch(newUrl)
+  } catch (e) {
+    console.log(`[nflClient] new-path weekly stats not found for ${season}, trying legacy path`)
+    rows = await rateLimitedFetch(oldUrl)
+  }
   console.log(`[nflClient] Fetched ${rows.length} weekly stat rows for ${season}`)
   return rows
 }
