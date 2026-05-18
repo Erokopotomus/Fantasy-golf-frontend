@@ -54,6 +54,7 @@ const DraftRecap = lazy(() => import('./pages/DraftRecap'))
 const MockDraftRecap = lazy(() => import('./pages/MockDraftRecap'))
 const NotificationSettings = lazy(() => import('./components/settings/NotificationSettings'))
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const CharacteristicDetail = lazy(() => import('./pages/admin/CharacteristicDetail'))
 const ProveIt = lazy(() => import('./pages/ProveIt'))
 const ImportLeague = lazy(() => import('./pages/ImportLeague'))
 const CustomImport = lazy(() => import('./pages/CustomImport'))
@@ -536,6 +537,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/intelligence/characteristics/:type"
+            element={
+              <ProtectedRoute>
+                <CharacteristicDetail />
               </ProtectedRoute>
             }
           />

@@ -1087,6 +1087,38 @@ class ApiService {
     })
   }
 
+  async getCharacteristicDetail(type) {
+    return this.request(`/admin/intelligence/characteristics/${encodeURIComponent(type)}`)
+  }
+
+  async updateCharacteristicThresholds(type, body) {
+    return this.request(`/admin/intelligence/characteristics/${encodeURIComponent(type)}/thresholds`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    })
+  }
+
+  async toggleCharacteristicPromote(type, enabled) {
+    return this.request(`/admin/intelligence/characteristics/${encodeURIComponent(type)}/toggle-promote`, {
+      method: 'POST',
+      body: JSON.stringify({ enabled }),
+    })
+  }
+
+  async toggleCharacteristicSuppress(type, suppressed) {
+    return this.request(`/admin/intelligence/characteristics/${encodeURIComponent(type)}/toggle-suppress`, {
+      method: 'POST',
+      body: JSON.stringify({ suppressed }),
+    })
+  }
+
+  async updateCharacteristicNotes(type, notes) {
+    return this.request(`/admin/intelligence/characteristics/${encodeURIComponent(type)}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ notes }),
+    })
+  }
+
   // Error Dashboard (Admin)
   async getErrorSummary() {
     return this.request('/errors/summary')
