@@ -7953,6 +7953,111 @@ railway run --service web node backend/scripts/intelligence/backfill-player-ids.
 
 ---
 
+### 205 — Sleeper player ID sync service  `MEDIUM`
+**Status:** `TODO`
+**Priority:** MEDIUM — high-ROI prerequisite before NFL 2026 launch. Sleeper is the most popular fantasy platform; bulletproof Sleeper imports = major friction reduction.
+**Owner:** Code
+
+**What this is:**
+Build a one-time-runnable sync service that pulls every NFL player from Sleeper's public API and pre-populates `Player.sleeperId` columns on our matching Player rows. Once run, every future Sleeper import gets instant exact-ID matches (no fuzzy fallback needed).
+
+**Why it matters:**
+- Today's player-ID backfill (#204, completed 2026-05-18) found 99% of Sleeper picks resolved, but those 1% (kickers like Justin Tucker, Matt Gay, Ryan Succop, Younghoe Koo) keep showing up because their Player rows don't have `sleeperId` populated.
+- Sleeper's `/v1/players/nfl` endpoint returns a comprehensive map of ALL NFL players (active + retired, ~5000+ entries) with their canonical Sleeper IDs. One API call replaces all fuzzy-match guessing.
+- Same pattern is the right long-term architecture for every platform — start with Sleeper since it's the easiest API + most popular platform.
+
+**Implementation plan (~2 hours):**
+
+1. **Create** `backend/src/services/sleeperPlayerSync.js`:
+   - `syncSleeperPlayers({ db = prisma }) → { processed, matched, enriched, missed, errors }`
+   - Fetch `https://api.sleeper.app/v1/players/nfl` (returns object keyed by Sleeper player_id, values have name + position + team + status fields)
+   - For each Sleeper player:
+     - Try exact `Player.sleeperId` match first (skip if already set)
+     - Fuzzy match by normalized name + position
+     - If match score ≥ 80: write `Player.sleeperId = sleeperPlayerId`
+     - If no match: collect into a misses array for review
+   - Return stats summary
+
+2. **Expose as admin endpoint** at `POST /api/admin/intelligence/sync-sleeper-players` (same fire-and-poll pattern as #204 to bypass Railway proxy timeouts). Reuse the in-memory job state pattern from `backend/src/routes/adminIntelligence.js`.
+
+3. **Optionally add scheduled cron** — Sleeper's player list updates weekly. A weekly Wednesday 4 AM cron keeps `Player.sleeperId` current as rookies / new signings come into Sleeper.
+
+4. **Verify** by checking that known kickers (Tucker, Gay, Succop, Koo) now have `Player.sleeperId` populated:
+   ```sql
+   SELECT name, "sleeperId" FROM players WHERE name IN ('Justin Tucker', 'Matt Gay', 'Ryan Succop', 'Younghoe Koo');
+   ```
+
+**Files (new):**
+- `backend/src/services/sleeperPlayerSync.js`
+- Possibly extend `backend/src/routes/adminIntelligence.js` with new POST/GET routes
+
+**Effect after running:** future Sleeper imports drop from "~99% match with fuzzy fallback" to "~99% match with exact ID lookup" — faster AND more reliable.
+
+---
+
+### 206 — Audit Yahoo parser for player_key extraction on historical seasons  `MEDIUM`
+**Status:** `TODO`
+**Priority:** MEDIUM — investigation task that may unlock Eric's stuck Yahoo data.
+**Owner:** Code
+
+**What this is:**
+The 2026-05-18 player-ID backfill (#204) found 19,768 picks across Eric's historical seasons have **no `playerId` stored at all** in `HistoricalSeason.draftData.picks[].playerId`. That's 37% of all picks. Yahoo's API returns `player_key` (`390.p.30154` format) for every pick — meaning Yahoo HAD the data; our importer likely didn't extract it in older code.
+
+**Question to answer:**
+Does the CURRENT Yahoo importer code (`backend/src/services/yahooImport.js`) extract `player_key` for historical seasons, or is it only capturing it for current-season imports?
+
+**How to investigate:**
+
+1. Read `backend/src/services/yahooImport.js`, specifically the `parseDraftCSV` / draft pick parsing functions.
+2. Verify the Yahoo Fantasy API draft results endpoint returns `player_key` for past seasons (test with one of Eric's known historical leagues — e.g., a 2020 or 2019 season).
+3. If the current importer captures it correctly → re-import Eric's Yahoo leagues to recover the 19,768 picks. The new PIR-1 matchAndLink wiring will populate platform IDs as a side effect.
+4. If the current importer drops `player_key` for historical seasons → file as a parser bug and fix before re-importing.
+
+**Verify approach:**
+Pick one of Eric's existing Yahoo leagues, re-run the import via admin tool, then query `HistoricalSeason.draftData.picks` for that season. Confirm `playerId` is populated on every pick (or at least the same coverage the new code is producing for fresh imports today).
+
+**Files (read-only for investigation):**
+- `backend/src/services/yahooImport.js`
+- `backend/src/routes/imports.js`
+
+**Effect if parser is fine:** ~19,768 additional picks become extractable for Manager Intelligence after Eric re-imports his Yahoo leagues.
+
+---
+
+### 207 — Historical Player record backfill (retired players)  `LOW`
+**Status:** `TODO`
+**Priority:** LOW — affects Manager Intelligence signal on pre-2018 seasons. Recent-era signal is stronger and matters more for v1 bias engine.
+**Owner:** Code
+
+**What this is:**
+The 2026-05-18 player-ID backfill found 13,538 Yahoo picks couldn't resolve because they're retired NFL players (Rashard Mendenhall, Arian Foster, Andre Johnson, Calvin Johnson, Chris Johnson, Michael Turner, Ray Rice, Maurice Jones-Drew, Roddy White, Jahvid Best, etc.) who aren't in our `Player` table — we only synced active rosters when the table was originally built.
+
+**Sources for historical players:**
+- **nflverse** (`nflfastR` / `nflreadr`) — comprehensive every-player-ever dataset including retired. Existing nflverse integration in `backend/src/services/nflverseSync.js` (verify the file exists/the integration is intact).
+- **Sleeper API** — `/v1/players/nfl` returns active + retired players in one call (this is the same endpoint #205 uses).
+- **Pro-Football-Reference** — comprehensive but scrape-only (no API).
+
+**Implementation plan (~3-4 hours):**
+
+1. **Pick a primary source.** Sleeper's API is likely easiest (one call, structured JSON, includes retired). nflverse is most comprehensive but bulkier integration.
+2. **Build sync service** that inserts retired players into our `Player` table with:
+   - `name`, `firstName`, `lastName`
+   - `nflPosition`, `nflTeamAbbr` (likely the last team they played for, or null if unknown)
+   - `gsisId` if available from nflverse
+   - `sleeperId` if pulled from Sleeper
+   - A flag indicating "historical/retired" to distinguish from active players in queries (existing `status` field on Player might work)
+3. **Re-run the player-ID backfill** (#204's admin endpoint) — the 13,538 misses should mostly resolve once those Player rows exist.
+
+**Files (new):**
+- `backend/src/services/historicalPlayerSync.js`
+- Possibly extend `backend/src/routes/adminIntelligence.js` with another sync endpoint
+
+**Effect:** Manager Intelligence gains signal on pre-2018 seasons for users with deep historical league imports. Eric's 2010-2017 Yahoo league picks become analyzable.
+
+**Defer rationale:** Bias engine weights recent decisions more heavily anyway, so pre-2018 signal is nice-to-have not need-to-have. Tackle after #205 (Sleeper sync) and #206 (Yahoo parser audit) since those have higher ROI per hour.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
