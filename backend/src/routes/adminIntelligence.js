@@ -4,72 +4,99 @@ const { authenticate } = require('../middleware/auth')
 const { requireAdmin } = require('../middleware/requireAdmin')
 const { runBackfill, summarizeMisses } = require('../services/intelligence/playerIdBackfill')
 
-// All admin intelligence routes require auth + admin role
+// Single in-memory job state. Persists across requests in this Node process,
+// resets on Railway restart (acceptable for a one-shot backfill).
+let currentJob = {
+  id: null,
+  status: 'idle',           // 'idle' | 'running' | 'done' | 'failed'
+  dryRun: null,
+  startedAt: null,
+  finishedAt: null,
+  progress: null,           // { picksProcessed, totalPicksEstimate, currentSeasonIndex, totalSeasons, stats }
+  result: null,             // { stats, missesByPlatform, missesCount, durationMs } when done
+  error: null,
+}
+
 router.use(authenticate, requireAdmin)
 
 /**
  * POST /api/admin/intelligence/backfill-player-ids?dryRun=true|false
  *
- * Streams chunked progress lines (NDJSON), one per ~200 picks.
- * Each line: { type: 'progress' | 'done' | 'error', ... }
+ * Kicks off the backfill in a background promise. Returns immediately.
+ * Poll /backfill-status to see progress + final result.
  *
- * To run:
- *   curl -N -X POST \
- *     -H "Authorization: Bearer $TOKEN" \
- *     "https://clutch-production-8def.up.railway.app/api/admin/intelligence/backfill-player-ids?dryRun=false"
+ * If a job is already running, returns 409 with the existing jobId.
  */
 router.post('/backfill-player-ids', async (req, res) => {
+  if (currentJob.status === 'running') {
+    return res.status(409).json({
+      error: 'already_running',
+      jobId: currentJob.id,
+      startedAt: currentJob.startedAt,
+      progress: currentJob.progress,
+    })
+  }
+
   const dryRun = req.query.dryRun === 'true'
+  const jobId = `backfill-${Date.now()}`
 
-  // Disable Express response timeout for this long-running endpoint
-  req.setTimeout(0)
-  res.setTimeout(0)
+  currentJob = {
+    id: jobId,
+    status: 'running',
+    dryRun,
+    startedAt: new Date().toISOString(),
+    finishedAt: null,
+    progress: { picksProcessed: 0, totalPicksEstimate: 0, currentSeasonIndex: 0, totalSeasons: 0, stats: null },
+    result: null,
+    error: null,
+  }
 
-  // Set NDJSON streaming headers
-  res.setHeader('Content-Type', 'application/x-ndjson')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Transfer-Encoding', 'chunked')
-  res.flushHeaders?.()
-
-  const emit = (obj) => {
+  // Fire and forget — let the request return immediately
+  ;(async () => {
     try {
-      res.write(JSON.stringify(obj) + '\n')
+      const { stats, misses, durationMs } = await runBackfill({
+        dryRun,
+        onProgress: async (progress) => {
+          // Mutate the in-memory job state on each progress callback
+          currentJob.progress = progress
+        },
+      })
+      currentJob.status = 'done'
+      currentJob.finishedAt = new Date().toISOString()
+      currentJob.result = {
+        stats,
+        missesByPlatform: summarizeMisses(misses),
+        missesCount: misses.length,
+        durationMs,
+      }
     } catch (e) {
-      // Client disconnected — backfill continues, but we can't stream
+      currentJob.status = 'failed'
+      currentJob.finishedAt = new Date().toISOString()
+      currentJob.error = { message: e.message, stack: e.stack }
+      console.error('[backfill] failed:', e)
     }
-  }
+  })()
 
-  try {
-    emit({ type: 'start', dryRun, timestamp: new Date().toISOString() })
+  res.json({
+    jobId,
+    status: 'running',
+    dryRun,
+    startedAt: currentJob.startedAt,
+    pollUrl: '/api/admin/intelligence/backfill-status',
+  })
+})
 
-    const { stats, misses, durationMs } = await runBackfill({
-      dryRun,
-      onProgress: async ({ picksProcessed, totalPicksEstimate, currentSeasonIndex, totalSeasons, stats }) => {
-        emit({
-          type: 'progress',
-          picksProcessed,
-          totalPicksEstimate,
-          currentSeasonIndex,
-          totalSeasons,
-          stats,
-        })
-      },
-    })
-
-    const byPlatform = summarizeMisses(misses)
-    emit({
-      type: 'done',
-      dryRun,
-      durationMs,
-      stats,
-      missesByPlatform: byPlatform,
-      missesCount: misses.length,
-    })
-  } catch (e) {
-    emit({ type: 'error', message: e.message, stack: e.stack })
-  } finally {
-    res.end()
-  }
+/**
+ * GET /api/admin/intelligence/backfill-status
+ *
+ * Returns the current job state. Status is one of:
+ *   - 'idle': no job has ever run on this process
+ *   - 'running': in progress, see .progress
+ *   - 'done': finished successfully, see .result
+ *   - 'failed': errored out, see .error
+ */
+router.get('/backfill-status', (req, res) => {
+  res.json(currentJob)
 })
 
 module.exports = router
