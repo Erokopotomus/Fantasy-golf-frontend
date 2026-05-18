@@ -4,9 +4,21 @@ const { calculateLeagueStandings, calculateTournamentScoring, calculateLiveTourn
 const { notifyLeague } = require('../services/notificationService')
 const { generatePlayoffBracket, getPlayoffBracket, createCustomPlayoffMatchups } = require('../services/playoffService')
 const { STANDARD_RULES, getScoringSchema, resolveRules } = require('../services/nflScoringService')
+const intelligence = require('../services/intelligence')
 
 const router = express.Router()
 const prisma = require('../lib/prisma.js')
+
+// Mirrors the helper in routes/imports.js — fire-and-forget Manager Intelligence
+// extraction after a user claims HistoricalSeasons via auto-match on league join.
+function runIntelligenceAfterAutoClaim(userId) {
+  if (!userId) return
+  Promise.resolve()
+    .then(() => intelligence.runForUser(userId, { db: prisma }))
+    .catch((err) => {
+      console.error('[intelligence] post-auto-claim extraction failed:', err.message)
+    })
+}
 
 // GET /api/leagues - Get user's leagues
 router.get('/', authenticate, async (req, res, next) => {
@@ -861,6 +873,8 @@ router.post('/:id/join', authenticate, async (req, res, next) => {
               data: { ownerUserId: req.user.id }
             })
           ])
+          // Fire-and-forget intelligence extraction now that ownership is set.
+          runIntelligenceAfterAutoClaim(req.user.id)
         }
       }
     } catch (err) {

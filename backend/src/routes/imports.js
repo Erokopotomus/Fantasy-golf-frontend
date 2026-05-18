@@ -11,6 +11,7 @@ const mflImport = require('../services/mflImport')
 const importHealthService = require('../services/importHealthService')
 const clutchRatingService = require('../services/clutchRatingService')
 const emailService = require('../services/emailService')
+const intelligence = require('../services/intelligence')
 
 const prisma = require('../lib/prisma.js')
 
@@ -19,6 +20,19 @@ function recalcRatingAfterImport(userId) {
   clutchRatingService.calculateRatingForUser(userId, prisma).catch(err => {
     console.error('[ClutchRating] Post-import recalc failed:', err.message)
   })
+}
+
+// Fire-and-forget manager-intelligence extraction after import or owner-claim.
+// Never blocks the response; failures are logged but never thrown. Safe to call
+// even when the user has no claimed HistoricalSeasons yet — extractors return
+// `null` for users with no data and the orchestrator records them as skipped.
+function runIntelligenceAfterImport(userId) {
+  if (!userId) return
+  Promise.resolve()
+    .then(() => intelligence.runForUser(userId, { db: prisma }))
+    .catch((err) => {
+      console.error('[intelligence] post-import extraction failed:', err.message)
+    })
 }
 
 const validateLeagueId = validateBody({
@@ -46,6 +60,7 @@ router.post('/sleeper/import', authenticate, validateLeagueId, async (req, res) 
     const selectedSeasons = req.body.selectedSeasons || undefined
     const result = await sleeperImport.runFullImport(leagueId, req.user.id, prisma, targetLeagueId, selectedSeasons)
     recalcRatingAfterImport(req.user.id)
+    runIntelligenceAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -80,6 +95,7 @@ router.post('/espn/import', authenticate, validateLeagueId, async (req, res) => 
     const selectedSeasons = req.body.selectedSeasons || undefined
     const result = await espnImport.runFullImport(leagueId, req.user.id, prisma, cookies, targetLeagueId, selectedSeasons)
     recalcRatingAfterImport(req.user.id)
+    runIntelligenceAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -151,6 +167,7 @@ router.post('/yahoo/import', authenticate, validateLeagueId, async (req, res) =>
     const onTokenRefresh = buildYahooRefreshCallback(req.user.id)
     const result = await yahooImport.runFullImport(leagueId, req.user.id, prisma, accessToken, targetLeagueId, selectedSeasons, onTokenRefresh)
     recalcRatingAfterImport(req.user.id)
+    runIntelligenceAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -192,6 +209,7 @@ router.post('/fantrax/import', authenticate, async (req, res) => {
     const targetLeagueId = req.body.targetLeagueId || undefined
     const result = await fantraxImport.runFullImport(csvData, req.user.id, prisma, targetLeagueId)
     recalcRatingAfterImport(req.user.id)
+    runIntelligenceAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -222,6 +240,7 @@ router.post('/mfl/import', authenticate, validateLeagueId, async (req, res) => {
     const selectedSeasons = req.body.selectedSeasons || undefined
     const result = await mflImport.runFullImport(leagueId, req.user.id, prisma, apiKey, targetLeagueId, selectedSeasons)
     recalcRatingAfterImport(req.user.id)
+    runIntelligenceAfterImport(req.user.id)
     res.json(result)
   } catch (err) {
     res.status(500).json({ error: { message: err.message } })
@@ -1506,6 +1525,10 @@ router.post('/vault-claim', authenticate, async (req, res) => {
       }
     })
 
+    // Fire-and-forget post-claim extraction — now that HistoricalSeasons
+    // have ownerUserId set, the user's manager characteristics can be derived.
+    runIntelligenceAfterImport(req.user.id)
+
     res.json({ success: true, leagueId: league.id, canonicalName })
   } catch (err) {
     console.error('Vault claim error:', err)
@@ -1656,8 +1679,9 @@ router.post('/claim-owner', authenticate, async (req, res) => {
       })
     })
 
-    // Fire-and-forget rating recalc
+    // Fire-and-forget rating recalc + intelligence extraction
     recalcRatingAfterImport(req.user.id)
+    runIntelligenceAfterImport(req.user.id)
 
     res.json({ success: true })
   } catch (err) {
