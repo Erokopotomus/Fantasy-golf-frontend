@@ -7901,6 +7901,58 @@ Display: horizontal "projected cut" line on the leaderboard between the last pla
 
 ---
 
+### 204 — Run Player ID Resolution backfill against prod  `MEDIUM`
+**Status:** `TODO`
+**Priority:** MEDIUM — unblocks Manager Intelligence (#202) build by populating player ID mappings on existing imported data.
+**Owner:** Cowork — please run via Railway CLI and report stats back.
+
+**What this is:**
+Commit `86d8933` (May 17) wired `playerMatcher.matchAndLink` into the 4 league import services (sleeper/yahoo/espn/mfl — fantrax skipped, no platform IDs). Going forward, every new import will populate `Player.{platform}Id` columns as a side effect.
+
+But Eric's existing imports (296 HistoricalSeason rows confirmed in prod via dry-run) happened BEFORE that wiring landed, so their picks have raw platform IDs in `HistoricalSeason.draftData` with no corresponding `Player.{platform}Id` mappings populated. This blocks Manager Intelligence extractors that need to resolve a raw Yahoo `390.p.X` style ID back to a canonical Player record.
+
+The backfill script catches up all that historical data in one pass.
+
+**How to run:**
+
+```bash
+railway run --service web node backend/scripts/intelligence/backfill-player-ids.js
+```
+
+Idempotent — safe to re-run. Expected runtime ~2 min on Railway (DB is local). Local runs over the proxy take ~50 min so use Railway exec.
+
+**Optional dry-run first** (no writes, just shows what WOULD happen):
+```bash
+railway run --service web node backend/scripts/intelligence/backfill-player-ids.js --dry-run
+```
+
+**What it does:**
+- Walks every `HistoricalSeason.draftData` row where `import.platform IS NOT NULL`
+- For each pick in `draftData.picks[]`:
+  - Calls `playerMatcher.matchAndLink({ name, platform, platformId, position, sport: 'nfl' }, prisma, { createIfMissing: false })`
+  - Strategy 1: exact `Player.{platform}Id` lookup. If hit, returns existing Player.
+  - Strategy 2 (fallback): fuzzy name match with normalization (suffixes stripped, lowercase, last+first-name scoring). If match score ≥80, returns the Player AND writes `Player.{platform}Id` to that row (this is the incremental enrichment we want).
+  - If no match: counted as a miss, added to a JSON dump for audit.
+- Skips Fantrax (no platform IDs by design)
+- Prints stats: totalPicks, exactMatch, fuzzyMatchEnriched, missed, errors, skippedNoPlayerId, skippedNoPlatform, skippedFantrax
+- Writes misses to `backend/scripts/intelligence/_misses/misses-{timestamp}.json` if any (gitignored — these are local audit dumps, don't commit them)
+
+**What to report back:**
+1. Stats summary (the JSON block the script prints at end)
+2. Misses-by-platform breakdown (it prints this too — top 10 sample names per platform)
+3. Approximate match success rate per platform (e.g., "Yahoo: 1842 picks, 1450 fuzzy-enriched, 392 missed = 78% match rate")
+4. Whether any errors fired
+5. Eyeball check on the misses file — are the misses noise (DSTs, kickers, ancient retired players) or real recent NFL players that should have matched?
+
+**After this completes, Manager Intelligence can resume building from MI-5 with confidence that player resolution works.**
+
+**FILES:**
+- `backend/scripts/intelligence/backfill-player-ids.js` — the script
+- `backend/src/services/playerMatcher.js` — the matcher it calls
+- `backend/scripts/intelligence/_misses/` — output dump (gitignored)
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
