@@ -1,5 +1,6 @@
 const prisma = require('../../../lib/prisma')
 const { lookupAdp, resolvePlayer } = require('./draftPickParser')
+const { fetchDedupedSeasons } = require('./seasonFetcher')
 const { mean, stdDev } = require('./stats')
 
 /**
@@ -40,11 +41,9 @@ function adpTier(adp) {
  *   }
  */
 async function getDraftsWithCohort(userId, db = prisma) {
-  const seasons = await db.historicalSeason.findMany({
-    where: {
-      ownerUserId: userId,
-      draftData: { not: null },
-    },
+  const seasons = await fetchDedupedSeasons(userId, {
+    db,
+    where: { draftData: { not: null } },
     select: {
       id: true,
       leagueId: true,
@@ -56,16 +55,11 @@ async function getDraftsWithCohort(userId, db = prisma) {
   })
 
   const drafts = []
-  const seen = new Set() // dedupe by (leagueId, seasonYear)
 
   for (const s of seasons) {
     const data = s.draftData
     if (!data || !Array.isArray(data.picks)) continue
     if (data.type !== 'auction') continue
-
-    const key = `${s.leagueId}::${s.seasonYear}`
-    if (seen.has(key)) continue
-    seen.add(key)
 
     const userOwnerName = s.ownerName
     const allPicks = data.picks.map((p) => ({

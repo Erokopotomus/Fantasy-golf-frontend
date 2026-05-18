@@ -21,7 +21,10 @@ function sampleSizeWeight(n) {
 }
 
 function consistencyWeight(pct) {
-  // pct in [0, 1]; S-curve favoring high consistency
+  // pct in [0, 1]; S-curve favoring high consistency.
+  // null / undefined → 0.5 neutral weight (used when sampleSize < 2 in
+  // extractors and we can't legitimately measure consistency yet).
+  if (pct == null) return 0.5
   if (pct <= 0) return 0
   if (pct >= 1) return 1
   return Math.pow(pct, 1.5)
@@ -35,10 +38,12 @@ function effectSizeWeight(effect) {
 }
 
 /**
- * Normalize consistency to [0, 1] regardless of input scale.
+ * Normalize consistency to [0, 1] regardless of input scale. null / undefined
+ * stays null so downstream code can detect "no measurable consistency yet"
+ * (single-sample case) and substitute the 0.5 neutral weight.
  */
 function normalizeConsistency(c) {
-  if (c == null) return 0
+  if (c == null) return null
   return c > 1 ? c / 100 : c
 }
 
@@ -49,7 +54,10 @@ function computeConfidenceScore({ sampleSize, consistencyPct, effectSize }) {
 }
 
 function computeLabel({ sampleSize, consistencyPct }, thresholds = DEFAULT_THRESHOLDS) {
-  const c = normalizeConsistency(consistencyPct)
+  // null consistency (single-sample) treated as 0.5 neutral for labelling — a
+  // single observation can never clear the HIGH bar (0.80) anyway.
+  const raw = normalizeConsistency(consistencyPct)
+  const c = raw == null ? 0.5 : raw
   if (sampleSize >= thresholds.highMinN && c >= thresholds.highMinConsistency) return 'HIGH'
   if (sampleSize >= thresholds.medMinN && c >= thresholds.medMinConsistency) return 'MEDIUM'
   return 'LOW'

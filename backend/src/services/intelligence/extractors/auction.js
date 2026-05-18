@@ -289,9 +289,12 @@ async function auctionSpendConcentration(userId, db) {
   const avgTop5Pct = mean(top5Vals)
   const avgCoefOfVariation = mean(cvVals)
 
-  // Consistency: stable top3Pct across drafts.
+  // Consistency: stable top3Pct across drafts. Single-draft samples produce
+  // stdDev([x]) = 0 → 1/(1+0) = 1.0 — a false "perfectly consistent" signal.
+  // Use a neutral 0.5 sentinel for N < 2 (schema's consistencyPct is Float
+  // NOT NULL so null isn't storable).
   const top3Std = stdDev(top3Vals)
-  const consistencyPct = 1 / (1 + top3Std)
+  const consistencyPct = perDraft.length < 2 ? 0.5 : 1 / (1 + top3Std)
 
   // 0.15 is the normalizing band: deviation from a 0.50 balanced baseline
   // of ±0.15 (so top3Pct of ~0.65 or ~0.35) is a "strong" signal. See header
