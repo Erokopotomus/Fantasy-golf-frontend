@@ -7625,7 +7625,7 @@ Bonus: a "Chopped from" badge on the player card showing the eliminated team nam
 ---
 
 ### 202 — MARQUEE: Retroactive Rating Reveal at Import (NFL launch hero feature) `HIGH`
-**Status:** `TODO`
+**Status:** `DONE` — reframed as Manager Intelligence backend pipeline (2026-05-18). 19 characteristics extracting from imported league history, admin observability live at `/admin` Intelligence tab. The user-facing reveal moment is now a separate future task (#208) — the data layer + admin observability is shipped first as the foundation. See `docs/plans/2026-05-17-manager-intelligence-design.md` + `2026-05-17-manager-intelligence-plan.md`.
 **Priority:** **HIGHEST priority for NFL launch positioning.** This is the one strategic addition from the May 16 competitive sweep + strategic-handoff doc worth interrupting the standard bug queue for. It is the launch-day press hook ("Clutch grades you, not just your players") made tangible in 90 seconds of onboarding.
 **Source:** Cowork — derived from `clutch_strategic_handoff.md` Section 3.1 + 7 + Eric's May 16 strategic discussion ("manager-grading stays a key differentiator without becoming the only thing"). MVP scope only — Year-2 vision (counterfactuals, brief's 6 process sub-scores, mobile-native reveal) is captured at bottom as out-of-scope.
 
@@ -8055,6 +8055,116 @@ The 2026-05-18 player-ID backfill found 13,538 Yahoo picks couldn't resolve beca
 **Effect:** Manager Intelligence gains signal on pre-2018 seasons for users with deep historical league imports. Eric's 2010-2017 Yahoo league picks become analyzable.
 
 **Defer rationale:** Bias engine weights recent decisions more heavily anyway, so pre-2018 signal is nice-to-have not need-to-have. Tackle after #205 (Sleeper sync) and #206 (Yahoo parser audit) since those have higher ROI per hour.
+
+---
+
+### 208 — Retroactive Rating Reveal — user-facing onboarding moment  `HIGH`
+**Status:** `TODO`
+**Priority:** HIGH — original marquee NFL-launch positioning of #202. The Manager Intelligence backend + admin observability shipped 2026-05-18; this task is the user-facing reveal moment that pays off the cold-start strategic differentiator.
+**Owner:** Code
+
+**What this is:**
+After a new user completes the import + vault-claim flow, route them to a designed reveal page titled "Your Clutch Rating: N seasons graded" that surfaces their Manager Intelligence characteristics + Clutch Rating V2 in a screenshot-worthy moment. The data layer is live (`ManagerCharacteristic` rows persisted). What's missing is the surface.
+
+**Implementation plan (~6-8 hours):**
+
+1. **Frontend reveal page** (`frontend/src/pages/RatingReveal.jsx`):
+   - Hero: big mono Clutch Rating number + tier badge + "N seasons graded across X leagues"
+   - Stat strip: top 3 HIGH-confidence characteristics formatted as engaging copy ("You spend 65% of your auction budget on top 3 picks — classic stars-and-scrubs.")
+   - Mini visualizations: championship pie, playoff rate ring, trade frequency gauge
+   - Share button: tweet card, Discord image, copy public link
+2. **Public route**: `/r/:userId` (or `/rating/:slug`) — shareable, privacy-controllable from user settings
+3. **Backend**: `GET /api/users/:id/rating-reveal` — pulls Clutch Rating V2 + top characteristics via Manager Intelligence + formatted stat copy
+4. **Onboarding hook**: after `runIntelligenceAfterImport` completes (or after first vault claim), redirect to `/rating/:slug` with a celebratory transition
+
+**Pre-requisites:**
+- Manager Intelligence backend (#202) — DONE 2026-05-18
+- Clutch Rating V2 — DONE (Phase 5B)
+- Vault claim wizard — DONE
+
+**Files (new):**
+- `frontend/src/pages/RatingReveal.jsx`
+- `backend/src/routes/ratingReveal.js`
+- Possibly a copywriting helper for "humanize a characteristic into a sentence"
+
+**Effect after shipping:** Every new import produces a 90-second reveal moment that's shareable, screenshot-worthy, and anchors Clutch's "we grade the manager, not the roster" positioning.
+
+**Year 2 vision (out of scope):** counterfactual analysis ("if you'd kept that #5 pick instead of reaching, you'd have...""), the brief's 6 process sub-scores, mobile-native reveal animations.
+
+---
+
+### 209 — Sleeper importer: persist failed waiver claims  `MEDIUM`
+**Status:** `TODO`
+**Priority:** MEDIUM — unlocks `top_bid_rate` Manager Intelligence characteristic for every Sleeper user (currently 0% have data because failed claims are dropped at import time).
+**Owner:** Code
+
+**What this is:**
+`backend/src/services/sleeperImport.js:118` explicitly filters `if (txn.status !== 'complete') continue` before pushing transactions into the `transactions` JSON blob. Discovered during MI-8 build — `top_bid_rate` needs visibility into failed claims to compute "of contested waivers, how often did the user have the top bid?"
+
+**Fix:**
+1. Remove or invert the filter — persist both `'complete'` and `'failed'` waiver claims
+2. Ensure `transactionParser.parseSleeperTxn` preserves the `status` field (verify it already does)
+3. Re-import a test Sleeper league, verify failed claim rows now appear
+4. Manually trigger `runForUser` for a Sleeper-claimed user, verify `top_bid_rate` now produces data
+
+**Effect:** `top_bid_rate` activates for all Sleeper users. Currently 0 users have data on this characteristic; after fix, will be most/all Sleeper users with multi-team waiver competition.
+
+---
+
+### 210 — Auction extractor ADP batching  `LOW`
+**Status:** `TODO`
+**Priority:** LOW — runtime optimization, not correctness. Same pattern PIR-7 + MI-19 already applied to pickQuality. Worth doing before backfill scale exceeds ~50 users.
+**Owner:** Code
+
+**What this is:**
+After MI-19's ADP batching reduced pickQuality from ~85s to ~5s per user, the new top bottleneck is `auction_overpay_rate` + `auction_bargain_rate` (~55s combined per user). Same N+1 ADP pattern in `backend/src/services/intelligence/lib/auctionParser.js:108-110` — `resolvePlayer` + `lookupAdp` per pick inside `Promise.all` loops.
+
+**Fix:** Apply the `batchResolvePicks` pattern from MI-19:
+1. Add `batchResolveAuctionPicks(picks, db)` to `auctionParser.js` — one bulk player lookup + one bulk ADP lookup per user, returns a Map
+2. `tierAllPicksInDraft` accepts optional `prebuiltMap` param
+3. Caller in `auction.js` passes the map through
+
+**Estimated runtime impact:** ~55s → ~5s for the two auction extractors on a 20-season user.
+
+**Files:**
+- `backend/src/services/intelligence/lib/auctionParser.js`
+- `backend/src/services/intelligence/extractors/auction.js`
+
+---
+
+### 211 — Surface Manager Intelligence facts in coach prompt  `MEDIUM`
+**Status:** `TODO`
+**Priority:** MEDIUM — completes the MI-18 promotion path. Data lands in CoachingMemory vault but is never read by the LLM coach today.
+**Owner:** Code
+
+**What this is:**
+MI-18 wired the promotion path so that admin-flipped characteristics flow into `CoachingMemory.content.managerIntelligence.facts`. But `backend/src/services/coachContextAssembly.js#formatContextForPrompt` only reads the patternEngine-shaped fields (`reachFrequency`, `boardAdherence`, etc.) — it ignores the new `managerIntelligence.facts` array entirely.
+
+**Fix:**
+1. Extend `formatContextForPrompt` to render MI facts for each documentType (draft_patterns, roster_patterns, season_narrative)
+2. Use the `formatValue` helper logic from `frontend/src/components/admin/intelligence/valueFormatters.js` (port to backend or share)
+3. Format facts as bullet points the LLM can reason about: "Your auction draft pattern: 65% of budget concentrated in top 3 picks (stars-and-scrubs strategy, HIGH confidence across 13 seasons)"
+4. Test by flipping `promoteToCoach=true` on a HIGH-confidence characteristic and verifying the next coach interaction surfaces the fact
+
+**Pre-req:** MI-18 — DONE 2026-05-18.
+
+**Effect:** Admin-promoted characteristics start informing the AI coach's contextual advice. Closes the gap between backward-looking data and forward-looking coaching.
+
+---
+
+### 212 — Race-safety fix for coach promotion cron  `LOW`
+**Status:** `TODO`
+**Priority:** LOW — observed by reviewer during MI-18 build. Self-heals next week's run; worth fixing for determinism.
+**Owner:** Code
+
+**What this is:**
+`backend/src/services/intelligence/coachPromotion.js` re-queries `characteristicAggregate` for promoted types inside each user iteration. If admin flips `promoteToCoach=true` mid-cron, some users in the loop get the new promotion + others don't.
+
+**Fix:** Snapshot the promoted types ONCE at the start of the memory writer run, pass the array down to `promoteCharacteristicsToVault(userId, { db, promotedTypes })`.
+
+**Files:** `backend/src/services/intelligence/coachPromotion.js`, `backend/src/services/coachingMemoryWriter.js`.
+
+**Effect:** Cron is deterministic regardless of admin activity during the run.
 
 ---
 
