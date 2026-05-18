@@ -16,6 +16,7 @@
 
 const prisma = require('../lib/prisma.js')
 const patternEngine = require('./patternEngine')
+const { promoteCharacteristicsToVault } = require('./intelligence/coachPromotion')
 
 // ════════════════════════════════════════════════
 //  ENTRY POINT
@@ -157,6 +158,22 @@ async function writeVaultForUser(userId) {
     } catch (err) {
       console.error(`[MemoryWriter] Error for user ${userId} sport ${sport}:`, err.message)
     }
+  }
+
+  // MI-18: Layer 2 stub — append admin-promoted Manager Intelligence
+  // characteristics into the cross-sport vault. Cross-sport, so runs once
+  // per user, not per sport. No-op if nothing is promoted.
+  try {
+    const miResult = await promoteCharacteristicsToVault(userId, { db: prisma })
+    if (miResult.docsTouched > 0) {
+      console.log(
+        `[MemoryWriter] MI promotion for user ${userId}: ` +
+        `${miResult.promotedTypes} promoted types, ` +
+        `${miResult.factsWritten} facts written across ${miResult.docsTouched} docs`
+      )
+    }
+  } catch (err) {
+    console.error(`[MemoryWriter] MI promotion error for user ${userId}:`, err.message)
   }
 }
 
