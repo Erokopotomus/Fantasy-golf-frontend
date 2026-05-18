@@ -7902,9 +7902,9 @@ Display: horizontal "projected cut" line on the leaderboard between the last pla
 ---
 
 ### 204 — Run Player ID Resolution backfill against prod  `MEDIUM`
-**Status:** `TODO`
+**Status:** `BLOCKED` — script needs proxy-disconnect resilience before it can run anywhere outside Railway shell. Claude Code will refactor and re-run on next session. Cowork: please stop trying to run this; not urgent, not blocking NFL launch.
 **Priority:** MEDIUM — unblocks Manager Intelligence (#202) build by populating player ID mappings on existing imported data.
-**Owner:** Cowork — please run via Railway CLI and report stats back.
+**Owner:** Claude Code (next session) — will refactor with reconnect/retry/batch logic, then run.
 
 **What this is:**
 Commit `86d8933` (May 17) wired `playerMatcher.matchAndLink` into the 4 league import services (sleeper/yahoo/espn/mfl — fantrax skipped, no platform IDs). Going forward, every new import will populate `Player.{platform}Id` columns as a side effect.
