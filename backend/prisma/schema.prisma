@@ -108,6 +108,10 @@ model User {
   // Manager Intelligence (retroactive characteristic extraction)
   managerCharacteristics ManagerCharacteristic[]
 
+  // NFL Data Spine / Pre-draft prep
+  prepReviews    PrepQuizReview[]
+  prepSettings   PrepUserSettings?
+
   @@map("users")
 }
 
@@ -434,6 +438,10 @@ model Player {
   // Decision capture (Year 1)
   watchlistEvents     WatchlistEvent[]
   auctionNominations  AuctionNomination[]
+
+  // NFL Data Spine
+  nflRosterSlots NflRosterSlot[]
+  nflProjections NflPlayerProjection[]
 
   @@index([owgrRank])
   @@index([name])
@@ -2838,6 +2846,11 @@ model NflTeam {
   homeGames NflGame[] @relation("NflHomeTeam")
   awayGames NflGame[] @relation("NflAwayTeam")
 
+  // NFL Data Spine
+  coachingStaff NflCoachingStaff[]
+  rosterSlots   NflRosterSlot[]
+  unitRanks     NflTeamUnitRank[]
+
   @@map("nfl_teams")
 }
 
@@ -2983,6 +2996,130 @@ model NflPlayerGame {
   @@index([playerId])
   @@index([teamAbbr])
   @@map("nfl_player_games")
+}
+
+// ============ NFL DATA SPINE (prep features + downstream consumers) ============
+
+model NflCoachingStaff {
+  id               String    @id @default(cuid())
+  teamId           String
+  team             NflTeam   @relation(fields: [teamId], references: [id])
+  season           Int
+  role             String    // 'HC' | 'OC' | 'DC'
+  name             String
+  previousTeamAbbr String?
+  previousRole     String?
+  hiredAt          DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  @@unique([teamId, season, role])
+  @@index([season, role])
+  @@map("nfl_coaching_staff")
+}
+
+model NflRosterSlot {
+  id           String   @id @default(cuid())
+  teamId       String
+  team         NflTeam  @relation(fields: [teamId], references: [id])
+  playerId     String
+  player       Player   @relation(fields: [playerId], references: [id])
+  snapshotType String   // 'end_of_2024_season' | 'current' | 'end_of_2025_season' | ...
+  position     String   // 'QB' | 'RB' | 'WR' | 'TE' | 'K' | 'DST' | 'OL' | 'DL' | etc.
+  depthRank    Int      // 1 = starter, 2 = backup, ... 99 = unknown (historical)
+  status       String   // 'active' | 'ir' | 'pup' | 'sus' | 'removed'
+  snapshotDate DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  @@unique([teamId, playerId, snapshotType])
+  @@index([snapshotType, teamId, position])
+  @@map("nfl_roster_slots")
+}
+
+model NflTeamUnitRank {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      NflTeam  @relation(fields: [teamId], references: [id])
+  season    Int
+  unit      String   // 'OL' | 'DL' — overall rank only in v1
+  rank      Int      // 1-32
+  score     Float?   // underlying metric (e.g., adjusted line yards)
+  source    String   // 'espn_aly'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([teamId, season, unit])
+  @@index([season, unit])
+  @@map("nfl_team_unit_ranks")
+}
+
+model NflPlayerProjection {
+  id              String   @id @default(cuid())
+  playerId        String
+  player          Player   @relation(fields: [playerId], references: [id])
+  season          Int
+  scoringType     String   // 'std' | 'ppr' | 'half_ppr'
+  projectedPoints Float
+  adp             Float?
+  positionRank    Int?
+  source          String   // 'fantasypros_consensus'
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  @@unique([playerId, season, scoringType, source])
+  @@index([season, scoringType, positionRank])
+  @@map("nfl_player_projections")
+}
+
+model PrepQuizCard {
+  id           String   @id @default(cuid())
+  templateName String   // 'team_oc' | 'fa_destination' | ...
+  subject      String   // e.g., 'BUF' for team_oc cards; player name for fa_destination
+  question     String
+  answer       String
+  distractors  String[]
+  difficulty   Int      // 1-5
+  category     String   // 'coaching' | 'roster' | 'ranks' | 'movement'
+  meta         Json
+  generatedAt  DateTime @default(now())
+  isActive     Boolean  @default(true)
+  reviews      PrepQuizReview[]
+  @@unique([templateName, subject])
+  @@index([category])
+  @@index([isActive])
+  @@index([templateName])
+  @@map("prep_quiz_cards")
+}
+
+model PrepQuizReview {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId         String
+  card           PrepQuizCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  easeFactor     Float        @default(2.5)
+  interval       Int          @default(1)
+  repetitions    Int          @default(0)
+  dueDate        DateTime     @default(now())
+  lastReviewed   DateTime?
+  correctCount   Int          @default(0)
+  incorrectCount Int          @default(0)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  @@unique([userId, cardId])
+  @@index([userId, dueDate])
+  @@map("prep_quiz_reviews")
+}
+
+model PrepUserSettings {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  focusMode      String?   // null = all 32 | 'AFC' | 'NFC' | 'AFC_EAST' | etc.
+  cardsPerDay    Int       @default(10)
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastQuizDate   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  @@map("prep_user_settings")
 }
 
 // ============ NEWS ARTICLES ============
