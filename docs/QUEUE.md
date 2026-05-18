@@ -8168,6 +8168,42 @@ MI-18 wired the promotion path so that admin-flipped characteristics flow into `
 
 ---
 
+### 213 — Migrate Railway Postgres from EU West to US East  `MEDIUM`
+**Status:** `TODO`
+**Priority:** MEDIUM — schedule for mid-July 2026, after the NFL data spine lands and before NFL launch crunch. Volume currently lives in EU West (Amsterdam); for a US fantasy product targeting NFL launch, every browser→backend round-trip pays ~80-120ms unnecessarily.
+**Owner:** Code
+
+**What this is:**
+Discovered 2026-05-18 during volume capacity check. The Railway Postgres volume + service were defaulted to EU West (Amsterdam, Netherlands) when the project was first created. Since the Clutch backend service is in the same project, internal backend→Postgres latency is sub-millisecond (fine). But every API request from US-based users (Eric and all target NFL users) crosses the Atlantic, adding ~160ms baseline round-trip latency to every request before the backend even processes it. Noticeable on page loads, particularly on live-scoring fast-poll endpoints during NFL Sundays.
+
+**Migration plan (~1-2 hours, scheduled off-hours):**
+
+1. **Pre-flight:**
+   - Verify the Clutch service can be region-migrated (not the volume alone — services and volumes are paired in Railway)
+   - Confirm zero in-flight crons during the window
+   - Take a fresh `pg_dump` for safety
+2. **Execution:**
+   - Spin up new Postgres service in US-East region
+   - `pg_dump` from EU, `pg_restore` to US (~30 min for current ~770MB; will grow with data spine)
+   - Update `DATABASE_URL` env var on the Clutch backend service in Railway
+   - Migrate the Clutch service itself to US-East (same Postgres-paired region)
+   - Verify all 38 cron jobs run cleanly post-cutover (check first hour of cron logs)
+3. **Validation:**
+   - Smoke test: page load latency, live scoring endpoint, an import flow
+   - Verify Manager Intelligence + extractor pipeline still fires correctly
+4. **Cleanup:**
+   - Decommission EU Postgres after 24-48 hours of stable US operation
+   - Update CLAUDE.md region notation
+
+**Timing constraints:**
+- DO NOT migrate during the data-spine build (May-June 2026) — adds risk to a critical foundation push
+- DO migrate before NFL launch (August 2026)
+- Sweet spot: mid-July, after data spine + prep features are stable but before NFL drafts begin
+
+**Effect after migration:** ~80-160ms shaved from every user-facing API request. Most noticeable on live-scoring polls and admin dashboard. Sets up for healthier baseline performance during NFL launch traffic.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
