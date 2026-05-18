@@ -64,11 +64,12 @@ async function getDraftPicksForUser(userId, db = prisma) {
  * Tries sleeperId, externalId, yahooId, espnId, mflId, fantraxId in order.
  * Returns null if no match.
  *
- * We select only `id` because pickQuality already has playerName/position
- * captured on the draft pick itself; downstream extractors that need richer
- * Player data can re-fetch with the desired select.
+ * Defaults to selecting `id` only — pickQuality already has playerName/position
+ * captured on the draft pick itself. Downstream extractors that need richer
+ * Player data can pass a custom `select` (e.g. `{ id: true, name: true }`)
+ * without an extra round-trip.
  */
-async function resolvePlayer(rawPlayerId, db = prisma) {
+async function resolvePlayer(rawPlayerId, db = prisma, select = { id: true }) {
   if (!rawPlayerId) return null
   const player = await db.player.findFirst({
     where: {
@@ -81,7 +82,7 @@ async function resolvePlayer(rawPlayerId, db = prisma) {
         { fantraxId: rawPlayerId },
       ],
     },
-    select: { id: true },
+    select,
   })
   return player
 }
