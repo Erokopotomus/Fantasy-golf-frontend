@@ -45,7 +45,10 @@ async function getDraftPicksForUser(userId, db = prisma) {
         playerName: p.playerName,
         position: p.position,
         isAuction: data.type === 'auction',
-        amount: p.amount,
+        // Different importers persist the auction price under different keys.
+        // Yahoo stores it as `cost`; Sleeper/ESPN/etc. as `amount`. Normalize
+        // here so downstream extractors get a single canonical field.
+        amount: p.amount != null ? p.amount : p.cost,
         leagueId: s.leagueId,
         seasonYear: s.seasonYear,
         importId: s.importId,

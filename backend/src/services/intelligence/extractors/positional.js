@@ -1,5 +1,6 @@
 const { registerExtractor } = require('../extractor')
 const { getDraftPicksForUser } = require('../lib/draftPickParser')
+const { stdDev } = require('../lib/stats')
 
 /**
  * Normalize a raw position string into a canonical bucket.
@@ -82,18 +83,6 @@ async function r1PositionDistribution(userId, db) {
     },
     sourceImportIds,
   }
-}
-
-/**
- * Population (uncorrected) standard deviation of a numeric array. Returns 0
- * for arrays of length 0 or 1 (no variance to measure).
- */
-function stdDev(values) {
-  if (!values || values.length <= 1) return 0
-  const mean = values.reduce((a, b) => a + b, 0) / values.length
-  const variance =
-    values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / values.length
-  return Math.sqrt(variance)
 }
 
 /**
