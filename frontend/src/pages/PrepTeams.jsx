@@ -59,7 +59,8 @@ function deltaCompare(a, b) {
 }
 
 function divisionTail(team) {
-  return team?.division ? team.division.split('_').pop() : null
+  if (!team?.division) return null
+  return team.division.split('_').pop().toUpperCase()
 }
 
 function TeamTile({ team }) {
@@ -140,7 +141,7 @@ function ViewTabs({ value, onChange, options }) {
               type="button"
               onClick={() => onChange(opt)}
               className={classNames(
-                'relative pb-1 transition-colors',
+                'relative pb-1 transition-colors focus:outline-none focus-visible:text-blaze',
                 active
                   ? 'text-blaze'
                   : 'text-text-muted hover:text-[var(--text-1)]',

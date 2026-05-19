@@ -343,8 +343,8 @@ export default function PrepChanges() {
                 <span className="font-editorial italic font-normal text-blaze"> in one place.</span>
               </h1>
             </div>
-            <div className="col-span-12 md:col-span-5">
-              <p className="font-body text-sm md:text-base text-text-secondary leading-snug">
+            <div className="col-span-12 md:col-span-5 md:pb-1">
+              <p className="font-body text-sm text-text-secondary leading-snug">
                 Where players landed, which coordinators jumped, and which units climbed or collapsed before Week 1.
               </p>
             </div>
