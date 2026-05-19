@@ -78,11 +78,11 @@ function TeamTile({ team }) {
       }}
     >
       {/* Color bar on top — visible sport accent */}
-      <div className="h-1.5 w-full" style={{ backgroundColor: color }} />
-      <div className="p-4">
+      <div className="h-1 w-full" style={{ backgroundColor: color }} />
+      <div className="px-3.5 py-3">
         <div className="flex items-baseline justify-between gap-2">
           <span
-            className="font-mono font-extrabold text-3xl tracking-tight"
+            className="font-mono font-extrabold text-2xl tracking-tight leading-none"
             style={{ color }}
           >
             {team.abbreviation}
@@ -91,10 +91,10 @@ function TeamTile({ team }) {
             {team.division ? team.division.slice(0, 1) + team.division.slice(1).toLowerCase() : team.conference}
           </span>
         </div>
-        <div className="mt-1 font-editorial italic text-base text-[var(--text-1)] leading-tight">
+        <div className="mt-0.5 font-editorial italic text-sm text-[var(--text-1)] leading-tight">
           {teamDisplayName(team)}
         </div>
-        <div className="mt-3 pt-3 border-t border-[var(--color-border)]/60 space-y-1.5 font-body text-[13px]">
+        <div className="mt-2 pt-2 border-t border-[var(--color-border)]/60 space-y-1 font-body text-[12.5px]">
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-text-muted text-[10px] uppercase tracking-[0.14em]">Head coach</span>
             <span className="text-[var(--text-1)] truncate font-semibold">{team.hcName ?? '—'}</span>
@@ -314,9 +314,9 @@ export default function PrepHub() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 pt-6 pb-16">
+      <div className="mx-auto max-w-6xl px-6 pt-5 pb-16">
         {/* Compressed hero — single tight band */}
-        <header className="mb-7">
+        <header className="mb-5">
           <div className="grid grid-cols-12 gap-6 items-end">
             <div className="col-span-12 md:col-span-7">
               <h1 className="font-display font-extrabold leading-[0.95] tracking-tight text-3xl md:text-4xl">
@@ -338,8 +338,8 @@ export default function PrepHub() {
         </header>
 
         {/* I. Featured Teams — prominent tabs */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
+        <section className="mb-8">
+          <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
             <div>
               <div className="flex items-baseline gap-3 mb-0.5">
                 <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">I.</span>
@@ -376,14 +376,14 @@ export default function PrepHub() {
               Loading the annual…
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
               {featured.map((t) => (
                 <TeamTile key={t.id} team={t} />
               ))}
             </div>
           )}
 
-          <div className="mt-4 text-right">
+          <div className="mt-3 text-right">
             <Link
               to="/lab/prep/teams"
               className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.24em] text-blaze hover:text-blaze-hot transition-colors font-bold"
