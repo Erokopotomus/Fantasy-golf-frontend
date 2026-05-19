@@ -2,6 +2,8 @@
 ## February 2026 — Priority Revision for Claude Code
 
 > **Context:** This document updates the build roadmap based on new product strategy work. The core insight: Clutch needs a reason for users to visit OUTSIDE of active fantasy seasons. The solution is a three-pillar architecture (Feed + Workspace + Prove It) that adapts to the sports calendar and serves six distinct user personas. This document should be read alongside the existing build specs and CLAUDE.md.
+>
+> **May 18 2026 status update:** The Lab now ships an NFL offseason prep surface at `/lab/prep` — overview hub, team browser, team detail, "What Changed" league diff, and SM-2 spaced-repetition daily quiz. Backed by 6 new Prisma models (rosters, coaching staffs, unit ranks 3-yr, projections, quiz cards + reviews + user settings). This is the **first concrete answer to "why open Clutch in May/June"** for NFL-focused users. See CLAUDE.md Phase 5H for details.
 
 ---
 
