@@ -49,11 +49,24 @@ router.get('/teams', async (req, res) => {
       prisma.nflTeamUnitRank.findMany({ where: { season: { in: [2024, 2025] } } }),
     ])
 
-    // Index coaching staff: teamId -> { HC, OC, DC }
+    // Index coaching staff: teamId -> { HC, OC, DC, hcIsNewFor2026 }
+    // Source data doesn't reliably populate hiredAt (GridironExperts scrape
+    // doesn't expose hire dates), so for v1 we hardcode the 2026 new-hire
+    // team set against the names we know from the offseason cycle. When a
+    // future sync source carries real hiredAt values, swap this out for a
+    // date comparison.
+    const NEW_FOR_2026_HC_TEAM_ABBRS = new Set([
+      'BUF', 'CHI', 'DAL', 'NE', 'NO', 'NYG', 'NYJ', 'PIT',
+    ])
+    const teamAbbrByIdLocal = new Map(teams.map((t) => [t.id, t.abbreviation]))
     const staffByTeam = new Map()
     for (const row of staff) {
       const entry = staffByTeam.get(row.teamId) || {}
       entry[row.role] = row.name
+      if (row.role === 'HC') {
+        const abbr = teamAbbrByIdLocal.get(row.teamId)
+        entry.hcIsNewFor2026 = NEW_FOR_2026_HC_TEAM_ABBRS.has(abbr)
+      }
       staffByTeam.set(row.teamId, entry)
     }
 
@@ -82,6 +95,7 @@ router.get('/teams', async (req, res) => {
         hcName: s.HC ?? null,
         ocName: s.OC ?? null,
         dcName: s.DC ?? null,
+        hcIsNewFor2026: s.hcIsNewFor2026 ?? false,
         olRank,
         dlRank,
         olRankDelta: olRank != null && ol2024 != null ? olRank - ol2024 : null,
@@ -208,33 +222,28 @@ router.get('/teams/:abbr', async (req, res) => {
 /**
  * GET /api/prep/changes
  *
- * "What Changed" — compares the end_of_2024_season roster snapshot against
- * the current snapshot, plus 2024 -> 2025 unit rank movement.
+ * "What Changed" — compares the end_of_2025_season roster snapshot against
+ * the current snapshot. End-of-2025 is the *actual* 2026 offseason anchor:
+ * who was where when 2025 ended, vs. who's where now (with the 2026 offseason
+ * shuffle baked in). Plus 2024 → 2025 unit rank movement.
  *
- * Arrival logic: a player on team B in current was either on team A != B in
- * end_of_2024 (arrival with fromTeamAbbr=A) or wasn't tracked at all (arrival
- * with fromTeamAbbr=null — rookie or returning).
- *
- * Departure logic: a player on team A in end_of_2024 who is now on team B != A
- * in current produces a 'departure' from A (with toTeamAbbr=B). Players who
- * stayed put are excluded.
- *
- * Roster changes are capped at 100 entries total, sorted by position rank
- * (QB > RB > WR > TE) so the most impactful surface first.
- *
- * Unit rank movers include only teams whose |delta| >= 5 (top movers in both
- * directions).
+ * Response shape:
+ *   playerMoves: one row per player who changed teams. Includes both endpoints
+ *     so the frontend can render a single "FROM → TO" line. Players whose
+ *     destination is unknown (departed and unsigned) are excluded — without a
+ *     concrete TO, the move is too speculative to surface in v1.
+ *   unitRankMovers: teams whose OL/DL rank moved >=5 spots 2024 → 2025.
  */
 router.get('/changes', async (req, res) => {
   try {
-    const [teams, currentRoster, eoy2024Roster, ranks2024, ranks2025] = await Promise.all([
+    const [teams, currentRoster, eoy2025Roster, ranks2024, ranks2025] = await Promise.all([
       prisma.nflTeam.findMany(),
       prisma.nflRosterSlot.findMany({
         where: { snapshotType: 'current' },
         include: { player: true },
       }),
       prisma.nflRosterSlot.findMany({
-        where: { snapshotType: 'end_of_2024_season' },
+        where: { snapshotType: 'end_of_2025_season' },
         include: { player: true },
       }),
       prisma.nflTeamUnitRank.findMany({ where: { season: 2024 } }),
@@ -243,72 +252,44 @@ router.get('/changes', async (req, res) => {
 
     const teamAbbrById = new Map(teams.map((t) => [t.id, t.abbreviation]))
 
-    // Build playerId -> { teamId, player } for each snapshot
+    // Build playerId -> snapshot for each side.
     const currentByPlayer = new Map()
-    for (const s of currentRoster) {
-      currentByPlayer.set(s.playerId, s)
-    }
-    const eoy2024ByPlayer = new Map()
-    for (const s of eoy2024Roster) {
-      eoy2024ByPlayer.set(s.playerId, s)
-    }
+    for (const s of currentRoster) currentByPlayer.set(s.playerId, s)
+    const eoy2025ByPlayer = new Map()
+    for (const s of eoy2025Roster) eoy2025ByPlayer.set(s.playerId, s)
 
-    const rosterChanges = []
-
-    // Arrivals: every player in current whose team differs from end_of_2024
-    // (or who wasn't in end_of_2024 at all).
-    for (const [playerId, slot] of currentByPlayer) {
-      const prev = eoy2024ByPlayer.get(playerId)
-      if (prev && prev.teamId === slot.teamId) continue // stayed put
-      const toAbbr = teamAbbrById.get(slot.teamId) ?? null
-      const fromAbbr = prev ? teamAbbrById.get(prev.teamId) ?? null : null
-      rosterChanges.push({
-        type: 'arrival',
-        teamAbbr: toAbbr,
-        player: {
-          id: playerId,
-          name: slot.player?.name ?? null,
-          position: slot.position,
-        },
-        fromTeamAbbr: fromAbbr,
-      })
-    }
-
-    // Departures: every player in end_of_2024 who has moved (now on a
-    // different team in current). Players who left the league entirely
-    // (no longer in any current snapshot) are skipped — DS-12 spec only
-    // pairs departures with concrete toTeamAbbr destinations.
-    for (const [playerId, prev] of eoy2024ByPlayer) {
+    // Single move per player. Each row carries both endpoints so the
+    // frontend doesn't have to dedupe.
+    const playerMoves = []
+    for (const [playerId, prev] of eoy2025ByPlayer) {
       const curr = currentByPlayer.get(playerId)
-      if (!curr) continue // not in current — left the league, skip
+      if (!curr) continue // left the league or not yet signed — skip
       if (curr.teamId === prev.teamId) continue // stayed put
       const fromAbbr = teamAbbrById.get(prev.teamId) ?? null
       const toAbbr = teamAbbrById.get(curr.teamId) ?? null
-      rosterChanges.push({
-        type: 'departure',
-        teamAbbr: fromAbbr,
+      if (!fromAbbr || !toAbbr) continue
+      playerMoves.push({
         player: {
           id: playerId,
-          name: prev.player?.name ?? null,
-          position: prev.position,
+          name: prev.player?.name ?? curr.player?.name ?? null,
+          position: prev.position ?? curr.position,
         },
+        fromTeamAbbr: fromAbbr,
         toTeamAbbr: toAbbr,
       })
     }
 
-    // Sort by position priority then by name so output is stable across runs.
-    rosterChanges.sort((a, b) => {
+    // Sort by position priority then alphabetical so QB moves surface first.
+    playerMoves.sort((a, b) => {
       const pr = positionRank(a.player.position) - positionRank(b.player.position)
       if (pr !== 0) return pr
       return (a.player.name ?? '').localeCompare(b.player.name ?? '')
     })
-    const cappedRosterChanges = rosterChanges.slice(0, 100)
+    const cappedMoves = playerMoves.slice(0, 80)
 
     // Unit rank movers: |2025 - 2024| >= 5
     const rank2024ByKey = new Map()
-    for (const r of ranks2024) {
-      rank2024ByKey.set(`${r.teamId}::${r.unit}`, r.rank)
-    }
+    for (const r of ranks2024) rank2024ByKey.set(`${r.teamId}::${r.unit}`, r.rank)
     const unitRankMovers = []
     for (const r of ranks2025) {
       const prev = rank2024ByKey.get(`${r.teamId}::${r.unit}`)
@@ -324,11 +305,10 @@ router.get('/changes', async (req, res) => {
         delta,
       })
     }
-    // Sort movers by absolute delta desc so biggest changes float to the top.
     unitRankMovers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
 
     res.json({
-      rosterChanges: cappedRosterChanges,
+      playerMoves: cappedMoves,
       unitRankMovers,
     })
   } catch (e) {

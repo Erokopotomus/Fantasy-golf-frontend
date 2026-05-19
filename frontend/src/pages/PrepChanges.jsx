@@ -62,16 +62,25 @@ function PositionChip({ pos }) {
 
 function CoachTile({ team }) {
   const color = TEAM_COLORS[team.abbreviation] ?? '#1E2A3A'
+  const isNew = team.hcIsNewFor2026 === true
   return (
     <Link
       to={`/lab/prep/teams/${team.abbreviation}`}
-      className="relative block rounded-card overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all"
+      className={classNames(
+        'relative block rounded-card overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all',
+        isNew && 'ring-2 ring-blaze ring-offset-2 ring-offset-[var(--bg)]',
+      )}
       style={{
         background: `linear-gradient(135deg, ${hexToRgba(color, 0.14)} 0%, ${hexToRgba(color, 0.04)} 100%)`,
         border: `1px solid ${hexToRgba(color, 0.28)}`,
       }}
     >
       <div className="h-1 w-full" style={{ backgroundColor: color }} />
+      {isNew && (
+        <span className="absolute top-1.5 right-1.5 font-mono text-[9px] uppercase tracking-[0.18em] font-extrabold px-1.5 py-0.5 rounded bg-blaze text-white shadow-sm z-10">
+          New
+        </span>
+      )}
       <div className="px-3 py-2.5">
         <div className="flex items-baseline justify-between gap-2">
           <span
@@ -80,28 +89,25 @@ function CoachTile({ team }) {
           >
             {team.abbreviation}
           </span>
-          <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-muted">
-            {team.division ? team.division.slice(0, 1) + team.division.slice(1).toLowerCase() : ''}
-          </span>
+          {!isNew && (
+            <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-muted">
+              {team.division ? team.division.slice(0, 1) + team.division.slice(1).toLowerCase() : ''}
+            </span>
+          )}
         </div>
         <div className="mt-1.5 font-body text-[12.5px] font-semibold text-[var(--text-1)] leading-tight truncate">
           {team.hcName ?? '—'}
         </div>
         <div className="font-mono text-[9px] uppercase tracking-[0.16em] text-text-muted mt-0.5">
-          Head coach
+          {isNew ? 'New head coach' : 'Head coach'}
         </div>
       </div>
     </Link>
   )
 }
 
-function ChangeRow({ row, isLast }) {
-  // Arrival: player.name lands on row.teamAbbr from row.fromTeamAbbr (or null)
-  // Departure: player leaves row.teamAbbr for row.toTeamAbbr (or null)
-  const isArrival = row.type === 'arrival'
-  const homeAbbr = row.teamAbbr
-  const otherAbbr = isArrival ? row.fromTeamAbbr : row.toTeamAbbr
-
+function MoveRow({ move, isLast }) {
+  // Single row per player. FROM → TO, both team abbreviations colored.
   return (
     <div
       className={classNames(
@@ -110,57 +116,16 @@ function ChangeRow({ row, isLast }) {
       )}
     >
       <div className="flex items-center gap-2.5 min-w-0">
-        <PositionChip pos={row.player?.position} />
+        <PositionChip pos={move.player?.position} />
         <span className="font-editorial italic text-[15px] text-[var(--text-1)] truncate leading-tight">
-          {row.player?.name ?? 'Unknown player'}
+          {move.player?.name ?? 'Unknown player'}
         </span>
       </div>
       <div className="flex items-baseline gap-1.5 font-mono text-[12px] whitespace-nowrap shrink-0">
-        {isArrival ? (
-          <>
-            <TeamAbbr abbr={homeAbbr} />
-            <span className="text-text-muted">←</span>
-            {otherAbbr ? (
-              <TeamAbbr abbr={otherAbbr} />
-            ) : (
-              <span className="text-text-muted text-[11px] italic">new</span>
-            )}
-          </>
-        ) : (
-          <>
-            <TeamAbbr abbr={homeAbbr} />
-            <span className="text-text-muted">→</span>
-            {otherAbbr ? (
-              <TeamAbbr abbr={otherAbbr} />
-            ) : (
-              <span className="text-text-muted text-[11px] italic">???</span>
-            )}
-          </>
-        )}
+        <TeamAbbr abbr={move.fromTeamAbbr} />
+        <span className="text-text-muted">→</span>
+        <TeamAbbr abbr={move.toTeamAbbr} />
       </div>
-    </div>
-  )
-}
-
-function ChangesColumn({ title, subtitle, rows, accent, emptyText }) {
-  return (
-    <div className="rounded-card-lg overflow-hidden shadow-card bg-[var(--surface)] border border-[var(--color-border)]">
-      <div className="h-2 w-full" style={{ backgroundColor: accent }} />
-      <div className="px-4 pt-4 pb-2">
-        <div className="font-display font-extrabold text-xl tracking-tight">{title}</div>
-        <div className="font-body text-[12.5px] text-text-secondary">{subtitle}</div>
-      </div>
-      {rows.length === 0 ? (
-        <div className="font-mono text-xs text-text-muted py-6 px-4 italic">
-          {emptyText}
-        </div>
-      ) : (
-        <div>
-          {rows.map((r, i) => (
-            <ChangeRow key={`${r.type}-${r.player?.id ?? i}-${i}`} row={r} isLast={i === rows.length - 1} />
-          ))}
-        </div>
-      )}
     </div>
   )
 }
@@ -217,7 +182,7 @@ function UnitMoverCard({ mover, isLast }) {
 }
 
 export default function PrepChanges() {
-  const [changes, setChanges] = useState({ rosterChanges: [], unitRankMovers: [] })
+  const [changes, setChanges] = useState({ playerMoves: [], unitRankMovers: [] })
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -232,7 +197,7 @@ export default function PrepChanges() {
         ])
         if (cancel) return
         setChanges({
-          rosterChanges: changesRes.rosterChanges ?? [],
+          playerMoves: changesRes.playerMoves ?? [],
           unitRankMovers: changesRes.unitRankMovers ?? [],
         })
         setTeams(teamsRes.teams ?? [])
@@ -247,29 +212,16 @@ export default function PrepChanges() {
     }
   }, [])
 
-  const arrivals = useMemo(() => {
-    return changes.rosterChanges
-      .filter((r) => r.type === 'arrival')
-      .sort((a, b) => {
-        const ar = POSITION_RANK[a.player?.position] ?? 99
-        const br = POSITION_RANK[b.player?.position] ?? 99
-        if (ar !== br) return ar - br
-        return (a.player?.name ?? '').localeCompare(b.player?.name ?? '')
-      })
-      .slice(0, 20)
-  }, [changes.rosterChanges])
+  const sortedMoves = useMemo(() => {
+    return [...changes.playerMoves].sort((a, b) => {
+      const ar = POSITION_RANK[a.player?.position] ?? 99
+      const br = POSITION_RANK[b.player?.position] ?? 99
+      if (ar !== br) return ar - br
+      return (a.player?.name ?? '').localeCompare(b.player?.name ?? '')
+    })
+  }, [changes.playerMoves])
 
-  const departures = useMemo(() => {
-    return changes.rosterChanges
-      .filter((r) => r.type === 'departure')
-      .sort((a, b) => {
-        const ar = POSITION_RANK[a.player?.position] ?? 99
-        const br = POSITION_RANK[b.player?.position] ?? 99
-        if (ar !== br) return ar - br
-        return (a.player?.name ?? '').localeCompare(b.player?.name ?? '')
-      })
-      .slice(0, 20)
-  }, [changes.rosterChanges])
+  const displayMoves = useMemo(() => sortedMoves.slice(0, 30), [sortedMoves])
 
   const topMovers = useMemo(() => {
     return [...changes.unitRankMovers]
@@ -300,8 +252,8 @@ export default function PrepChanges() {
     return Math.max(0, Math.ceil((kickoff.getTime() - today.getTime()) / 86400000))
   }, [])
 
-  const totalArrivals = changes.rosterChanges.filter((r) => r.type === 'arrival').length
-  const totalDepartures = changes.rosterChanges.filter((r) => r.type === 'departure').length
+  const totalMoves = changes.playerMoves.length
+  const totalNewHCs = teams.filter((t) => t.hcIsNewFor2026).length
   const totalMovers = changes.unitRankMovers.length
 
   return (
@@ -314,8 +266,8 @@ export default function PrepChanges() {
             ← Prep
           </Link>
           <div className="hidden md:flex items-center gap-5 text-white/60">
-            <span><span className="text-white font-bold">{totalArrivals || '—'}</span> arrivals</span>
-            <span><span className="text-white font-bold">{totalDepartures || '—'}</span> departures</span>
+            <span><span className="text-white font-bold">{totalNewHCs || '—'}</span> new HCs</span>
+            <span><span className="text-white font-bold">{totalMoves || '—'}</span> player moves</span>
             <span><span className="text-white font-bold">{totalMovers || '—'}</span> units moved</span>
           </div>
           <div className="flex items-center gap-4 shrink-0">
@@ -365,7 +317,13 @@ export default function PrepChanges() {
             </h2>
           </div>
           <p className="font-body text-sm text-text-secondary mb-5">
-            Head coaches entering <span className="font-editorial italic">2026</span>. Click any tile for the full staff and roster.
+            Head coaches entering <span className="font-editorial italic">2026</span>.
+            {totalNewHCs > 0 && (
+              <>
+                {' '}<span className="text-blaze font-bold">{totalNewHCs} new</span> for this season — marked below. Click any tile for the full staff and roster.
+              </>
+            )}
+            {totalNewHCs === 0 && ' Click any tile for the full staff and roster.'}
           </p>
 
           {loading ? (
@@ -398,16 +356,16 @@ export default function PrepChanges() {
           )}
         </section>
 
-        {/* SECTION II — Arrivals & Departures */}
+        {/* SECTION II — Player moves (single list, no duplicate arrivals/departures) */}
         <section className="mb-12">
           <div className="flex items-baseline gap-3 mb-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">II.</span>
             <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
-              Who moved, who arrived
+              The biggest moves
             </h2>
           </div>
           <p className="font-body text-sm text-text-secondary mb-5">
-            Sorted by position priority — quarterbacks first, then backs, receivers, tight ends.
+            Players who changed teams this offseason. QBs first, then RB, WR, TE. One row per move — from old team to new.
           </p>
 
           {loading ? (
@@ -415,21 +373,40 @@ export default function PrepChanges() {
               Loading the wire…
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <ChangesColumn
-                title="Notable arrivals"
-                subtitle={`${arrivals.length} of ${totalArrivals} shown · landed on a new roster`}
-                rows={arrivals}
-                accent="#0D9668"
-                emptyText="No arrivals tracked yet — the offseason snapshot is still filling in."
-              />
-              <ChangesColumn
-                title="Notable departures"
-                subtitle={`${departures.length} of ${totalDepartures} shown · changed teams`}
-                rows={departures}
-                accent="#E83838"
-                emptyText="No departures tracked yet — the offseason snapshot is still filling in."
-              />
+            <div className="rounded-card-lg overflow-hidden shadow-card bg-[var(--surface)] border border-[var(--color-border)]">
+              <div className="h-2 w-full bg-gradient-to-r from-blaze via-crown to-field" />
+              <div className="px-4 pt-4 pb-2 flex items-baseline justify-between gap-3">
+                <div>
+                  <div className="font-display font-extrabold text-xl tracking-tight">
+                    Notable moves
+                  </div>
+                  <div className="font-body text-[12.5px] text-text-secondary">
+                    {displayMoves.length} of {totalMoves} shown
+                  </div>
+                </div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+                  Old team <span className="text-text-secondary">→</span> New team
+                </div>
+              </div>
+              {displayMoves.length === 0 ? (
+                <div className="font-mono text-xs text-text-muted py-6 px-4 italic">
+                  No qualifying moves yet — comparing end of 2025 to the current 2026 roster.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2">
+                  {displayMoves.map((m, i) => (
+                    <MoveRow
+                      key={`${m.player?.id ?? i}-${i}`}
+                      move={m}
+                      isLast={false}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className="px-4 py-3 border-t border-[var(--color-border)]/60 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em]">
+                <span className="text-[var(--text-1)] font-bold">⚡ CLUTCH</span>
+                <span className="text-text-muted">2025 season end → 2026 offseason</span>
+              </div>
             </div>
           )}
         </section>
