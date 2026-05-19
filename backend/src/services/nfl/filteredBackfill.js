@@ -12,8 +12,11 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
   for (const r of candidates) {
     const playerId = playerMap.get(r.player_id)
     if (!playerId) { droppedNoPlayer++; continue }
-    const externalGameId = r.game_id
-    const gameId = gameMap.get(externalGameId)
+    const teamAbbrForLookup = normalizeTeamAbbr(r.team || r.recent_team || '')
+    const weekForLookup = Number(r.week)
+    if (!teamAbbrForLookup || !weekForLookup) { droppedNoGame++; continue }
+    const lookupKey = `${season}_${weekForLookup}_${teamAbbrForLookup}`
+    const gameId = gameMap.get(lookupKey)
     if (!gameId) { droppedNoGame++; continue }
 
     statRows.push({
@@ -161,11 +164,27 @@ async function runFilteredSeason(prisma, season, gsisIdToPlayerId, pool) {
 
   await nflHistoricalSync.syncScheduleRaw(prisma, season)
 
+  // Build a season+week+team keyed map (each game contributes TWO entries —
+  // one for the home team, one for the away team). This shape lets us look
+  // up the gameId from a player row using season + week + the player's team,
+  // which works across both legacy (2016-2023) and current (2024+) nflverse
+  // weekly-stats schemas (the 2024+ schema dropped the `game_id` column).
   const games = await prisma.nflGame.findMany({
     where: { season },
-    select: { id: true, externalId: true },
+    select: {
+      id: true,
+      week: true,
+      homeTeam: { select: { abbreviation: true } },
+      awayTeam: { select: { abbreviation: true } },
+    },
   })
-  const gameMap = new Map(games.filter(g => g.externalId).map(g => [g.externalId, g.id]))
+  const gameMap = new Map()
+  for (const g of games) {
+    const homeAbbr = g.homeTeam?.abbreviation
+    const awayAbbr = g.awayTeam?.abbreviation
+    if (homeAbbr) gameMap.set(`${season}_${g.week}_${homeAbbr}`, g.id)
+    if (awayAbbr) gameMap.set(`${season}_${g.week}_${awayAbbr}`, g.id)
+  }
 
   const result = await syncFilteredWeeklyStats(prisma, season, gsisIdToPlayerId, gameMap, pool)
   console.log(`[filteredBackfill] ${season}: inserted ${result.inserted} player-game rows`)
