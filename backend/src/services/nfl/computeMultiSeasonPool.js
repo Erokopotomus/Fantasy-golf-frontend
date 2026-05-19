@@ -18,7 +18,11 @@ async function computeMultiSeasonPool(seasons) {
       const seasonPool = computeSeasonPool(rows)
       perSeasonSizes[season] = seasonPool.size
       for (const id of seasonPool) pool.add(id)
-      console.log(`[pool] ${season}: ${seasonPool.size} qualifiers (running union: ${pool.size})`)
+      if (seasonPool.size === 0) {
+        console.warn(`[pool] ${season}: 0 qualifiers — ${rows.length} rows fetched (possible nflverse format issue or empty CSV)`)
+      } else {
+        console.log(`[pool] ${season}: ${seasonPool.size} qualifiers (running union: ${pool.size})`)
+      }
     } catch (e) {
       console.warn(`[pool] Season ${season} failed: ${e.message} — skipping`)
       perSeasonSizes[season] = 'ERROR'
