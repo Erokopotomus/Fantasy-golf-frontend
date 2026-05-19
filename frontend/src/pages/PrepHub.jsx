@@ -295,8 +295,10 @@ export default function PrepHub() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)]">
-      {/* Broadcast-style ticker bar — dark, countdown is the hero */}
-      <div className="bg-slate text-white">
+      {/* Broadcast-style ticker bar — blaze separator above so it doesn't bleed
+          into the navbar. Lighter slate-mid keeps it distinct from the nav. */}
+      <div className="h-0.5 bg-blaze" aria-hidden="true" />
+      <div className="bg-slate-mid text-white border-b border-black/20">
         <div className="mx-auto max-w-6xl px-6 py-2.5 flex items-center justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
           <Link to="/lab" className="text-white/60 hover:text-white transition-colors shrink-0">
             ← The Lab
