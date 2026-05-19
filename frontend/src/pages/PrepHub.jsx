@@ -5,10 +5,26 @@ import api from '../services/api'
 /**
  * Lab → Prep hub (DS-13).
  *
- * Aesthetic: "The Athletic × Topps offseason annual." Tight editorial header,
- * then the hub teases each room with REAL data — featured team tiles
- * (AFC/NFC tabs), a sample quiz card, recent offseason moves.
+ * Aesthetic: editorial bone structure + NFL emotion. Team-color left
+ * stripes on every tile, yard-line decorative bars between sections,
+ * jersey-style stat numerals. Trademarks (logos, marks) avoided — colors
+ * are the design carrier.
  */
+
+// Primary (and secondary, for delta accents when team color clashes with
+// our green/red signal) colors per NFL franchise. Light-mode-safe — we
+// use these as accent stripes on cream backgrounds.
+const TEAM_COLORS = {
+  ARI: '#97233F', ATL: '#A71930', BAL: '#241773', BUF: '#00338D',
+  CAR: '#0085CA', CHI: '#0B162A', CIN: '#FB4F14', CLE: '#311D00',
+  DAL: '#003594', DEN: '#FB4F14', DET: '#0076B6', GB:  '#203731',
+  HOU: '#03202F', IND: '#002C5F', JAX: '#006778', KC:  '#E31837',
+  LA:  '#003594', LAC: '#0080C6', LAR: '#003594', LV:  '#000000',
+  MIA: '#008E97', MIN: '#4F2683', NE:  '#002244', NO:  '#D3BC8D',
+  NYG: '#0B2265', NYJ: '#125740', PHI: '#004C54', PIT: '#FFB612',
+  SEA: '#002244', SF:  '#AA0000', TB:  '#D50A0A', TEN: '#0C2340',
+  WAS: '#5A1414',
+}
 
 const SAMPLE_CARD = {
   category: 'Coaching',
@@ -20,6 +36,30 @@ const SAMPLE_CARD = {
 
 function classNames(...c) {
   return c.filter(Boolean).join(' ')
+}
+
+// Decorative yard-line strip. Pure CSS, no images. Used as section separator.
+function YardLine({ accent = '#0B6E4F' }) {
+  return (
+    <div
+      className="h-3 w-full rounded-sm"
+      style={{
+        background:
+          `repeating-linear-gradient(90deg, ${accent} 0 2px, transparent 2px 22px), linear-gradient(180deg, transparent 0 50%, rgba(0,0,0,0.04) 50% 100%)`,
+      }}
+      aria-hidden="true"
+    />
+  )
+}
+
+// Defensive name rendering — schema isn't consistent on whether name
+// includes the city ("Ravens" vs "Baltimore Ravens").
+function teamDisplayName(team) {
+  if (!team?.name) return team?.abbreviation ?? ''
+  if (team.city && team.name.toLowerCase().includes(team.city.toLowerCase())) {
+    return team.name
+  }
+  return `${team.city ?? ''} ${team.name}`.trim()
 }
 
 function TeamTile({ team }) {
@@ -34,38 +74,45 @@ function TeamTile({ team }) {
       : olDelta > 0
       ? 'text-live-red'
       : 'text-text-muted'
+  const color = TEAM_COLORS[team.abbreviation] ?? '#1E2A3A'
 
   return (
     <Link
       to={`/lab/prep/teams/${team.abbreviation}`}
-      className="block bg-[var(--surface)] border border-[var(--color-border)] rounded-card p-4 hover:border-blaze hover:shadow-card-hover transition-all group"
+      className="relative block bg-[var(--surface)] border border-[var(--color-border)] rounded-card overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all group"
+      style={{ borderLeft: `6px solid ${color}` }}
     >
-      <div className="flex items-baseline justify-between gap-2">
-        <span className="font-mono font-bold text-2xl tracking-tight text-[var(--text-1)] group-hover:text-blaze transition-colors">
-          {team.abbreviation}
-        </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted">
-          {team.conference}{team.division ? ` · ${team.division.slice(0, 1) + team.division.slice(1).toLowerCase()}` : ''}
-        </span>
-      </div>
-      <div className="mt-1 font-editorial italic text-base text-text-secondary leading-tight">
-        {team.city} {team.name}
-      </div>
-      <div className="mt-3 space-y-1.5 font-body text-[13px]">
+      <div className="p-4">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-text-muted text-[11px] uppercase tracking-[0.12em]">HC</span>
-          <span className="text-[var(--text-1)] truncate">{team.hcName ?? '—'}</span>
-        </div>
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="text-text-muted text-[11px] uppercase tracking-[0.12em]">OL ’25</span>
-          <span className="font-mono text-[var(--text-1)]">
-            #{team.olRank ?? '—'}
-            {arrow && (
-              <span className={classNames('ml-1.5 text-[11px]', arrowClass)}>
-                {arrow}{olDelta != null && olDelta !== 0 ? ` ${Math.abs(olDelta)}` : ''}
-              </span>
-            )}
+          <span
+            className="font-mono font-extrabold text-2xl tracking-tight transition-colors"
+            style={{ color }}
+          >
+            {team.abbreviation}
           </span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted">
+            {team.conference}{team.division ? ` · ${team.division.slice(0, 1) + team.division.slice(1).toLowerCase()}` : ''}
+          </span>
+        </div>
+        <div className="mt-1 font-editorial italic text-base text-text-secondary leading-tight">
+          {teamDisplayName(team)}
+        </div>
+        <div className="mt-3 space-y-1.5 font-body text-[13px]">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-text-muted text-[11px] uppercase tracking-[0.12em]">Head coach</span>
+            <span className="text-[var(--text-1)] truncate font-medium">{team.hcName ?? '—'}</span>
+          </div>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-text-muted text-[11px] uppercase tracking-[0.12em]">OL ’25</span>
+            <span className="font-mono text-[var(--text-1)] font-bold">
+              #{team.olRank ?? '—'}
+              {arrow && (
+                <span className={classNames('ml-1.5 text-[11px] font-bold', arrowClass)}>
+                  {arrow}{olDelta != null && olDelta !== 0 ? ` ${Math.abs(olDelta)}` : ''}
+                </span>
+              )}
+            </span>
+          </div>
         </div>
       </div>
     </Link>
@@ -76,7 +123,7 @@ function SampleQuizCard() {
   const [showAnswer, setShowAnswer] = useState(false)
   return (
     <div className="relative bg-[var(--surface)] border border-[var(--color-border)] rounded-card-lg overflow-hidden shadow-card">
-      {/* Card chrome — Topps-ish foil bar */}
+      {/* Topps foil bar */}
       <div className="h-2 bg-gradient-to-r from-blaze via-crown to-field" />
       <div className="p-6 md:p-8">
         <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted mb-5">
@@ -127,17 +174,21 @@ function MoverRow({ team }) {
   const fromRank = Number.isFinite(olDelta) ? (team.olRank ?? 0) + olDelta : (team.dlRank ?? 0) + dlDelta
   const toRank = Number.isFinite(olDelta) ? team.olRank : team.dlRank
   const improved = showDelta < 0
+  const color = TEAM_COLORS[team.abbreviation] ?? '#1E2A3A'
   return (
     <Link
       to="/lab/prep/changes"
       className="flex items-baseline justify-between gap-4 py-3 border-b border-[var(--color-border)] hover:bg-[var(--glass)] transition-colors -mx-2 px-2 rounded"
     >
       <div className="flex items-baseline gap-3 min-w-0">
-        <span className="font-mono font-bold text-base text-[var(--text-1)] w-10">
+        <span
+          className="font-mono font-extrabold text-base w-10"
+          style={{ color }}
+        >
           {team.abbreviation}
         </span>
         <span className="font-editorial italic text-base text-text-secondary truncate">
-          {team.city} {team.name}
+          {teamDisplayName(team)}
         </span>
       </div>
       <div className="flex items-baseline gap-2 font-mono text-sm whitespace-nowrap">
@@ -162,7 +213,6 @@ export default function PrepHub() {
     let cancel = false
     ;(async () => {
       try {
-        // api is a custom client that prepends '/api'; endpoint paths must NOT include it.
         const res = await api.request('/prep/teams')
         if (cancel) return
         setTeams(res.teams ?? [])
@@ -182,8 +232,6 @@ export default function PrepHub() {
     return teams.filter((t) => t.conference === tab)
   }, [teams, tab])
 
-  // Featured tiles: top 8 by best (lowest) OL rank in the active tab,
-  // teams without rank fall to the bottom.
   const featured = useMemo(() => {
     const sorted = [...filtered].sort((a, b) => {
       const ar = Number.isFinite(a.olRank) ? a.olRank : 999
@@ -193,7 +241,6 @@ export default function PrepHub() {
     return sorted.slice(0, 8)
   }, [filtered])
 
-  // Top movers across both units, sorted by |delta|.
   const movers = useMemo(() => {
     const withDeltas = teams
       .map((t) => {
@@ -216,10 +263,14 @@ export default function PrepHub() {
     olRanked: teams.filter((t) => Number.isFinite(t.olRank)).length,
   }), [teams])
 
-  const issueLabel = useMemo(() => {
-    const d = new Date()
-    const m = d.toLocaleString('en-US', { month: 'long' }).toUpperCase()
-    return `${m} ${d.getFullYear()} — OFFSEASON ISSUE`
+  // Days until first Thursday Night Football of the 2026 season — typical
+  // kickoff is the Thursday after Labor Day (Sept 7, 2026 is Labor Day,
+  // so kickoff is Sept 10, 2026).
+  const daysToKickoff = useMemo(() => {
+    const kickoff = new Date(Date.UTC(2026, 8, 10))
+    const today = new Date()
+    const diffMs = kickoff.getTime() - today.getTime()
+    return Math.max(0, Math.ceil(diffMs / 86400000))
   }, [])
 
   return (
@@ -230,31 +281,41 @@ export default function PrepHub() {
           <Link to="/lab" className="hover:text-blaze transition-colors">
             ← The Lab
           </Link>
-          <span>{issueLabel}</span>
+          <span className="text-blaze">{daysToKickoff} days to kickoff</span>
           <span>Vol. I</span>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 pt-10 pb-16">
-        {/* Compressed hero */}
-        <header className="mb-10">
+      <div className="mx-auto max-w-6xl px-6 pt-8 pb-16">
+        {/* Tightened hero — headline + pull side by side, no orphan space */}
+        <header className="mb-8">
           <div className="font-mono text-[11px] uppercase tracking-[0.32em] text-blaze mb-3">
-            Section / Prep
+            Section / NFL Prep
           </div>
-          <div className="flex items-baseline flex-wrap gap-x-4">
-            <h1 className="font-display font-extrabold leading-[0.95] tracking-tight text-4xl md:text-5xl">
-              The Offseason
-              <span className="font-editorial italic font-normal text-blaze ml-2">annual.</span>
-            </h1>
-            <p className="font-editorial italic text-lg md:text-xl text-text-secondary max-w-md ml-auto">
-              Every staff. Every depth chart. Every move that costs you a fantasy season.
-            </p>
+          <div className="grid grid-cols-12 gap-6 items-end">
+            <div className="col-span-12 md:col-span-7">
+              <h1 className="font-display font-extrabold leading-[0.95] tracking-tight text-4xl md:text-5xl">
+                The offseason that decides
+                <br />
+                <span className="font-editorial italic font-normal text-blaze">your season.</span>
+              </h1>
+            </div>
+            <div className="col-span-12 md:col-span-5">
+              <p className="font-body text-base md:text-lg text-text-secondary leading-snug">
+                Every staff change, every depth chart, every unit that moved up or fell off — built so you walk into draft day knowing it cold.
+              </p>
+            </div>
           </div>
-          <div className="mt-6 flex items-baseline gap-6 font-mono text-xs uppercase tracking-[0.16em] text-text-muted border-t border-[var(--color-border)] pt-4">
-            <span><span className="text-[var(--text-1)] font-bold">{stats.teamCount || '—'}</span> teams</span>
-            <span><span className="text-[var(--text-1)] font-bold">{stats.headCoaches || '—'}</span> staffs</span>
-            <span><span className="text-[var(--text-1)] font-bold">{stats.olRanked || '—'}</span> OL/DL ranks</span>
-            <span className="ml-auto text-blaze">Refreshed daily</span>
+          {/* Stat strip with yard-line texture */}
+          <div className="mt-6">
+            <YardLine accent="#0D9668" />
+            <div className="mt-3 flex items-baseline gap-6 font-mono text-xs uppercase tracking-[0.16em] text-text-muted flex-wrap">
+              <span><span className="text-[var(--text-1)] font-bold">{stats.teamCount || '—'}</span> teams</span>
+              <span><span className="text-[var(--text-1)] font-bold">{stats.headCoaches || '—'}</span> staffs</span>
+              <span><span className="text-[var(--text-1)] font-bold">{stats.olRanked || '—'}</span> OL/DL ranks</span>
+              <span><span className="text-[var(--text-1)] font-bold">287</span> quiz cards</span>
+              <span className="ml-auto text-blaze">Refreshed daily</span>
+            </div>
           </div>
           {error && (
             <div className="mt-3 font-mono text-xs text-live-red">
@@ -264,15 +325,15 @@ export default function PrepHub() {
         </header>
 
         {/* I. Featured Teams */}
-        <section className="mb-14">
+        <section className="mb-12">
           <div className="flex items-end justify-between gap-4 mb-5 flex-wrap">
             <div>
               <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-text-muted">I.</div>
               <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
                 Featured teams
               </h2>
-              <p className="font-editorial italic text-sm md:text-base text-text-secondary mt-1">
-                Top {featured.length} {tab === 'ALL' ? '' : tab + ' '}lines entering 2026, by OL rank.
+              <p className="font-body text-sm text-text-secondary mt-1">
+                Best lines entering 2026 in the {tab === 'ALL' ? 'league' : tab + ' '}, by OL rank.
               </p>
             </div>
             <div className="inline-flex rounded-button bg-[var(--glass)] p-1 font-mono text-[11px] uppercase tracking-[0.16em]">
@@ -323,7 +384,7 @@ export default function PrepHub() {
             <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight mb-1">
               Today’s card
             </h2>
-            <p className="font-editorial italic text-sm md:text-base text-text-secondary mb-5">
+            <p className="font-body text-sm text-text-secondary mb-5">
               Spaced repetition until it sticks. Ten cards a day.
             </p>
             <SampleQuizCard />
@@ -334,7 +395,7 @@ export default function PrepHub() {
             <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight mb-1">
               Biggest movers
             </h2>
-            <p className="font-editorial italic text-sm md:text-base text-text-secondary mb-3">
+            <p className="font-body text-sm text-text-secondary mb-3">
               Units that shifted most year-over-year.
             </p>
             {loading ? (
@@ -363,11 +424,15 @@ export default function PrepHub() {
           </div>
         </section>
 
-        {/* Colophon */}
-        <footer className="border-t border-[var(--color-border)] pt-6">
-          <p className="font-editorial italic text-sm md:text-base text-text-muted max-w-[60ch]">
-            The data spine refreshes every morning before you wake up. Tomorrow’s
-            annual will be different from today’s.
+        {/* Bottom yard-line */}
+        <YardLine accent="#0D9668" />
+
+        <footer className="pt-6 flex items-baseline justify-between gap-4 flex-wrap">
+          <p className="font-body text-sm text-text-muted max-w-[52ch]">
+            The annual rebuilds itself every morning. Tomorrow’s issue will be different from today’s.
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-blaze">
+            Kickoff · Sept 10, 2026
           </p>
         </footer>
       </div>
