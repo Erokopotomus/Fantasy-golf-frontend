@@ -7,12 +7,14 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
   console.log(`[filteredBackfill] ${season}: ${candidates.length} of ${rows.length} rows in pool`)
 
   const statRows = []
+  let droppedNoPlayer = 0
+  let droppedNoGame = 0
   for (const r of candidates) {
     const playerId = playerMap.get(r.player_id)
-    if (!playerId) continue
+    if (!playerId) { droppedNoPlayer++; continue }
     const externalGameId = r.game_id
     const gameId = gameMap.get(externalGameId)
-    if (!gameId) continue
+    if (!gameId) { droppedNoGame++; continue }
 
     statRows.push({
       playerId,
@@ -42,6 +44,10 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
     })
   }
 
+  if (droppedNoPlayer > 0 || droppedNoGame > 0) {
+    console.log(`[filteredBackfill] ${season}: dropped ${droppedNoPlayer} (no player), ${droppedNoGame} (no game) before insert`)
+  }
+
   if (statRows.length === 0) {
     console.log(`[filteredBackfill] ${season}: no rows to insert after filtering`)
     return { inserted: 0 }
@@ -59,12 +65,12 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
     }).join(',\n')
 
     try {
-      await prisma.$executeRawUnsafe(`
+      const n = await prisma.$executeRawUnsafe(`
         INSERT INTO nfl_player_games (id, "playerId", "gameId", "teamAbbr", "passAttempts", "passCompletions", "passYards", "passTds", "interceptions", "sacked", "sackYards", "passerRating", "rushAttempts", "rushYards", "rushTds", "fumbles", "fumblesLost", "targets", "receptions", "recYards", "recTds", "targetShare", "fantasyPtsStd", "fantasyPtsPpr", "fantasyPtsHalf", "sourceProvider", "sourceIngestedAt", "createdAt", "updatedAt")
         VALUES ${values}
         ON CONFLICT ("playerId", "gameId") DO NOTHING
       `)
-      inserted += chunk.length
+      inserted += Number(n) || 0
     } catch (e) {
       console.warn(`[filteredBackfill] insert failed at offset ${i}: ${e.message}`)
     }
