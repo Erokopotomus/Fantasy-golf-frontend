@@ -443,6 +443,9 @@ model Player {
   nflRosterSlots NflRosterSlot[]
   nflProjections NflPlayerProjection[]
 
+  // NFL career-data backfill (Phase 7)
+  nflPlayerDataState NflPlayerDataState?
+
   @@index([owgrRank])
   @@index([name])
   @@index([gsisId])
@@ -2996,6 +2999,26 @@ model NflPlayerGame {
   @@index([playerId])
   @@index([teamAbbr])
   @@map("nfl_player_games")
+}
+
+model NflPlayerDataState {
+  id              String   @id @default(cuid())
+  playerId        String   @unique
+  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  inPool          Boolean  @default(false)
+  fetchedThrough  Int?
+  earliestFetched Int?
+  lastFetchedAt   DateTime?
+
+  lazyFetchedAt   DateTime?
+  lazyFetchError  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([inPool])
+  @@map("nfl_player_data_state")
 }
 
 // ============ NFL DATA SPINE (prep features + downstream consumers) ============
