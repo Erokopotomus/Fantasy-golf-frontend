@@ -200,6 +200,67 @@ router.get('/players', optionalAuth, async (req, res, next) => {
   }
 })
 
+// GET /api/nfl/draft-players — Draftable NFL pool for Mock Draft
+// Pulls from NflPlayerProjection (Sleeper + FFC ADP), sorted by ADP ascending.
+// Returns team colors inline so the frontend doesn't need a second fetch.
+router.get('/draft-players', optionalAuth, async (req, res, next) => {
+  try {
+    const scoring = String(req.query.scoring || 'half_ppr')
+    if (!['ppr', 'half_ppr', 'standard'].includes(scoring)) {
+      return res.status(400).json({ error: 'scoring must be ppr, half_ppr, or standard' })
+    }
+    const season = parseInt(req.query.season, 10) || new Date().getUTCFullYear()
+
+    const rows = await prisma.nflPlayerProjection.findMany({
+      where: {
+        season,
+        source: 'sleeper_consensus',
+        scoringType: scoring,
+        adp: { not: null }, // draftable pool = players with FFC ADP
+      },
+      include: {
+        player: {
+          select: {
+            id: true, name: true, nflPosition: true, nflTeamAbbr: true,
+            headshotUrl: true,
+          },
+        },
+      },
+      orderBy: [
+        { adp: { sort: 'asc', nulls: 'last' } },
+        { projectedPoints: 'desc' },
+      ],
+    })
+
+    // Pull team colors once (32 rows, cached in-process is fine for now)
+    const teams = await prisma.nflTeam.findMany({
+      select: { abbreviation: true, primaryColor: true, secondaryColor: true },
+    })
+    const colorByAbbr = new Map(teams.map(t => [t.abbreviation, t]))
+
+    const players = rows
+      .filter(r => r.player) // skip orphaned projections (defensive)
+      .map(r => {
+        const team = colorByAbbr.get(r.player.nflTeamAbbr) || {}
+        return {
+          id: r.player.id,
+          name: r.player.name,
+          position: r.player.nflPosition,
+          teamAbbr: r.player.nflTeamAbbr,
+          headshotUrl: r.player.headshotUrl,
+          teamPrimaryColor: team.primaryColor || null,
+          teamSecondaryColor: team.secondaryColor || null,
+          adp: r.adp,
+          projectedPoints: r.projectedPoints,
+        }
+      })
+
+    res.json({ players, scoring, season, count: players.length })
+  } catch (err) {
+    next(err)
+  }
+})
+
 // GET /api/nfl/players/:id — NFL player detail with game log
 router.get('/players/:id', optionalAuth, async (req, res, next) => {
   try {
