@@ -5,12 +5,14 @@ import { TEAM_COLORS, hexToRgba } from '../utils/nflTeamColors'
 import PrepSectionNav from '../components/prep/PrepSectionNav'
 
 /**
- * Lab → Prep → Team Browser index (DS-14, page 1 of 4).
+ * Lab → Prep → Team Browser (DS-14, restructured).
  *
- * "Every team. Every shift." All 32 teams in a sortable, filterable,
- * searchable grid. Matches the PrepHub masthead pattern (slate-mid
- * ticker bar, blaze separator above) and tile aesthetic — but tighter:
- * up to 5 cols on xl breakpoints so the league sits in a single frame.
+ * Default view: conference/division layout. Two columns (AFC / NFC), each
+ * with four stacked division sections (East, North, South, West), each
+ * holding a 2×2 mini-grid of team tiles. View toggle (AFC · NFC · ALL ·
+ * GRID) lives in the filter row as a tab strip — letterspaced caps with
+ * middle-dot separators, blaze + underline on active. GRID is an opt-in
+ * flat sortable view for power users.
  */
 
 function classNames(...c) {
@@ -27,7 +29,6 @@ function teamDisplayName(team) {
 
 function divisionLabel(division) {
   if (!division) return ''
-  // "AFC_EAST" -> "East" (just the half we don't already convey via conference tab)
   const parts = division.split('_')
   const tail = parts[parts.length - 1]
   return tail.slice(0, 1) + tail.slice(1).toLowerCase()
@@ -41,7 +42,9 @@ const SORT_OPTIONS = [
   { value: 'alpha', label: 'A → Z' },
 ]
 
-const DIVISIONS = ['EAST', 'NORTH', 'SOUTH', 'WEST']
+const VIEW_OPTIONS = ['AFC', 'NFC', 'ALL', 'GRID']
+const DIVISION_ORDER = ['EAST', 'NORTH', 'SOUTH', 'WEST']
+const CONFERENCE_ORDER = ['AFC', 'NFC']
 
 function rankCompare(a, b) {
   const av = Number.isFinite(a) ? a : 999
@@ -50,11 +53,13 @@ function rankCompare(a, b) {
 }
 
 function deltaCompare(a, b) {
-  // Negative delta = improved (rank went down, which is better).
-  // Sort ascending so biggest improvers (most negative) come first.
   const av = Number.isFinite(a) ? a : Infinity
   const bv = Number.isFinite(b) ? b : Infinity
   return av - bv
+}
+
+function divisionTail(team) {
+  return team?.division ? team.division.split('_').pop() : null
 }
 
 function TeamTile({ team }) {
@@ -118,12 +123,114 @@ function TeamTile({ team }) {
   )
 }
 
+/**
+ * Editorial tab-strip selector. Renders labels in letterspaced caps with
+ * middle-dot separators. Active label is blaze with a 2px underline
+ * sitting ~4px below the baseline; inactive labels are muted.
+ */
+function ViewTabs({ value, onChange, options }) {
+  return (
+    <div className="flex items-baseline gap-3 font-mono text-xs uppercase tracking-[0.24em] font-bold">
+      {options.map((opt, i) => {
+        const active = value === opt
+        return (
+          <span key={opt} className="flex items-baseline gap-3">
+            {i > 0 && <span className="text-text-muted/60 select-none" aria-hidden>·</span>}
+            <button
+              type="button"
+              onClick={() => onChange(opt)}
+              className={classNames(
+                'relative pb-1 transition-colors',
+                active
+                  ? 'text-blaze'
+                  : 'text-text-muted hover:text-[var(--text-1)]',
+              )}
+            >
+              {opt}
+              {active && (
+                <span
+                  aria-hidden
+                  className="absolute left-0 right-0 h-[2px] bg-blaze"
+                  style={{ bottom: '-2px' }}
+                />
+              )}
+            </button>
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+function DivisionSection({ divisionKey, teams }) {
+  const sorted = useMemo(
+    () => [...teams].sort((a, b) => rankCompare(a.olRank, b.olRank)),
+    [teams],
+  )
+  const avgOl = useMemo(() => {
+    const ranked = teams.filter((t) => Number.isFinite(t.olRank))
+    if (ranked.length === 0) return null
+    const sum = ranked.reduce((acc, t) => acc + t.olRank, 0)
+    return Math.round(sum / ranked.length)
+  }, [teams])
+  return (
+    <section className="mb-7 last:mb-0">
+      <div className="flex items-baseline justify-between gap-3 mb-2.5">
+        <h3 className="font-mono text-xs uppercase tracking-[0.32em] font-bold text-[var(--text-1)]">
+          {divisionLabel(divisionKey)}
+        </h3>
+        {avgOl != null && (
+          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+            Avg OL <span className="text-[var(--text-1)] font-bold">#{avgOl}</span>
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {sorted.map((t) => (
+          <TeamTile key={t.id} team={t} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ConferenceColumn({ conferenceKey, teams }) {
+  // Group teams by division tail
+  const byDivision = useMemo(() => {
+    const map = {}
+    for (const t of teams) {
+      const div = divisionTail(t)
+      if (!div) continue
+      if (!map[div]) map[div] = []
+      map[div].push(t)
+    }
+    return map
+  }, [teams])
+
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border)]">
+        <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
+          {conferenceKey}
+        </h2>
+        <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+          {teams.length} teams
+        </span>
+      </div>
+      {DIVISION_ORDER.map((divKey) => {
+        const divTeams = byDivision[divKey] ?? []
+        if (divTeams.length === 0) return null
+        return <DivisionSection key={divKey} divisionKey={divKey} teams={divTeams} />
+      })}
+    </div>
+  )
+}
+
 export default function PrepTeams() {
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [conference, setConference] = useState('ALL')
-  const [activeDivisions, setActiveDivisions] = useState([])
+  const [view, setView] = useState('ALL') // 'AFC' | 'NFC' | 'ALL' | 'GRID'
   const [sortBy, setSortBy] = useState('olRank')
   const [search, setSearch] = useState('')
 
@@ -145,57 +252,57 @@ export default function PrepTeams() {
     }
   }, [])
 
-  // Reset division filter when conference changes to ALL (divisions only make sense within a conference)
-  useEffect(() => {
-    if (conference === 'ALL') setActiveDivisions([])
-  }, [conference])
+  // Search applies in every view; sort only meaningful in GRID
+  const searched = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return teams
+    return teams.filter((t) => {
+      const display = teamDisplayName(t).toLowerCase()
+      const hc = (t.hcName ?? '').toLowerCase()
+      const abbr = (t.abbreviation ?? '').toLowerCase()
+      return display.includes(q) || hc.includes(q) || abbr.includes(q)
+    })
+  }, [teams, search])
 
-  const filtered = useMemo(() => {
-    let pool = teams
-    if (conference !== 'ALL') {
-      pool = pool.filter((t) => t.conference === conference)
+  // Conference/division layout: split into AFC + NFC pools
+  const byConference = useMemo(() => {
+    const afc = []
+    const nfc = []
+    for (const t of searched) {
+      if (t.conference === 'AFC') afc.push(t)
+      else if (t.conference === 'NFC') nfc.push(t)
     }
-    if (activeDivisions.length > 0) {
-      pool = pool.filter((t) => {
-        if (!t.division) return false
-        const tail = t.division.split('_').pop()
-        return activeDivisions.includes(tail)
-      })
-    }
-    if (search.trim()) {
-      const q = search.trim().toLowerCase()
-      pool = pool.filter((t) => {
-        const display = teamDisplayName(t).toLowerCase()
-        const hc = (t.hcName ?? '').toLowerCase()
-        return display.includes(q) || hc.includes(q) || (t.abbreviation ?? '').toLowerCase().includes(q)
-      })
-    }
-    const sorted = [...pool]
+    return { AFC: afc, NFC: nfc }
+  }, [searched])
+
+  // GRID layout: flat sorted pool
+  const gridSorted = useMemo(() => {
+    const pool = [...searched]
     switch (sortBy) {
       case 'olRank':
-        sorted.sort((a, b) => rankCompare(a.olRank, b.olRank))
+        pool.sort((a, b) => rankCompare(a.olRank, b.olRank))
         break
       case 'olDelta':
-        sorted.sort((a, b) => deltaCompare(a.olRankDelta, b.olRankDelta))
+        pool.sort((a, b) => deltaCompare(a.olRankDelta, b.olRankDelta))
         break
       case 'dlRank':
-        sorted.sort((a, b) => rankCompare(a.dlRank, b.dlRank))
+        pool.sort((a, b) => rankCompare(a.dlRank, b.dlRank))
         break
       case 'dlDelta':
-        sorted.sort((a, b) => deltaCompare(a.dlRankDelta, b.dlRankDelta))
+        pool.sort((a, b) => deltaCompare(a.dlRankDelta, b.dlRankDelta))
         break
       case 'alpha':
       default:
-        sorted.sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b)))
+        pool.sort((a, b) => teamDisplayName(a).localeCompare(teamDisplayName(b)))
     }
-    return sorted
-  }, [teams, conference, activeDivisions, sortBy, search])
+    return pool
+  }, [searched, sortBy])
 
   const stats = useMemo(() => ({
     total: teams.length,
-    showing: filtered.length,
+    showing: view === 'GRID' ? gridSorted.length : searched.length,
     olRanked: teams.filter((t) => Number.isFinite(t.olRank)).length,
-  }), [teams, filtered])
+  }), [teams, gridSorted, searched, view])
 
   const daysToKickoff = useMemo(() => {
     const kickoff = new Date(Date.UTC(2026, 8, 10))
@@ -203,11 +310,12 @@ export default function PrepTeams() {
     return Math.max(0, Math.ceil((kickoff.getTime() - today.getTime()) / 86400000))
   }, [])
 
-  function toggleDivision(div) {
-    setActiveDivisions((prev) =>
-      prev.includes(div) ? prev.filter((d) => d !== div) : [...prev, div],
-    )
-  }
+  // Which conferences to render in the structured layout
+  const conferencesToShow = useMemo(() => {
+    if (view === 'AFC') return ['AFC']
+    if (view === 'NFC') return ['NFC']
+    return CONFERENCE_ORDER
+  }, [view])
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)]">
@@ -239,8 +347,8 @@ export default function PrepTeams() {
       <PrepSectionNav />
 
       <div className="mx-auto max-w-6xl px-6 pt-5 pb-16">
-        {/* Hero — tight band */}
-        <header className="mb-5">
+        {/* Hero — two-column lockup, baseline-aligned */}
+        <header className="mb-6">
           <div className="grid grid-cols-12 gap-6 items-end">
             <div className="col-span-12 md:col-span-7">
               <h1 className="font-display font-extrabold leading-[0.95] tracking-tight text-3xl md:text-4xl">
@@ -248,9 +356,9 @@ export default function PrepTeams() {
                 <span className="font-editorial italic font-normal text-blaze"> Every shift.</span>
               </h1>
             </div>
-            <div className="col-span-12 md:col-span-5">
-              <p className="font-body text-sm md:text-base text-text-secondary leading-snug">
-                Thirty-two staffs, thirty-two depth charts, thirty-two offensive lines that either held the line or didn’t. Filter, sort, dig in.
+            <div className="col-span-12 md:col-span-5 md:pb-1">
+              <p className="font-body text-sm text-text-secondary leading-snug">
+                Thirty-two staffs, thirty-two depth charts, thirty-two offensive lines that either held the line or didn’t.
               </p>
             </div>
           </div>
@@ -261,86 +369,22 @@ export default function PrepTeams() {
           )}
         </header>
 
-        {/* Controls row */}
-        <section className="mb-5 space-y-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            {/* Conference tabs */}
-            <div className="inline-flex rounded-card border border-[var(--color-border)] bg-[var(--surface)] p-1 shadow-card font-mono text-xs uppercase tracking-[0.18em]">
-              {['AFC', 'NFC', 'ALL'].map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setConference(opt)}
-                  className={classNames(
-                    'px-5 py-2 rounded-button transition-all font-bold',
-                    conference === opt
-                      ? 'bg-slate text-white shadow-button'
-                      : 'text-text-secondary hover:text-[var(--text-1)] hover:bg-[var(--glass)]',
-                  )}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-
-            {/* Search */}
-            <div className="relative">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search team or coach…"
-                className="font-body text-sm bg-[var(--surface)] border border-[var(--color-border)] rounded-button px-3.5 py-2 w-64 focus:outline-none focus:border-blaze focus:ring-1 focus:ring-blaze/40 placeholder:text-text-muted"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            {/* Division chips — hidden when ALL */}
-            {conference !== 'ALL' ? (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
-                  Division
-                </span>
-                {DIVISIONS.map((div) => {
-                  const active = activeDivisions.includes(div)
-                  return (
-                    <button
-                      key={div}
-                      type="button"
-                      onClick={() => toggleDivision(div)}
-                      className={classNames(
-                        'px-3 py-1 rounded-full font-mono text-[10px] uppercase tracking-[0.18em] font-bold transition-all border',
-                        active
-                          ? 'bg-blaze text-white border-blaze shadow-button'
-                          : 'bg-[var(--surface)] text-text-secondary border-[var(--color-border)] hover:border-blaze/50 hover:text-[var(--text-1)]',
-                      )}
-                    >
-                      {div.slice(0, 1) + div.slice(1).toLowerCase()}
-                    </button>
-                  )
-                })}
-                {activeDivisions.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveDivisions([])}
-                    className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted hover:text-blaze transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div />
-            )}
-
-            {/* Sort dropdown */}
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">Sort</span>
+        {/* Filter row — tabs on the left, search + (in GRID) sort on the right */}
+        <section className="mb-7 border-y border-[var(--color-border)] py-3.5 flex items-center justify-between gap-4 flex-wrap">
+          <ViewTabs value={view} onChange={setView} options={VIEW_OPTIONS} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search team or coach…"
+              className="font-body text-sm bg-[var(--surface)] border border-[var(--color-border)] rounded-button px-3 py-1.5 h-9 w-60 max-w-[240px] focus:outline-none focus:border-blaze focus:ring-1 focus:ring-blaze/40 placeholder:text-text-muted"
+            />
+            {view === 'GRID' && (
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="font-mono text-xs uppercase tracking-[0.14em] font-bold bg-[var(--surface)] border border-[var(--color-border)] rounded-button px-3 py-1.5 focus:outline-none focus:border-blaze focus:ring-1 focus:ring-blaze/40"
+                className="font-mono text-xs uppercase tracking-[0.14em] font-bold bg-[var(--surface)] border border-[var(--color-border)] rounded-button px-3 h-9 focus:outline-none focus:border-blaze focus:ring-1 focus:ring-blaze/40"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -348,23 +392,36 @@ export default function PrepTeams() {
                   </option>
                 ))}
               </select>
-            </div>
+            )}
           </div>
         </section>
 
-        {/* Grid */}
+        {/* Body */}
         {loading ? (
           <div className="font-mono text-xs uppercase tracking-[0.16em] text-text-muted py-16 text-center">
             Loading the league…
           </div>
-        ) : filtered.length === 0 ? (
+        ) : stats.showing === 0 ? (
           <div className="font-mono text-xs uppercase tracking-[0.16em] text-text-muted py-12 text-center">
             No teams match the current filters.
           </div>
-        ) : (
+        ) : view === 'GRID' ? (
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-2.5">
-            {filtered.map((t) => (
+            {gridSorted.map((t) => (
               <TeamTile key={t.id} team={t} />
+            ))}
+          </div>
+        ) : (
+          <div className={classNames(
+            'grid gap-10',
+            conferencesToShow.length === 1 ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2',
+          )}>
+            {conferencesToShow.map((conf) => (
+              <ConferenceColumn
+                key={conf}
+                conferenceKey={conf}
+                teams={byConference[conf] ?? []}
+              />
             ))}
           </div>
         )}
