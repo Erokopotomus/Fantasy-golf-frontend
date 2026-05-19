@@ -140,49 +140,29 @@ function MoveRow({ move, isLast }) {
   )
 }
 
-// Horizontal scale (1-32) showing a team's rank movement.
-function RankSlider({ from, to, color, improved }) {
-  // Rank 1 is best (left). Rank 32 is worst (right).
-  // Position = (rank - 1) / 31 as a 0-100% percentage.
-  const pct = (r) => `${((r - 1) / 31) * 100}%`
-  const leftRank = Math.min(from, to)
-  const rightRank = Math.max(from, to)
+// Centered delta bar: extends right (green) when improved, left (red) when regressed.
+// Magnitude is the visual story; absolute league position lives in the header.
+function RankDeltaBar({ delta, improved }) {
+  const magnitude = Math.abs(delta)
+  const MAX_MAGNITUDE = 31 // theoretical worst-case shift (#1 ↔ #32)
+  const widthPct = (magnitude / MAX_MAGNITUDE) * 50 // half-width since centered on zero
   const barColor = improved ? '#0D9668' : '#E83838'
 
   return (
-    <div className="relative h-6 w-full">
-      {/* Track */}
-      <div className="absolute left-0 right-0 top-1/2 h-px bg-[var(--color-border)] -translate-y-1/2" />
-      {/* Tick marks at quartiles (1, 8, 16, 24, 32) — subtle reference */}
-      {[1, 8, 16, 24, 32].map((r) => (
-        <div
-          key={r}
-          className="absolute top-1/2 w-px h-1.5 bg-[var(--color-border)] -translate-y-1/2"
-          style={{ left: pct(r) }}
-          aria-hidden
-        />
-      ))}
-      {/* Movement bar */}
+    <div className="relative h-4 w-full">
+      {/* Baseline track */}
+      <div className="absolute inset-x-0 top-1/2 h-px bg-[var(--color-border)] -translate-y-1/2" />
+      {/* Center zero tick */}
+      <div className="absolute left-1/2 top-1/2 -translate-y-1/2 -translate-x-1/2 w-px h-3 bg-[var(--color-border)]" />
+      {/* Magnitude bar */}
       <div
-        className="absolute top-1/2 h-1 rounded-full -translate-y-1/2"
+        className="absolute top-1/2 -translate-y-1/2 h-2.5 rounded"
         style={{
-          left: pct(leftRank),
-          width: `calc(${pct(rightRank)} - ${pct(leftRank)})`,
+          ...(improved
+            ? { left: '50%', width: `${widthPct}%`, borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }
+            : { right: '50%', width: `${widthPct}%`, borderTopRightRadius: 0, borderBottomRightRadius: 0 }),
           backgroundColor: barColor,
-          opacity: 0.6,
         }}
-      />
-      {/* FROM dot — small, muted */}
-      <div
-        className="absolute top-1/2 w-2 h-2 rounded-full -translate-y-1/2 -translate-x-1/2 border-2 bg-[var(--bg)]"
-        style={{ left: pct(from), borderColor: barColor }}
-        title={`2024: #${from}`}
-      />
-      {/* TO dot — bigger, team-colored */}
-      <div
-        className="absolute top-1/2 w-3.5 h-3.5 rounded-full -translate-y-1/2 -translate-x-1/2 shadow-md"
-        style={{ left: pct(to), backgroundColor: color }}
-        title={`2025: #${to}`}
       />
     </div>
   )
@@ -234,10 +214,10 @@ function UnitMoverCard({ mover, isLast }) {
           </span>
         </div>
       </div>
-      <RankSlider from={mover.from} to={mover.to} color={color} improved={improved} />
+      <RankDeltaBar delta={mover.delta} improved={improved} />
       <div className="mt-1 flex justify-between font-mono text-[9px] uppercase tracking-[0.16em] text-text-muted/70 select-none">
-        <span>#1 best</span>
-        <span>#32</span>
+        <span>← regressed</span>
+        <span>improved →</span>
       </div>
     </div>
   )
