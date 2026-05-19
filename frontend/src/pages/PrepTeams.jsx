@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { TEAM_COLORS, hexToRgba } from '../utils/nflTeamColors'
 import PrepSectionNav from '../components/prep/PrepSectionNav'
+import KickoffCountdown from '../components/prep/KickoffCountdown'
 
 /**
  * Lab → Prep → Team Browser (DS-14, restructured).
@@ -305,12 +306,6 @@ export default function PrepTeams() {
     olRanked: teams.filter((t) => Number.isFinite(t.olRank)).length,
   }), [teams, gridSorted, searched, view])
 
-  const daysToKickoff = useMemo(() => {
-    const kickoff = new Date(Date.UTC(2026, 8, 10))
-    const today = new Date()
-    return Math.max(0, Math.ceil((kickoff.getTime() - today.getTime()) / 86400000))
-  }, [])
-
   // Which conferences to render in the structured layout
   const conferencesToShow = useMemo(() => {
     if (view === 'AFC') return ['AFC']
@@ -333,13 +328,7 @@ export default function PrepTeams() {
             <span><span className="text-white font-bold">{stats.olRanked || '—'}</span> ranks</span>
           </div>
           <div className="flex items-center gap-4 shrink-0">
-            <div className="flex items-baseline gap-2">
-              <span className="text-white/50 text-[10px]">Kickoff</span>
-              <span className="font-display font-extrabold text-blaze text-2xl leading-none tabular-nums tracking-tight">
-                {daysToKickoff}
-              </span>
-              <span className="text-blaze font-bold text-[11px]">days</span>
-            </div>
+            <KickoffCountdown />
             <span className="text-white/40">·</span>
             <span className="text-white/50">Vol. I</span>
           </div>
