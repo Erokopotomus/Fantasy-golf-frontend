@@ -212,6 +212,8 @@ export default function PrepChanges() {
     }
   }, [])
 
+  const [movesFilter, setMovesFilter] = useState('ALL') // 'ALL' | 'QB' | 'RB' | 'WR' | 'TE' | 'COACHES'
+
   const sortedMoves = useMemo(() => {
     return [...changes.playerMoves].sort((a, b) => {
       const ar = POSITION_RANK[a.player?.position] ?? 99
@@ -221,7 +223,37 @@ export default function PrepChanges() {
     })
   }, [changes.playerMoves])
 
-  const displayMoves = useMemo(() => sortedMoves.slice(0, 30), [sortedMoves])
+  // Per-position counts for pill badges.
+  const movesCountByPos = useMemo(() => {
+    const counts = { ALL: sortedMoves.length, QB: 0, RB: 0, WR: 0, TE: 0 }
+    for (const m of sortedMoves) {
+      const p = m.player?.position
+      if (p && counts[p] != null) counts[p]++
+    }
+    return counts
+  }, [sortedMoves])
+
+  // Build coaching "moves" from the new-HC teams. Each new HC row is a
+  // "coach landed on this team" entry. v1 doesn't know the previous team so
+  // we surface just the destination + name; the visual register matches a
+  // player move row.
+  const coachMoves = useMemo(() => {
+    return teams
+      .filter((t) => t.hcIsNewFor2026)
+      .map((t) => ({
+        name: t.hcName,
+        teamAbbr: t.abbreviation,
+        role: 'HC',
+      }))
+      .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''))
+  }, [teams])
+
+  const filteredMoves = useMemo(() => {
+    if (movesFilter === 'ALL' || movesFilter === 'COACHES') return sortedMoves
+    return sortedMoves.filter((m) => m.player?.position === movesFilter)
+  }, [sortedMoves, movesFilter])
+
+  const displayMoves = useMemo(() => filteredMoves.slice(0, 30), [filteredMoves])
 
   const topMovers = useMemo(() => {
     return [...changes.unitRankMovers]
@@ -375,22 +407,82 @@ export default function PrepChanges() {
           ) : (
             <div className="rounded-card-lg overflow-hidden shadow-card bg-[var(--surface)] border border-[var(--color-border)]">
               <div className="h-2 w-full bg-gradient-to-r from-blaze via-crown to-field" />
-              <div className="px-4 pt-4 pb-2 flex items-baseline justify-between gap-3">
-                <div>
-                  <div className="font-display font-extrabold text-xl tracking-tight">
-                    Notable moves
-                  </div>
-                  <div className="font-body text-[12.5px] text-text-secondary">
-                    {displayMoves.length} of {totalMoves} shown
-                  </div>
-                </div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
-                  Old team <span className="text-text-secondary">→</span> New team
+
+              {/* Position filter pills */}
+              <div className="px-4 pt-4 pb-3 flex items-center gap-2 flex-wrap border-b border-[var(--color-border)]/60">
+                {[
+                  { key: 'ALL', label: 'All', count: movesCountByPos.ALL },
+                  { key: 'QB', label: 'QB', count: movesCountByPos.QB },
+                  { key: 'RB', label: 'RB', count: movesCountByPos.RB },
+                  { key: 'WR', label: 'WR', count: movesCountByPos.WR },
+                  { key: 'TE', label: 'TE', count: movesCountByPos.TE },
+                  { key: 'COACHES', label: 'Coaches', count: coachMoves.length },
+                ].map((opt) => {
+                  const active = movesFilter === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setMovesFilter(opt.key)}
+                      className={classNames(
+                        'inline-flex items-baseline gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] uppercase tracking-[0.18em] font-bold border transition-all',
+                        active
+                          ? 'bg-slate text-white border-slate shadow-button'
+                          : 'bg-[var(--surface)] text-text-secondary border-[var(--color-border)] hover:border-blaze/50 hover:text-[var(--text-1)]',
+                      )}
+                    >
+                      {opt.label}
+                      <span className={classNames(
+                        'font-mono text-[10px]',
+                        active ? 'text-white/60' : 'text-text-muted',
+                      )}>
+                        {opt.count}
+                      </span>
+                    </button>
+                  )
+                })}
+                <div className="ml-auto font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted hidden sm:block">
+                  {movesFilter === 'COACHES'
+                    ? 'New head coach'
+                    : <>Old team <span className="text-text-secondary">→</span> New team</>}
                 </div>
               </div>
-              {displayMoves.length === 0 ? (
+
+              {/* Panel body — coaches vs player moves */}
+              {movesFilter === 'COACHES' ? (
+                coachMoves.length === 0 ? (
+                  <div className="font-mono text-xs text-text-muted py-6 px-4 italic">
+                    No new head coaches tagged for 2026.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2">
+                    {coachMoves.map((c, i) => (
+                      <div
+                        key={c.teamAbbr}
+                        className={classNames(
+                          'flex items-center justify-between gap-3 py-2.5 px-4 hover:bg-white/70 transition-colors',
+                          i < coachMoves.length - 1 && 'border-b border-[var(--color-border)]/50',
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <PositionChip pos="HC" />
+                          <span className="font-editorial italic text-[15px] text-[var(--text-1)] truncate leading-tight">
+                            {c.name}
+                          </span>
+                        </div>
+                        <div className="flex items-baseline gap-1.5 font-mono text-[12px] whitespace-nowrap shrink-0">
+                          <TeamAbbr abbr={c.teamAbbr} />
+                          <span className="font-mono text-[9px] uppercase tracking-[0.18em] font-bold px-1.5 py-0.5 rounded bg-blaze text-white">
+                            New
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : displayMoves.length === 0 ? (
                 <div className="font-mono text-xs text-text-muted py-6 px-4 italic">
-                  No qualifying moves yet — comparing end of 2025 to the current 2026 roster.
+                  No qualifying moves at {movesFilter === 'ALL' ? 'any position' : movesFilter} — comparing end of 2025 to the current 2026 roster.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2">
@@ -403,9 +495,14 @@ export default function PrepChanges() {
                   ))}
                 </div>
               )}
+
               <div className="px-4 py-3 border-t border-[var(--color-border)]/60 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em]">
                 <span className="text-[var(--text-1)] font-bold">⚡ CLUTCH</span>
-                <span className="text-text-muted">2025 season end → 2026 offseason</span>
+                <span className="text-text-muted">
+                  {movesFilter === 'COACHES'
+                    ? `${coachMoves.length} new HCs for 2026`
+                    : `${displayMoves.length} of ${movesFilter === 'ALL' ? totalMoves : movesCountByPos[movesFilter] ?? 0} shown`}
+                </span>
               </div>
             </div>
           )}

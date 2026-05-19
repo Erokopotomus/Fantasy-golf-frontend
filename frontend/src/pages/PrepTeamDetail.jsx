@@ -237,6 +237,8 @@ export default function PrepTeamDetail() {
   const { abbr } = useParams()
   const normalizedAbbr = (abbr ?? '').toUpperCase()
   const [data, setData] = useState(null)
+  const [changes, setChanges] = useState(null) // { playerMoves, unitRankMovers }
+  const [teamSummary, setTeamSummary] = useState(null) // for hcIsNewFor2026
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [notFound, setNotFound] = useState(false)
@@ -249,12 +251,19 @@ export default function PrepTeamDetail() {
     setData(null)
     ;(async () => {
       try {
-        const res = await api.request(`/prep/teams/${normalizedAbbr}`)
+        const [detail, changesRes, teamsRes] = await Promise.all([
+          api.request(`/prep/teams/${normalizedAbbr}`),
+          api.request('/prep/changes').catch(() => null),
+          api.request('/prep/teams').catch(() => null),
+        ])
         if (cancel) return
-        if (!res?.team) {
+        if (!detail?.team) {
           setNotFound(true)
         } else {
-          setData(res)
+          setData(detail)
+          setChanges(changesRes)
+          const t = teamsRes?.teams?.find((x) => x.abbreviation === normalizedAbbr)
+          setTeamSummary(t ?? null)
         }
       } catch (e) {
         if (cancel) return
@@ -295,6 +304,38 @@ export default function PrepTeamDetail() {
     const today = new Date()
     return Math.max(0, Math.ceil((kickoff.getTime() - today.getTime()) / 86400000))
   }, [])
+
+  // Team-scoped offseason changes: moves where this team is either source or destination.
+  const teamScopedChanges = useMemo(() => {
+    if (!changes?.playerMoves) return { arrivals: [], departures: [] }
+    const arrivals = []
+    const departures = []
+    for (const m of changes.playerMoves) {
+      if (m.toTeamAbbr === normalizedAbbr) arrivals.push(m)
+      else if (m.fromTeamAbbr === normalizedAbbr) departures.push(m)
+    }
+    const posSort = (a, b) => {
+      const order = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DST: 5 }
+      const ar = order[a.player?.position] ?? 99
+      const br = order[b.player?.position] ?? 99
+      if (ar !== br) return ar - br
+      return (a.player?.name ?? '').localeCompare(b.player?.name ?? '')
+    }
+    arrivals.sort(posSort)
+    departures.sort(posSort)
+    return { arrivals, departures }
+  }, [changes, normalizedAbbr])
+
+  const teamUnitMoves = useMemo(() => {
+    if (!changes?.unitRankMovers) return []
+    return changes.unitRankMovers.filter((m) => m.teamAbbr === normalizedAbbr)
+  }, [changes, normalizedAbbr])
+
+  const hasOffseasonChanges =
+    teamScopedChanges.arrivals.length > 0 ||
+    teamScopedChanges.departures.length > 0 ||
+    teamUnitMoves.length > 0 ||
+    teamSummary?.hcIsNewFor2026 === true
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)]">
@@ -398,6 +439,178 @@ export default function PrepTeamDetail() {
                 <UnitTrendCard title="Defensive Line" ranks={data.ranks} unitKey="dlRank" color={color} />
               </div>
             </section>
+
+            {/* What changed for THIS team — offseason scoped to the current roster */}
+            {hasOffseasonChanges && (
+              <section className="mb-8">
+                <div className="flex items-baseline justify-between gap-3 mb-3 flex-wrap">
+                  <div className="flex items-baseline gap-3">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+                      i·b
+                    </span>
+                    <h2 className="font-display font-extrabold text-2xl tracking-tight">
+                      What changed for {normalizedAbbr}
+                    </h2>
+                  </div>
+                  <Link
+                    to="/lab/prep/changes"
+                    className="font-mono text-[10px] uppercase tracking-[0.24em] text-blaze hover:text-blaze-hot font-bold"
+                  >
+                    League view →
+                  </Link>
+                </div>
+                <div
+                  className="rounded-card-lg overflow-hidden shadow-card bg-[var(--surface)]"
+                  style={{ border: `1px solid ${hexToRgba(color, 0.32)}` }}
+                >
+                  <div className="h-1.5 w-full" style={{ backgroundColor: color }} />
+                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[var(--color-border)]">
+                    {/* Arrivals */}
+                    <div className="p-4">
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.24em] font-bold text-field">
+                          Arrivals
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+                          {teamScopedChanges.arrivals.length}
+                        </span>
+                      </div>
+                      {teamScopedChanges.arrivals.length === 0 ? (
+                        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted italic py-2">
+                          No new faces this offseason.
+                        </div>
+                      ) : (
+                        <ul className="space-y-1.5">
+                          {teamScopedChanges.arrivals.slice(0, 6).map((m) => (
+                            <li
+                              key={m.player?.id}
+                              className="flex items-baseline justify-between gap-2 font-body text-[13px]"
+                            >
+                              <span className="flex items-baseline gap-2 min-w-0">
+                                <span className="font-mono text-[9px] uppercase tracking-[0.18em] font-bold text-text-muted shrink-0 w-7">
+                                  {m.player?.position ?? '—'}
+                                </span>
+                                <span className="font-editorial italic text-[var(--text-1)] truncate">
+                                  {m.player?.name ?? '—'}
+                                </span>
+                              </span>
+                              <span className="font-mono text-[11px] font-bold whitespace-nowrap shrink-0" style={{ color: TEAM_COLORS[m.fromTeamAbbr] ?? '#1E2A3A' }}>
+                                ← {m.fromTeamAbbr}
+                              </span>
+                            </li>
+                          ))}
+                          {teamScopedChanges.arrivals.length > 6 && (
+                            <li className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted pt-1">
+                              + {teamScopedChanges.arrivals.length - 6} more
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Departures */}
+                    <div className="p-4">
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.24em] font-bold text-live-red">
+                          Departures
+                        </span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+                          {teamScopedChanges.departures.length}
+                        </span>
+                      </div>
+                      {teamScopedChanges.departures.length === 0 ? (
+                        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted italic py-2">
+                          No tracked departures.
+                        </div>
+                      ) : (
+                        <ul className="space-y-1.5">
+                          {teamScopedChanges.departures.slice(0, 6).map((m) => (
+                            <li
+                              key={m.player?.id}
+                              className="flex items-baseline justify-between gap-2 font-body text-[13px]"
+                            >
+                              <span className="flex items-baseline gap-2 min-w-0">
+                                <span className="font-mono text-[9px] uppercase tracking-[0.18em] font-bold text-text-muted shrink-0 w-7">
+                                  {m.player?.position ?? '—'}
+                                </span>
+                                <span className="font-editorial italic text-[var(--text-1)] truncate">
+                                  {m.player?.name ?? '—'}
+                                </span>
+                              </span>
+                              <span className="font-mono text-[11px] font-bold whitespace-nowrap shrink-0" style={{ color: TEAM_COLORS[m.toTeamAbbr] ?? '#1E2A3A' }}>
+                                → {m.toTeamAbbr}
+                              </span>
+                            </li>
+                          ))}
+                          {teamScopedChanges.departures.length > 6 && (
+                            <li className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted pt-1">
+                              + {teamScopedChanges.departures.length - 6} more
+                            </li>
+                          )}
+                        </ul>
+                      )}
+                    </div>
+
+                    {/* Coaching + unit movement */}
+                    <div className="p-4">
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.24em] font-bold text-blaze">
+                          Staff + lines
+                        </span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {teamSummary?.hcIsNewFor2026 && (
+                          <li className="flex items-baseline justify-between gap-2 font-body text-[13px]">
+                            <span className="flex items-baseline gap-2 min-w-0">
+                              <span className="font-mono text-[9px] uppercase tracking-[0.18em] font-bold text-blaze shrink-0 w-7">
+                                HC
+                              </span>
+                              <span className="font-editorial italic text-[var(--text-1)] truncate">
+                                {data.coaching?.hc?.name ?? '—'}
+                              </span>
+                            </span>
+                            <span className="font-mono text-[9px] uppercase tracking-[0.18em] font-bold px-1.5 py-0.5 rounded bg-blaze text-white">
+                              New
+                            </span>
+                          </li>
+                        )}
+                        {teamUnitMoves.length === 0 ? (
+                          !teamSummary?.hcIsNewFor2026 && (
+                            <li className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted italic py-2">
+                              No qualifying staff or line moves.
+                            </li>
+                          )
+                        ) : (
+                          teamUnitMoves.map((m) => {
+                            const improved = m.delta < 0
+                            return (
+                              <li key={`${m.unit}`} className="flex items-baseline justify-between gap-2 font-body text-[13px]">
+                                <span className="flex items-baseline gap-2">
+                                  <span className="font-mono text-[9px] uppercase tracking-[0.18em] font-bold text-text-muted shrink-0 w-7">
+                                    {m.unit}
+                                  </span>
+                                  <span className="font-mono text-text-secondary">#{m.from}</span>
+                                  <span className="text-text-muted">→</span>
+                                  <span className={improved ? 'font-mono font-extrabold text-field' : 'font-mono font-extrabold text-live-red'}>
+                                    #{m.to}
+                                  </span>
+                                </span>
+                                <span className={classNames(
+                                  'font-mono text-[10px] uppercase tracking-[0.14em] font-bold',
+                                  improved ? 'text-field' : 'text-live-red',
+                                )}>
+                                  {improved ? '▲' : '▼'} {Math.abs(m.delta)}
+                                </span>
+                              </li>
+                            )
+                          })
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
 
             {/* Depth chart */}
             <section className="mb-8">
