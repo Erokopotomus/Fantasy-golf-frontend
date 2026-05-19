@@ -22,7 +22,9 @@ async function markPoolPlayersFetched(prisma, gsisIdToPlayerId, pool, throughSea
   `
 
   const now = new Date()
+  const seenPlayerIds = new Set()
   for (const r of rows) {
+    seenPlayerIds.add(r.playerId)
     await prisma.nflPlayerDataState.upsert({
       where: { playerId: r.playerId },
       create: {
@@ -40,7 +42,30 @@ async function markPoolPlayersFetched(prisma, gsisIdToPlayerId, pool, throughSea
       },
     })
   }
-  return { updated: rows.length }
+
+  // Pool members with zero NflPlayerGame rows: emit a sentinel state row so the
+  // lazy-fetch path can distinguish "tried, no data" from "never tried."
+  let sentinelCount = 0
+  for (const pid of poolPlayerIds) {
+    if (seenPlayerIds.has(pid)) continue
+    await prisma.nflPlayerDataState.upsert({
+      where: { playerId: pid },
+      create: {
+        playerId: pid,
+        inPool: true,
+        earliestFetched: null,
+        fetchedThrough: null,
+        lastFetchedAt: now,
+      },
+      update: {
+        inPool: true,
+        lastFetchedAt: now,
+      },
+    })
+    sentinelCount++
+  }
+
+  return { updated: rows.length, sentinels: sentinelCount }
 }
 
 /**
