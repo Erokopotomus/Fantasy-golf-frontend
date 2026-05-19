@@ -822,4 +822,5 @@ module.exports = {
   backfillSeason,
   verifySeason,
   backfillAll,
+  syncScheduleRaw,
 }
