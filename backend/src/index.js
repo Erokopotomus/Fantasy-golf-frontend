@@ -1262,6 +1262,69 @@ httpServer.listen(PORT, () => {
     console.log('[Cron] AI Insight pipeline scheduled (daily 5 AM)')
   }
 
+  // ── Prep Feature (NFL Data Spine) ──
+  {
+    // 4:00 AM ET daily — refresh current NFL roster snapshot from Sleeper
+    cron.schedule('0 4 * * *', async () => {
+      console.log(`[Cron:prep-roster] ${new Date().toISOString()} — Starting roster sync`)
+      try {
+        const { syncCurrentRosters } = require('./services/prep/nflRosterSync')
+        const result = await syncCurrentRosters()
+        console.log(`[Cron:prep-roster] Done: ${result.teamsProcessed} teams, ${result.slotsUpserted} upserted, ${result.slotsMarkedRemoved} removed, ${result.playersUnresolved} unresolved`)
+      } catch (err) {
+        console.error(`[Cron:prep-roster] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    // 4:30 AM ET daily — regenerate quiz cards from current data spine
+    // Runs AFTER roster sync so cards reflect the latest depth chart.
+    cron.schedule('30 4 * * *', async () => {
+      console.log(`[Cron:prep-cards] ${new Date().toISOString()} — Regenerating quiz cards`)
+      try {
+        const { regenerateAllCards } = require('./services/prep/quizCardGenerator')
+        const result = await regenerateAllCards()
+        console.log(`[Cron:prep-cards] Done: ${result.totalCards} active, ${result.deactivated} deactivated, ${result.errors} errors`)
+      } catch (err) {
+        console.error(`[Cron:prep-cards] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    // Tuesday 5:00 AM ET — refresh unit ranks for the current season
+    // (ESPN updates team stats overnight; Tuesday catches the prior week's games)
+    cron.schedule('0 5 * * 2', async () => {
+      console.log(`[Cron:prep-ranks] ${new Date().toISOString()} — Syncing NFL unit ranks`)
+      try {
+        const { syncUnitRanks } = require('./services/prep/nflUnitRankSync')
+        // Always refresh the in-progress + just-finished seasons; older seasons
+        // are immutable.
+        const currentYear = new Date().getFullYear()
+        const result = await syncUnitRanks({ seasons: [currentYear - 1, currentYear] })
+        console.log(`[Cron:prep-ranks] Done: ${result.rowsUpserted} rows`)
+      } catch (err) {
+        console.error(`[Cron:prep-ranks] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    // Wednesday 5:00 AM ET Apr-Aug — refresh NFL projections (pre-draft window)
+    // After August the regular Tue 6:30 AM nflFantasyTracker takes over current-season stats;
+    // this cron is specifically for offseason draft prep ADP/projection refresh.
+    cron.schedule('0 5 * 4-8 3', async () => {
+      console.log(`[Cron:prep-projections] ${new Date().toISOString()} — Refreshing NFL projections`)
+      try {
+        const { computeNflClutchRankings } = require('./services/projectionSync')
+        const targetSeason = new Date().getFullYear()
+        for (const fmt of ['ppr', 'half_ppr', 'std']) {
+          const result = await computeNflClutchRankings(fmt, targetSeason)
+          console.log(`[Cron:prep-projections] ${fmt}: ${result.count} rankings, ${result.nflProjUpserted} NflPlayerProjection rows`)
+        }
+      } catch (err) {
+        console.error(`[Cron:prep-projections] Error:`, err.message)
+      }
+    }, { timezone: 'America/New_York' })
+
+    console.log('[Cron] Prep feature scheduled (roster 4 AM, cards 4:30 AM, ranks Tue 5 AM, projections Wed 5 AM Apr-Aug)')
+  }
+
   // ── Error Capture Cleanup ──
   // Weekly Sunday 2:00 AM ET — purge resolved errors older than 30 days
   cron.schedule('0 2 * * 0', async () => {
