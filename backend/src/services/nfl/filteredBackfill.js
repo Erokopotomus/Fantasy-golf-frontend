@@ -99,8 +99,12 @@ async function syncFilteredPlayers(prisma, seasons, pool) {
   const toCreate = new Map()
   for (const season of seasons) {
     let rows
-    try { rows = await nfl.getWeeklyStats(season) }
-    catch (e) { continue }
+    try {
+      rows = await nfl.getWeeklyStats(season)
+    } catch (e) {
+      console.warn(`[filteredBackfill] syncFilteredPlayers: ${season} fetch failed: ${e.message} — skipping`)
+      continue
+    }
     for (const r of rows) {
       const gid = r.player_id
       if (!gid || !pool.has(gid) || existingByGsis.has(gid) || toCreate.has(gid)) continue
@@ -127,16 +131,22 @@ async function syncFilteredPlayers(prisma, seasons, pool) {
   const entries = [...toCreate.entries()]
   for (let i = 0; i < entries.length; i += CHUNK) {
     const chunk = entries.slice(i, i + CHUNK)
-    const values = chunk.map(([gsisId, p]) => {
-      const id = genId()
-      existingByGsis.set(gsisId, id) // pre-populate the return map
-      return `(${sqlVal(id)}, ${sqlVal(gsisId)}, ${sqlVal(p.name)}, ${sqlVal(p.position)}, ${sqlVal(p.team)}, ${sqlVal(sport.id)}, true, 'nflverse', '${now}', '${now}', '${now}')`
-    }).join(',\n')
+    // First pass: build the (gsisId, generated-id) pairs without mutating the return map yet
+    const idsForChunk = chunk.map(([gsisId, p]) => ({
+      gsisId,
+      id: genId(),
+      meta: p,
+    }))
+    const values = idsForChunk.map(({ id, gsisId, meta }) => (
+      `(${sqlVal(id)}, ${sqlVal(gsisId)}, ${sqlVal(meta.name)}, ${sqlVal(meta.position)}, ${sqlVal(meta.team)}, ${sqlVal(sport.id)}, true, 'nflverse', '${now}', '${now}', '${now}')`
+    )).join(',\n')
     await prisma.$executeRawUnsafe(`
       INSERT INTO players (id, "gsisId", name, "nflPosition", "nflTeamAbbr", "sportId", "isActive", "sourceProvider", "sourceIngestedAt", "createdAt", "updatedAt")
       VALUES ${values}
       ON CONFLICT ("gsisId") DO NOTHING
     `)
+    // Populate return map only after successful INSERT
+    for (const { gsisId, id } of idsForChunk) existingByGsis.set(gsisId, id)
   }
 
   return { created: toCreate.size, gsisIdToPlayerId: existingByGsis }
