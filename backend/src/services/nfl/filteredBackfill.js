@@ -80,3 +80,86 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
 }
 
 module.exports = { syncFilteredWeeklyStats }
+
+/**
+ * Create Player records for any pool gsisIds that don't exist yet.
+ * Scans nflverse weekly stats for player metadata (name, position, current team).
+ *
+ * Reuses existing logic from nflHistoricalSync but constrained to the pool.
+ */
+async function syncFilteredPlayers(prisma, seasons, pool) {
+  const { mapPosition, normalizeTeamAbbr, genId, sqlVal } = require('./sqlHelpers')
+
+  const existing = await prisma.player.findMany({
+    where: { gsisId: { not: null } },
+    select: { id: true, gsisId: true },
+  })
+  const existingByGsis = new Map(existing.map(p => [p.gsisId, p.id]))
+
+  const toCreate = new Map()
+  for (const season of seasons) {
+    let rows
+    try { rows = await nfl.getWeeklyStats(season) }
+    catch (e) { continue }
+    for (const r of rows) {
+      const gid = r.player_id
+      if (!gid || !pool.has(gid) || existingByGsis.has(gid) || toCreate.has(gid)) continue
+      const pos = mapPosition(r.position || r.position_group)
+      if (!pos) continue
+      toCreate.set(gid, {
+        name: r.player_display_name || r.player_name || 'Unknown',
+        position: pos,
+        team: normalizeTeamAbbr(r.recent_team || r.team || ''),
+      })
+    }
+  }
+
+  console.log(`[filteredBackfill] Creating ${toCreate.size} new Player records for pool`)
+  if (toCreate.size === 0) {
+    return { created: 0, gsisIdToPlayerId: existingByGsis }
+  }
+
+  const sport = await prisma.sport.findUnique({ where: { slug: 'nfl' } })
+  if (!sport) throw new Error('NFL sport row missing — run nflSync first')
+
+  const now = new Date().toISOString()
+  const CHUNK = 100
+  const entries = [...toCreate.entries()]
+  for (let i = 0; i < entries.length; i += CHUNK) {
+    const chunk = entries.slice(i, i + CHUNK)
+    const values = chunk.map(([gsisId, p]) => {
+      const id = genId()
+      existingByGsis.set(gsisId, id) // pre-populate the return map
+      return `(${sqlVal(id)}, ${sqlVal(gsisId)}, ${sqlVal(p.name)}, ${sqlVal(p.position)}, ${sqlVal(p.team)}, ${sqlVal(sport.id)}, true, 'nflverse', '${now}', '${now}', '${now}')`
+    }).join(',\n')
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO players (id, "gsisId", name, "nflPosition", "nflTeamAbbr", "sportId", "isActive", "sourceProvider", "sourceIngestedAt", "createdAt", "updatedAt")
+      VALUES ${values}
+      ON CONFLICT ("gsisId") DO NOTHING
+    `)
+  }
+
+  return { created: toCreate.size, gsisIdToPlayerId: existingByGsis }
+}
+
+module.exports.syncFilteredPlayers = syncFilteredPlayers
+
+const nflHistoricalSync = require('../nflHistoricalSync')
+
+async function runFilteredSeason(prisma, season, gsisIdToPlayerId, pool) {
+  console.log(`[filteredBackfill] === Season ${season} ===`)
+
+  await nflHistoricalSync.syncScheduleRaw(prisma, season)
+
+  const games = await prisma.nflGame.findMany({
+    where: { season },
+    select: { id: true, externalId: true },
+  })
+  const gameMap = new Map(games.filter(g => g.externalId).map(g => [g.externalId, g.id]))
+
+  const result = await syncFilteredWeeklyStats(prisma, season, gsisIdToPlayerId, gameMap, pool)
+  console.log(`[filteredBackfill] ${season}: inserted ${result.inserted} player-game rows`)
+  return result
+}
+
+module.exports.runFilteredSeason = runFilteredSeason
