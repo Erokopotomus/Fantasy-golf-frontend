@@ -114,6 +114,7 @@ import PrepHub from './pages/PrepHub'
 import PrepChanges from './pages/PrepChanges'
 import PrepTeams from './pages/PrepTeams'
 import PrepTeamDetail from './pages/PrepTeamDetail'
+const PrepQuiz = lazy(() => import('./pages/PrepQuiz'))
 
 // Reset scroll position on route changes — prevents stale scroll restoration
 // when lazy-loaded content shifts page height during data fetching
@@ -514,6 +515,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PrepChanges />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lab/prep/quiz"
+            element={
+              <ProtectedRoute>
+                <PrepQuiz />
               </ProtectedRoute>
             }
           />
