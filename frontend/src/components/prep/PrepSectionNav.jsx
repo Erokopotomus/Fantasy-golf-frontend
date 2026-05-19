@@ -17,7 +17,7 @@ const ROOMS = [
 export default function PrepSectionNav() {
   return (
     <div className="border-b border-[var(--color-border)] bg-[var(--surface)]">
-      <div className="mx-auto max-w-6xl px-6 py-2.5 flex items-center gap-1 overflow-x-auto font-mono text-[11px] uppercase tracking-[0.2em]">
+      <div className="mx-auto max-w-6xl px-4 md:px-6 py-2.5 flex items-center gap-1 overflow-x-auto font-mono text-[11px] uppercase tracking-[0.2em]">
         {ROOMS.map((room) => (
           <NavLink
             key={room.to}

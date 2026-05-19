@@ -337,7 +337,7 @@ export default function PrepChanges() {
       {/* Broadcast ticker — same as PrepHub */}
       <div className="h-0.5 bg-blaze" aria-hidden="true" />
       <div className="bg-slate-mid text-white border-b border-black/20">
-        <div className="mx-auto max-w-6xl px-6 py-2.5 flex items-center justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
+        <div className="mx-auto max-w-6xl px-4 md:px-6 py-2.5 flex items-center justify-between gap-3 md:gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
           <Link to="/lab/prep" className="text-white/60 hover:text-white transition-colors shrink-0">
             ← Prep
           </Link>
@@ -361,7 +361,7 @@ export default function PrepChanges() {
       </div>
       <PrepSectionNav />
 
-      <div className="mx-auto max-w-6xl px-6 pt-5 pb-16">
+      <div className="mx-auto max-w-6xl px-4 md:px-6 pt-5 pb-16">
         {/* Compressed hero */}
         <header className="mb-7">
           <div className="grid grid-cols-12 gap-6 items-end">

@@ -342,7 +342,7 @@ export default function PrepTeamDetail() {
       {/* Masthead */}
       <div className="h-0.5 bg-blaze" aria-hidden="true" />
       <div className="bg-slate-mid text-white border-b border-black/20">
-        <div className="mx-auto max-w-6xl px-6 py-2.5 flex items-center justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
+        <div className="mx-auto max-w-6xl px-4 md:px-6 py-2.5 flex items-center justify-between gap-3 md:gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
           <div className="flex items-center gap-4 shrink-0">
             <Link to="/lab/prep" className="text-white/60 hover:text-white transition-colors">
               ← Prep
@@ -373,7 +373,7 @@ export default function PrepTeamDetail() {
       </div>
       <PrepSectionNav />
 
-      <div className="mx-auto max-w-6xl px-6 pt-5 pb-16">
+      <div className="mx-auto max-w-6xl px-4 md:px-6 pt-5 pb-16">
         {loading ? (
           <div className="font-mono text-xs uppercase tracking-[0.16em] text-text-muted py-16 text-center">
             Loading {normalizedAbbr}…
@@ -406,10 +406,10 @@ export default function PrepTeamDetail() {
               }}
             >
               <div className="h-2 w-full" style={{ backgroundColor: color }} />
-              <div className="px-6 md:px-8 py-5 md:py-6 flex items-end justify-between gap-6 flex-wrap">
-                <div className="flex items-end gap-5 min-w-0">
+              <div className="px-4 md:px-8 py-4 md:py-6 flex items-end justify-between gap-4 md:gap-6 flex-wrap">
+                <div className="flex items-end gap-3 md:gap-5 min-w-0">
                   <span
-                    className="font-mono font-extrabold text-5xl md:text-6xl tracking-tight leading-none"
+                    className="font-mono font-extrabold text-[44px] md:text-6xl tracking-tight leading-none"
                     style={{ color }}
                   >
                     {data.team.abbreviation}
@@ -418,7 +418,7 @@ export default function PrepTeamDetail() {
                     <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted mb-1">
                       {divisionBadge(data.team.conference, data.team.division)}
                     </div>
-                    <h1 className="font-editorial italic font-normal text-3xl md:text-4xl leading-tight text-[var(--text-1)]">
+                    <h1 className="font-editorial italic font-normal text-[26px] md:text-4xl leading-tight text-[var(--text-1)]">
                       {teamDisplayName(data.team)}
                     </h1>
                   </div>

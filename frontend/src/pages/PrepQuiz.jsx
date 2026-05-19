@@ -424,19 +424,19 @@ export default function PrepQuiz() {
       {/* Broadcast-style ticker — streak is the hero metric here */}
       <div className="h-0.5 bg-blaze" aria-hidden="true" />
       <div className="bg-slate-mid text-white border-b border-black/20">
-        <div className="mx-auto max-w-4xl px-6 py-2.5 flex items-center justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
+        <div className="mx-auto max-w-4xl px-4 md:px-6 py-2.5 flex items-center justify-between gap-3 md:gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
           <Link to="/lab/prep" className="text-white/60 hover:text-white transition-colors shrink-0">
             ← The Lab
           </Link>
-          <div className="flex items-center gap-5 shrink-0">
+          <div className="flex items-center gap-3 md:gap-5 shrink-0">
             <div className="flex items-baseline gap-2">
               <span className="font-display font-extrabold text-blaze text-2xl leading-none tabular-nums tracking-tight">
                 {settings.currentStreak ?? 0}
               </span>
               <span className="text-blaze font-bold text-[11px]">day streak</span>
             </div>
-            <span className="text-white/40">·</span>
-            <span className="text-white/60">
+            <span className="text-white/40 hidden sm:inline">·</span>
+            <span className="text-white/60 hidden sm:inline">
               best <span className="text-white font-bold">{settings.longestStreak ?? 0}</span>
             </span>
             <span className="text-white/40">·</span>
@@ -450,14 +450,14 @@ export default function PrepQuiz() {
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
-              <span>Settings</span>
+              <span className="hidden sm:inline">Settings</span>
             </button>
           </div>
         </div>
       </div>
       <PrepSectionNav />
 
-      <div className="mx-auto max-w-3xl px-6 pt-6 pb-16">
+      <div className="mx-auto max-w-3xl px-4 md:px-6 pt-6 pb-16">
         {/* Compressed hero */}
         <header className="mb-6">
           <div className="flex items-baseline justify-between gap-4 flex-wrap">
