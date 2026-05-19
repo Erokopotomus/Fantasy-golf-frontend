@@ -111,6 +111,7 @@ import PoolView from './pages/PoolView'
 import PoolAdmin from './pages/PoolAdmin'
 import PoolsLanding from './pages/PoolsLanding'
 import PrepHub from './pages/PrepHub'
+import PrepChanges from './pages/PrepChanges'
 
 // Reset scroll position on route changes — prevents stale scroll restoration
 // when lazy-loaded content shifts page height during data fetching
@@ -487,6 +488,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PrepHub />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lab/prep/changes"
+            element={
+              <ProtectedRoute>
+                <PrepChanges />
               </ProtectedRoute>
             }
           />
