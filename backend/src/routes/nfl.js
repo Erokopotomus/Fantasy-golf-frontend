@@ -207,7 +207,7 @@ router.get('/draft-players', optionalAuth, async (req, res, next) => {
   try {
     const scoring = String(req.query.scoring || 'half_ppr')
     if (!['ppr', 'half_ppr', 'standard'].includes(scoring)) {
-      return res.status(400).json({ error: 'scoring must be ppr, half_ppr, or standard' })
+      return res.status(400).json({ error: { message: 'scoring must be ppr, half_ppr, or standard' } })
     }
     const season = parseInt(req.query.season, 10) || new Date().getUTCFullYear()
 

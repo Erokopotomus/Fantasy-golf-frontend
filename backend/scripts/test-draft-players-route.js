@@ -28,13 +28,15 @@ async function run() {
 
   // Test 4: half_ppr smaller than ppr (FFC publishes fewer half-ppr players)
   const half = await (await fetchFn(`${BASE}/nfl/draft-players?scoring=half_ppr`)).json()
-  if (half.players.length >= ppr.players.length) {
+  if (half.players.length > ppr.players.length) {
     failures.push(`half_ppr should be <= ppr, got half=${half.players.length} ppr=${ppr.players.length}`)
   }
 
-  // Test 5: Invalid scoring returns 400
+  // Test 5: Invalid scoring returns 400 with nested error shape
   const bad = await fetchFn(`${BASE}/nfl/draft-players?scoring=bogus`)
   if (bad.status !== 400) failures.push(`invalid scoring: expected 400, got ${bad.status}`)
+  const badBody = await bad.json()
+  if (!badBody?.error?.message) failures.push('invalid scoring: response missing error.message')
 
   if (failures.length) {
     console.error('FAIL:\n  ' + failures.join('\n  '))
