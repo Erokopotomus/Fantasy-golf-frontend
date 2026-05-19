@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { TEAM_COLORS, hexToRgba } from '../utils/nflTeamColors'
+import PrepSectionNav from '../components/prep/PrepSectionNav'
 
 /**
  * Lab → Prep → Daily Quiz (DS-16).
@@ -454,6 +455,7 @@ export default function PrepQuiz() {
           </div>
         </div>
       </div>
+      <PrepSectionNav />
 
       <div className="mx-auto max-w-3xl px-6 pt-6 pb-16">
         {/* Compressed hero */}

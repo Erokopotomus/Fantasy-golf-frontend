@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
+import PrepSectionNav from '../components/prep/PrepSectionNav'
 
 /**
  * Lab → Prep → What Changed (DS-15).
@@ -330,6 +331,7 @@ export default function PrepChanges() {
           </div>
         </div>
       </div>
+      <PrepSectionNav />
 
       <div className="mx-auto max-w-6xl px-6 pt-5 pb-16">
         {/* Compressed hero */}

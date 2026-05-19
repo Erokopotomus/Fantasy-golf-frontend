@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import { TEAM_COLORS, hexToRgba } from '../utils/nflTeamColors'
+import PrepSectionNav from '../components/prep/PrepSectionNav'
 
 /**
  * Lab → Prep hub (DS-13).
@@ -303,6 +304,7 @@ export default function PrepHub() {
           </div>
         </div>
       </div>
+      <PrepSectionNav />
 
       <div className="mx-auto max-w-6xl px-6 pt-5 pb-16">
         {/* Compressed hero — single tight band */}

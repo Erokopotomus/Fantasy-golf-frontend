@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import api from '../services/api'
 import { TEAM_COLORS, hexToRgba } from '../utils/nflTeamColors'
+import PrepSectionNav from '../components/prep/PrepSectionNav'
 
 /**
  * Lab → Prep → Team Detail (DS-14, page 2 of 4).
@@ -329,6 +330,7 @@ export default function PrepTeamDetail() {
           </div>
         </div>
       </div>
+      <PrepSectionNav />
 
       <div className="mx-auto max-w-6xl px-6 pt-5 pb-16">
         {loading ? (
