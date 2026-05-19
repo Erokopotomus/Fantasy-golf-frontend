@@ -204,6 +204,24 @@ router.get('/players', optionalAuth, async (req, res, next) => {
 router.get('/players/:id', optionalAuth, async (req, res, next) => {
   try {
     const { season } = req.query
+
+    // Lazy-fetch trigger: if we have no game data for this player AND no state row,
+    // pull their last-5-season career on demand. Caps at ~10s for reasonable UX.
+    const dataState = await prisma.nflPlayerDataState.findUnique({
+      where: { playerId: req.params.id },
+    })
+    if (!dataState) {
+      const anyGame = await prisma.nflPlayerGame.findFirst({
+        where: { playerId: req.params.id },
+        select: { id: true },
+      })
+      if (!anyGame) {
+        const { lazyFetchPlayer } = require('../services/nfl/lazyFetch')
+        console.log(`[nfl] Triggering lazy-fetch for ${req.params.id}`)
+        await lazyFetchPlayer(prisma, req.params.id)
+      }
+    }
+
     let targetSeason = season ? parseInt(season) : null
 
     // Default to the player's most recent season when no season is specified.
