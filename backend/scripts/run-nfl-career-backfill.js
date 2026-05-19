@@ -13,6 +13,11 @@ const prisma = new PrismaClient()
 const START = parseInt(process.env.START || '1999', 10)
 const END = parseInt(process.env.END || '2025', 10)
 
+if (!Number.isFinite(START) || !Number.isFinite(END) || START > END) {
+  console.error(`[backfill] Invalid START/END (got START=${process.env.START}, END=${process.env.END})`)
+  process.exit(1)
+}
+
 ;(async () => {
   const seasons = []
   for (let y = START; y <= END; y++) seasons.push(y)
@@ -45,7 +50,8 @@ const END = parseInt(process.env.END || '2025', 10)
 
   await prisma.$disconnect()
   console.log('\n✓ Done.')
-})().catch(e => {
+})().catch(async (e) => {
   console.error(e)
+  try { await prisma.$disconnect() } catch {}
   process.exit(1)
 })
