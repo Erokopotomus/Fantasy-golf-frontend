@@ -295,21 +295,28 @@ export default function PrepHub() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)]">
-      {/* Compact masthead: breadcrumb + countdown + stats + Vol — one row */}
-      <div className="border-b border-[var(--color-border)]">
-        <div className="mx-auto max-w-6xl px-6 py-3 flex items-center justify-between gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted flex-wrap">
-          <Link to="/lab" className="hover:text-blaze transition-colors shrink-0">
+      {/* Broadcast-style ticker bar — dark, countdown is the hero */}
+      <div className="bg-slate text-white">
+        <div className="mx-auto max-w-6xl px-6 py-2.5 flex items-center justify-between gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
+          <Link to="/lab" className="text-white/60 hover:text-white transition-colors shrink-0">
             ← The Lab
           </Link>
-          <div className="flex items-center gap-5">
-            <span><span className="text-[var(--text-1)] font-bold">{stats.teamCount || '—'}</span> teams</span>
-            <span><span className="text-[var(--text-1)] font-bold">{stats.headCoaches || '—'}</span> staffs</span>
-            <span><span className="text-[var(--text-1)] font-bold">{stats.olRanked || '—'}</span> ranks</span>
-            <span><span className="text-[var(--text-1)] font-bold">287</span> cards</span>
+          <div className="hidden md:flex items-center gap-5 text-white/60">
+            <span><span className="text-white font-bold">{stats.teamCount || '—'}</span> teams</span>
+            <span><span className="text-white font-bold">{stats.headCoaches || '—'}</span> staffs</span>
+            <span><span className="text-white font-bold">{stats.olRanked || '—'}</span> ranks</span>
+            <span><span className="text-white font-bold">287</span> cards</span>
           </div>
           <div className="flex items-center gap-4 shrink-0">
-            <span className="text-blaze font-bold">{daysToKickoff}d to kickoff</span>
-            <span>Vol. I</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-white/50 text-[10px]">Kickoff</span>
+              <span className="font-display font-extrabold text-blaze text-2xl leading-none tabular-nums tracking-tight">
+                {daysToKickoff}
+              </span>
+              <span className="text-blaze font-bold text-[11px]">days</span>
+            </div>
+            <span className="text-white/40">·</span>
+            <span className="text-white/50">Vol. I</span>
           </div>
         </div>
       </div>
