@@ -19,7 +19,11 @@ function computeHalfPpr(row) {
   const recYds  = num(row.receiving_yards ?? row.rec_yards)
   const recTd   = num(row.receiving_tds ?? row.rec_tds)
   const rec     = num(row.receptions)
-  const fumLost = num(row.rushing_fumbles_lost ?? row.receiving_fumbles_lost ?? row.fumbles_lost)
+  // Modern nflverse splits fumbles by play type AND provides an aggregate.
+  // Prefer the aggregate when present; otherwise sum the split columns.
+  const fumLost = row.fumbles_lost != null
+    ? num(row.fumbles_lost)
+    : num(row.rushing_fumbles_lost) + num(row.receiving_fumbles_lost)
 
   return (
     passYds * 0.04 + passTd * 4 - passInt * 2 +
