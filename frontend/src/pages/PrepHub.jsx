@@ -5,15 +5,12 @@ import api from '../services/api'
 /**
  * Lab → Prep hub (DS-13).
  *
- * Aesthetic: editorial bone structure + NFL emotion. Team-color left
- * stripes on every tile, yard-line decorative bars between sections,
- * jersey-style stat numerals. Trademarks (logos, marks) avoided — colors
- * are the design carrier.
+ * Editorial bone structure + NFL emotion via team-color tile backgrounds
+ * and team-identity quiz cards. No yard-line gimmicks — colors carry the
+ * sport. Each quiz card is screenshot-shareable (subject-team palette +
+ * CLUTCH attribution baked in).
  */
 
-// Primary (and secondary, for delta accents when team color clashes with
-// our green/red signal) colors per NFL franchise. Light-mode-safe — we
-// use these as accent stripes on cream backgrounds.
 const TEAM_COLORS = {
   ARI: '#97233F', ATL: '#A71930', BAL: '#241773', BUF: '#00338D',
   CAR: '#0085CA', CHI: '#0B162A', CIN: '#FB4F14', CLE: '#311D00',
@@ -28,6 +25,9 @@ const TEAM_COLORS = {
 
 const SAMPLE_CARD = {
   category: 'Coaching',
+  subjectAbbr: 'BUF',
+  subjectCity: 'Buffalo',
+  subjectName: 'Bills',
   question: 'Who is the Buffalo Bills’ head coach for the 2026 season?',
   answer: 'Joe Brady',
   distractors: ['Sean McDermott', 'Sean McVay', 'Mike Vrabel'],
@@ -38,22 +38,14 @@ function classNames(...c) {
   return c.filter(Boolean).join(' ')
 }
 
-// Decorative yard-line strip. Pure CSS, no images. Used as section separator.
-function YardLine({ accent = '#0B6E4F' }) {
-  return (
-    <div
-      className="h-3 w-full rounded-sm"
-      style={{
-        background:
-          `repeating-linear-gradient(90deg, ${accent} 0 2px, transparent 2px 22px), linear-gradient(180deg, transparent 0 50%, rgba(0,0,0,0.04) 50% 100%)`,
-      }}
-      aria-hidden="true"
-    />
-  )
+function hexToRgba(hex, alpha = 1) {
+  if (!hex || hex[0] !== '#') return `rgba(30,42,58,${alpha})`
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
 }
 
-// Defensive name rendering — schema isn't consistent on whether name
-// includes the city ("Ravens" vs "Baltimore Ravens").
 function teamDisplayName(team) {
   if (!team?.name) return team?.abbreviation ?? ''
   if (team.city && team.name.toLowerCase().includes(team.city.toLowerCase())) {
@@ -79,31 +71,36 @@ function TeamTile({ team }) {
   return (
     <Link
       to={`/lab/prep/teams/${team.abbreviation}`}
-      className="relative block bg-[var(--surface)] border border-[var(--color-border)] rounded-card overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all group"
-      style={{ borderLeft: `6px solid ${color}` }}
+      className="relative block rounded-card overflow-hidden hover:shadow-card-hover hover:-translate-y-0.5 transition-all group"
+      style={{
+        background: `linear-gradient(135deg, ${hexToRgba(color, 0.14)} 0%, ${hexToRgba(color, 0.04)} 100%)`,
+        border: `1px solid ${hexToRgba(color, 0.28)}`,
+      }}
     >
+      {/* Color bar on top — visible sport accent */}
+      <div className="h-1.5 w-full" style={{ backgroundColor: color }} />
       <div className="p-4">
         <div className="flex items-baseline justify-between gap-2">
           <span
-            className="font-mono font-extrabold text-2xl tracking-tight transition-colors"
+            className="font-mono font-extrabold text-3xl tracking-tight"
             style={{ color }}
           >
             {team.abbreviation}
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-text-muted">
-            {team.conference}{team.division ? ` · ${team.division.slice(0, 1) + team.division.slice(1).toLowerCase()}` : ''}
+            {team.division ? team.division.slice(0, 1) + team.division.slice(1).toLowerCase() : team.conference}
           </span>
         </div>
-        <div className="mt-1 font-editorial italic text-base text-text-secondary leading-tight">
+        <div className="mt-1 font-editorial italic text-base text-[var(--text-1)] leading-tight">
           {teamDisplayName(team)}
         </div>
-        <div className="mt-3 space-y-1.5 font-body text-[13px]">
+        <div className="mt-3 pt-3 border-t border-[var(--color-border)]/60 space-y-1.5 font-body text-[13px]">
           <div className="flex items-baseline justify-between gap-2">
-            <span className="text-text-muted text-[11px] uppercase tracking-[0.12em]">Head coach</span>
-            <span className="text-[var(--text-1)] truncate font-medium">{team.hcName ?? '—'}</span>
+            <span className="text-text-muted text-[10px] uppercase tracking-[0.14em]">Head coach</span>
+            <span className="text-[var(--text-1)] truncate font-semibold">{team.hcName ?? '—'}</span>
           </div>
           <div className="flex items-baseline justify-between gap-2">
-            <span className="text-text-muted text-[11px] uppercase tracking-[0.12em]">OL ’25</span>
+            <span className="text-text-muted text-[10px] uppercase tracking-[0.14em]">OL ’25</span>
             <span className="font-mono text-[var(--text-1)] font-bold">
               #{team.olRank ?? '—'}
               {arrow && (
@@ -121,14 +118,33 @@ function TeamTile({ team }) {
 
 function SampleQuizCard() {
   const [showAnswer, setShowAnswer] = useState(false)
+  const subjectColor = TEAM_COLORS[SAMPLE_CARD.subjectAbbr] ?? '#1E2A3A'
   return (
-    <div className="relative bg-[var(--surface)] border border-[var(--color-border)] rounded-card-lg overflow-hidden shadow-card">
-      {/* Topps foil bar */}
-      <div className="h-2 bg-gradient-to-r from-blaze via-crown to-field" />
+    <div
+      className="relative rounded-card-lg overflow-hidden shadow-card"
+      style={{
+        background: `linear-gradient(160deg, ${hexToRgba(subjectColor, 0.12)} 0%, ${hexToRgba(subjectColor, 0.03)} 60%, var(--surface) 100%)`,
+        border: `1px solid ${hexToRgba(subjectColor, 0.32)}`,
+      }}
+    >
+      {/* Team-color top band — owns the card's identity */}
+      <div className="h-2 w-full" style={{ backgroundColor: subjectColor }} />
       <div className="p-6 md:p-8">
-        <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted mb-5">
-          <span>Card · {SAMPLE_CARD.category}</span>
-          <span>Difficulty {SAMPLE_CARD.difficulty}/5</span>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2.5">
+            <span
+              className="font-mono font-extrabold text-lg tracking-tight px-2 py-0.5 rounded"
+              style={{ color: subjectColor, backgroundColor: hexToRgba(subjectColor, 0.1) }}
+            >
+              {SAMPLE_CARD.subjectAbbr}
+            </span>
+            <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+              · {SAMPLE_CARD.category}
+            </span>
+          </div>
+          <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+            Difficulty {SAMPLE_CARD.difficulty}/5
+          </span>
         </div>
         <h3 className="font-editorial italic text-2xl md:text-3xl leading-snug text-[var(--text-1)]">
           “{SAMPLE_CARD.question}”
@@ -144,19 +160,24 @@ function SampleQuizCard() {
                   type="button"
                   onClick={() => setShowAnswer(true)}
                   className={classNames(
-                    'text-left px-4 py-3 rounded-button border font-body text-sm transition-all',
-                    !showAnswer && 'border-[var(--color-border)] hover:border-blaze hover:bg-[var(--glass-hover)]',
-                    showAnswer && isAnswer && 'border-field bg-field/10 text-field font-semibold',
-                    showAnswer && !isAnswer && 'border-[var(--color-border)] opacity-50',
+                    'text-left px-4 py-3 rounded-button border font-body text-sm transition-all bg-white/60',
+                    !showAnswer && 'border-[var(--color-border)] hover:bg-white',
+                    showAnswer && isAnswer && 'border-field bg-field/10 text-field font-bold',
+                    showAnswer && !isAnswer && 'border-[var(--color-border)] opacity-40',
                   )}
+                  style={!showAnswer ? { borderColor: hexToRgba(subjectColor, 0.25) } : undefined}
                 >
                   {choice}
                 </button>
               )
             })}
         </div>
-        <div className="mt-6 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.2em]">
-          <span className="text-text-muted">{showAnswer ? 'Answer revealed' : 'Tap any choice'}</span>
+        {/* Footer with CLUTCH branding — screenshot attribution */}
+        <div className="mt-6 pt-5 border-t border-[var(--color-border)]/60 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em]">
+          <div className="flex items-center gap-2">
+            <span className="text-[var(--text-1)] font-bold">⚡ CLUTCH</span>
+            <span className="text-text-muted">· NFL Prep</span>
+          </div>
           <Link to="/lab/prep/quiz" className="text-blaze hover:text-blaze-hot transition-colors">
             Today’s deck →
           </Link>
@@ -166,7 +187,7 @@ function SampleQuizCard() {
   )
 }
 
-function MoverRow({ team }) {
+function MoverRow({ team, isLast }) {
   const olDelta = team.olRankDelta
   const dlDelta = team.dlRankDelta
   const showDelta = Number.isFinite(olDelta) ? olDelta : dlDelta
@@ -178,16 +199,19 @@ function MoverRow({ team }) {
   return (
     <Link
       to="/lab/prep/changes"
-      className="flex items-baseline justify-between gap-4 py-3 border-b border-[var(--color-border)] hover:bg-[var(--glass)] transition-colors -mx-2 px-2 rounded"
+      className={classNames(
+        'flex items-baseline justify-between gap-3 py-3 px-4 hover:bg-white/70 transition-colors',
+        !isLast && 'border-b border-[var(--color-border)]/50',
+      )}
     >
       <div className="flex items-baseline gap-3 min-w-0">
         <span
-          className="font-mono font-extrabold text-base w-10"
+          className="font-mono font-extrabold text-base w-10 shrink-0"
           style={{ color }}
         >
           {team.abbreviation}
         </span>
-        <span className="font-editorial italic text-base text-text-secondary truncate">
+        <span className="font-editorial italic text-base text-[var(--text-1)] truncate">
           {teamDisplayName(team)}
         </span>
       </div>
@@ -195,7 +219,7 @@ function MoverRow({ team }) {
         <span className="text-text-muted text-[10px] uppercase tracking-[0.16em]">{unit}</span>
         <span className="text-text-muted">#{fromRank}</span>
         <span className="text-text-muted">→</span>
-        <span className={improved ? 'text-field font-bold' : 'text-live-red font-bold'}>
+        <span className={improved ? 'text-field font-extrabold' : 'text-live-red font-extrabold'}>
           #{toRank}
         </span>
       </div>
@@ -207,7 +231,7 @@ export default function PrepHub() {
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [tab, setTab] = useState('AFC') // 'AFC' | 'NFC' | 'ALL'
+  const [tab, setTab] = useState('AFC')
 
   useEffect(() => {
     let cancel = false
@@ -254,7 +278,7 @@ export default function PrepHub() {
       })
       .filter(Boolean)
     withDeltas.sort((a, b) => Math.abs(b._bestDelta) - Math.abs(a._bestDelta))
-    return withDeltas.slice(0, 4)
+    return withDeltas.slice(0, 5)
   }, [teams])
 
   const stats = useMemo(() => ({
@@ -263,58 +287,47 @@ export default function PrepHub() {
     olRanked: teams.filter((t) => Number.isFinite(t.olRank)).length,
   }), [teams])
 
-  // Days until first Thursday Night Football of the 2026 season — typical
-  // kickoff is the Thursday after Labor Day (Sept 7, 2026 is Labor Day,
-  // so kickoff is Sept 10, 2026).
   const daysToKickoff = useMemo(() => {
     const kickoff = new Date(Date.UTC(2026, 8, 10))
     const today = new Date()
-    const diffMs = kickoff.getTime() - today.getTime()
-    return Math.max(0, Math.ceil(diffMs / 86400000))
+    return Math.max(0, Math.ceil((kickoff.getTime() - today.getTime()) / 86400000))
   }, [])
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-1)]">
-      {/* Issue chrome */}
+      {/* Compact masthead: breadcrumb + countdown + stats + Vol — one row */}
       <div className="border-b border-[var(--color-border)]">
-        <div className="mx-auto max-w-6xl px-6 py-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
-          <Link to="/lab" className="hover:text-blaze transition-colors">
+        <div className="mx-auto max-w-6xl px-6 py-3 flex items-center justify-between gap-6 font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted flex-wrap">
+          <Link to="/lab" className="hover:text-blaze transition-colors shrink-0">
             ← The Lab
           </Link>
-          <span className="text-blaze">{daysToKickoff} days to kickoff</span>
-          <span>Vol. I</span>
+          <div className="flex items-center gap-5">
+            <span><span className="text-[var(--text-1)] font-bold">{stats.teamCount || '—'}</span> teams</span>
+            <span><span className="text-[var(--text-1)] font-bold">{stats.headCoaches || '—'}</span> staffs</span>
+            <span><span className="text-[var(--text-1)] font-bold">{stats.olRanked || '—'}</span> ranks</span>
+            <span><span className="text-[var(--text-1)] font-bold">287</span> cards</span>
+          </div>
+          <div className="flex items-center gap-4 shrink-0">
+            <span className="text-blaze font-bold">{daysToKickoff}d to kickoff</span>
+            <span>Vol. I</span>
+          </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 pt-8 pb-16">
-        {/* Tightened hero — headline + pull side by side, no orphan space */}
-        <header className="mb-8">
-          <div className="font-mono text-[11px] uppercase tracking-[0.32em] text-blaze mb-3">
-            Section / NFL Prep
-          </div>
+      <div className="mx-auto max-w-6xl px-6 pt-6 pb-16">
+        {/* Compressed hero — single tight band */}
+        <header className="mb-7">
           <div className="grid grid-cols-12 gap-6 items-end">
             <div className="col-span-12 md:col-span-7">
-              <h1 className="font-display font-extrabold leading-[0.95] tracking-tight text-4xl md:text-5xl">
+              <h1 className="font-display font-extrabold leading-[0.95] tracking-tight text-3xl md:text-4xl">
                 The offseason that decides
-                <br />
-                <span className="font-editorial italic font-normal text-blaze">your season.</span>
+                <span className="font-editorial italic font-normal text-blaze"> your season.</span>
               </h1>
             </div>
             <div className="col-span-12 md:col-span-5">
-              <p className="font-body text-base md:text-lg text-text-secondary leading-snug">
-                Every staff change, every depth chart, every unit that moved up or fell off — built so you walk into draft day knowing it cold.
+              <p className="font-body text-sm md:text-base text-text-secondary leading-snug">
+                Every staff change, every depth chart, every unit that moved up or fell off — so you walk into draft day knowing it cold.
               </p>
-            </div>
-          </div>
-          {/* Stat strip with yard-line texture */}
-          <div className="mt-6">
-            <YardLine accent="#0D9668" />
-            <div className="mt-3 flex items-baseline gap-6 font-mono text-xs uppercase tracking-[0.16em] text-text-muted flex-wrap">
-              <span><span className="text-[var(--text-1)] font-bold">{stats.teamCount || '—'}</span> teams</span>
-              <span><span className="text-[var(--text-1)] font-bold">{stats.headCoaches || '—'}</span> staffs</span>
-              <span><span className="text-[var(--text-1)] font-bold">{stats.olRanked || '—'}</span> OL/DL ranks</span>
-              <span><span className="text-[var(--text-1)] font-bold">287</span> quiz cards</span>
-              <span className="ml-auto text-blaze">Refreshed daily</span>
             </div>
           </div>
           {error && (
@@ -324,29 +337,32 @@ export default function PrepHub() {
           )}
         </header>
 
-        {/* I. Featured Teams */}
+        {/* I. Featured Teams — prominent tabs */}
         <section className="mb-12">
-          <div className="flex items-end justify-between gap-4 mb-5 flex-wrap">
+          <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
             <div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-text-muted">I.</div>
-              <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
-                Featured teams
-              </h2>
-              <p className="font-body text-sm text-text-secondary mt-1">
-                Best lines entering 2026 in the {tab === 'ALL' ? 'league' : tab + ' '}, by OL rank.
+              <div className="flex items-baseline gap-3 mb-0.5">
+                <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">I.</span>
+                <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
+                  Featured teams
+                </h2>
+              </div>
+              <p className="font-body text-sm text-text-secondary">
+                Top {featured.length} {tab === 'ALL' ? 'league-wide' : `in the ${tab}`} by OL rank, 2025.
               </p>
             </div>
-            <div className="inline-flex rounded-button bg-[var(--glass)] p-1 font-mono text-[11px] uppercase tracking-[0.16em]">
+            {/* Beefed-up conference selector */}
+            <div className="inline-flex rounded-card border border-[var(--color-border)] bg-[var(--surface)] p-1 shadow-card font-mono text-xs uppercase tracking-[0.18em]">
               {['AFC', 'NFC', 'ALL'].map((opt) => (
                 <button
                   key={opt}
                   type="button"
                   onClick={() => setTab(opt)}
                   className={classNames(
-                    'px-3 py-1.5 rounded-button transition-colors',
+                    'px-5 py-2 rounded-button transition-all font-bold',
                     tab === opt
-                      ? 'bg-blaze text-white'
-                      : 'text-text-secondary hover:text-[var(--text-1)]',
+                      ? 'bg-slate text-white shadow-button'
+                      : 'text-text-secondary hover:text-[var(--text-1)] hover:bg-[var(--glass)]',
                   )}
                 >
                   {opt}
@@ -370,68 +386,75 @@ export default function PrepHub() {
           <div className="mt-4 text-right">
             <Link
               to="/lab/prep/teams"
-              className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.24em] text-blaze hover:text-blaze-hot transition-colors"
+              className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.24em] text-blaze hover:text-blaze-hot transition-colors font-bold"
             >
               Browse all 32 →
             </Link>
           </div>
         </section>
 
-        {/* II. Quiz preview + III. Movers — two-column */}
-        <section className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
+        {/* II + III mirrored — both wrapped in matching containers */}
+        <section className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-12">
           <div className="lg:col-span-3">
-            <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-text-muted">II.</div>
-            <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight mb-1">
-              Today’s card
-            </h2>
-            <p className="font-body text-sm text-text-secondary mb-5">
+            <div className="flex items-baseline gap-3 mb-1">
+              <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">II.</span>
+              <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
+                Today’s card
+              </h2>
+            </div>
+            <p className="font-body text-sm text-text-secondary mb-4">
               Spaced repetition until it sticks. Ten cards a day.
             </p>
             <SampleQuizCard />
           </div>
 
           <div className="lg:col-span-2">
-            <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-text-muted">III.</div>
-            <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight mb-1">
-              Biggest movers
-            </h2>
-            <p className="font-body text-sm text-text-secondary mb-3">
+            <div className="flex items-baseline gap-3 mb-1">
+              <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">III.</span>
+              <h2 className="font-display font-extrabold text-2xl md:text-3xl tracking-tight">
+                Biggest movers
+              </h2>
+            </div>
+            <p className="font-body text-sm text-text-secondary mb-4">
               Units that shifted most year-over-year.
             </p>
-            {loading ? (
-              <div className="font-mono text-xs uppercase tracking-[0.16em] text-text-muted py-6">
-                Loading…
+            <div
+              className="rounded-card-lg overflow-hidden shadow-card bg-[var(--surface)] border border-[var(--color-border)]"
+            >
+              <div className="h-2 w-full bg-gradient-to-r from-field via-blaze to-live-red" />
+              {loading ? (
+                <div className="font-mono text-xs uppercase tracking-[0.16em] text-text-muted py-8 text-center">
+                  Loading…
+                </div>
+              ) : movers.length === 0 ? (
+                <div className="font-mono text-xs text-text-muted py-6 px-4">
+                  No year-over-year data yet.
+                </div>
+              ) : (
+                <div>
+                  {movers.map((t, i) => (
+                    <MoverRow key={t.id} team={t} isLast={i === movers.length - 1} />
+                  ))}
+                </div>
+              )}
+              <div className="px-4 py-3 border-t border-[var(--color-border)]/60 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.24em]">
+                <span className="text-[var(--text-1)] font-bold">⚡ CLUTCH</span>
+                <Link
+                  to="/lab/prep/changes"
+                  className="text-blaze hover:text-blaze-hot transition-colors font-bold"
+                >
+                  Read the offseason →
+                </Link>
               </div>
-            ) : movers.length === 0 ? (
-              <div className="font-mono text-xs text-text-muted py-3">
-                No year-over-year data yet.
-              </div>
-            ) : (
-              <div className="divide-y divide-[var(--color-border)]">
-                {movers.map((t) => (
-                  <MoverRow key={t.id} team={t} />
-                ))}
-              </div>
-            )}
-            <div className="mt-4 text-right">
-              <Link
-                to="/lab/prep/changes"
-                className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.24em] text-blaze hover:text-blaze-hot transition-colors"
-              >
-                Read the offseason →
-              </Link>
             </div>
           </div>
         </section>
 
-        {/* Bottom yard-line */}
-        <YardLine accent="#0D9668" />
-
-        <footer className="pt-6 flex items-baseline justify-between gap-4 flex-wrap">
+        <footer className="border-t border-[var(--color-border)] pt-5 flex items-baseline justify-between gap-4 flex-wrap">
           <p className="font-body text-sm text-text-muted max-w-[52ch]">
             The annual rebuilds itself every morning. Tomorrow’s issue will be different from today’s.
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-blaze">
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-blaze font-bold">
             Kickoff · Sept 10, 2026
           </p>
         </footer>
