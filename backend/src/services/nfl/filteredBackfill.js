@@ -58,6 +58,7 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
 
   const CHUNK = 500
   let inserted = 0
+  let insertErrors = 0
   const now = new Date().toISOString()
 
   for (let i = 0; i < statRows.length; i += CHUNK) {
@@ -76,10 +77,11 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
       inserted += Number(n) || 0
     } catch (e) {
       console.warn(`[filteredBackfill] insert failed at offset ${i}: ${e.message}`)
+      insertErrors++
     }
   }
 
-  return { inserted }
+  return { inserted, insertErrors }
 }
 
 module.exports = { syncFilteredWeeklyStats }

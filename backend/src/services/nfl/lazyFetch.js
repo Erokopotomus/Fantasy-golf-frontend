@@ -21,7 +21,7 @@ async function lazyFetchPlayer(prisma, playerId) {
   if (!player.gsisId) return { status: 'no-gsis-id' }
 
   const existing = await prisma.nflPlayerDataState.findUnique({ where: { playerId } })
-  if (existing && (existing.inPool || existing.lazyFetchedAt)) {
+  if (existing && (existing.inPool || (existing.lazyFetchedAt && !existing.lazyFetchError))) {
     return { status: 'already-loaded' }
   }
 
@@ -31,17 +31,13 @@ async function lazyFetchPlayer(prisma, playerId) {
   const playerMap = new Map([[player.gsisId, player.id]])
 
   let totalInserted = 0
+  let hadError = false
+  const errorMessages = []
   const seasonStats = {}
 
   for (const season of LAZY_FETCH_SEASONS) {
     try {
       await nflHistoricalSync.syncScheduleRaw(prisma, season)
-
-      // Build a season+week+team keyed map (each game contributes TWO entries —
-      // one for the home team, one for the away team). This shape lets us look
-      // up the gameId from a player row using season + week + the player's team,
-      // which works across both legacy (2016-2023) and current (2024+) nflverse
-      // weekly-stats schemas (the 2024+ schema dropped the `game_id` column).
       const games = await prisma.nflGame.findMany({
         where: { season },
         select: {
@@ -62,26 +58,53 @@ async function lazyFetchPlayer(prisma, playerId) {
       const r = await syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
       totalInserted += r.inserted
       seasonStats[season] = r.inserted
+      if (r.insertErrors > 0) {
+        hadError = true
+        errorMessages.push(`${season}: ${r.insertErrors} chunk(s) failed during insert`)
+      }
     } catch (e) {
       console.warn(`[lazyFetch] ${season} failed for ${player.name}: ${e.message}`)
       seasonStats[season] = `ERROR: ${e.message}`
+      hadError = true
+      errorMessages.push(`${season}: ${e.message}`)
     }
   }
 
   const now = new Date()
+  const lastSeason = LAZY_FETCH_SEASONS[LAZY_FETCH_SEASONS.length - 1]
+  const firstSeason = LAZY_FETCH_SEASONS[0]
+  if (hadError) {
+    // Don't stamp lazyFetchedAt so a future drawer click retries.
+    // Write the error summary so an operator can see what happened.
+    await prisma.nflPlayerDataState.upsert({
+      where: { playerId: player.id },
+      create: {
+        playerId: player.id,
+        inPool: false,
+        lazyFetchError: errorMessages.join(' | ').slice(0, 500),
+      },
+      update: {
+        lazyFetchError: errorMessages.join(' | ').slice(0, 500),
+      },
+    })
+    return { status: 'fetch-error', inserted: totalInserted, seasonStats, errors: errorMessages }
+  }
+
   await prisma.nflPlayerDataState.upsert({
     where: { playerId: player.id },
     create: {
       playerId: player.id,
       inPool: false,
       lazyFetchedAt: now,
-      fetchedThrough: 2025,
-      earliestFetched: LAZY_FETCH_SEASONS[0],
+      fetchedThrough: lastSeason,
+      earliestFetched: firstSeason,
+      lazyFetchError: null,
     },
     update: {
       lazyFetchedAt: now,
-      fetchedThrough: 2025,
-      earliestFetched: LAZY_FETCH_SEASONS[0],
+      fetchedThrough: lastSeason,
+      earliestFetched: firstSeason,
+      lazyFetchError: null,
     },
   })
 
