@@ -1238,6 +1238,12 @@ class ApiService {
     return this.request(`/nfl/players${qs ? '?' + qs : ''}`)
   }
 
+  async getDraftPlayers({ scoring = 'half_ppr', season } = {}) {
+    const params = new URLSearchParams({ scoring })
+    if (season) params.set('season', season)
+    return this.request(`/nfl/draft-players?${params.toString()}`)
+  }
+
   async getNflSeasons() {
     return this.request('/nfl/seasons')
   }
