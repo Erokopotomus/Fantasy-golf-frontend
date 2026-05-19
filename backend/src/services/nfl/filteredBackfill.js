@@ -1,6 +1,14 @@
 const nfl = require('../nflClient')
 const { genId, sqlVal, normalizeTeamAbbr } = require('./sqlHelpers')
 
+// nflverse CSVs surface missing numeric fields as '' (empty string) for some
+// seasons (e.g. target_share before 2006). Plain ?? doesn't catch empties, so
+// they leak straight into SQL as `..., , ...` syntax errors. Normalize here.
+function numOrNull(v) {
+  if (v == null || v === '') return null
+  return v
+}
+
 async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool) {
   const rows = await nfl.getWeeklyStats(season)
   const candidates = rows.filter(r => r.player_id && pool.has(r.player_id))
@@ -23,27 +31,27 @@ async function syncFilteredWeeklyStats(prisma, season, playerMap, gameMap, pool)
       playerId,
       gameId,
       teamAbbr: normalizeTeamAbbr(r.recent_team || r.team || ''),
-      passAttempts:    r.passing_attempts ?? r.attempts,
-      passCompletions: r.passing_completions ?? r.completions,
-      passYards:       r.passing_yards ?? r.pass_yards,
-      passTds:         r.passing_tds ?? r.pass_tds,
-      interceptions:   r.passing_interceptions ?? r.interceptions,
-      sacked:          r.sacks_suffered ?? r.sacks,
-      sackYards:       r.sack_yards_lost,
-      passerRating:    r.passer_rating,
-      rushAttempts:    r.carries ?? r.rush_attempts,
-      rushYards:       r.rushing_yards ?? r.rush_yards,
-      rushTds:         r.rushing_tds ?? r.rush_tds,
-      fumbles:         r.rushing_fumbles ?? r.fumbles,
-      fumblesLost:     r.rushing_fumbles_lost ?? r.fumbles_lost,
-      targets:         r.targets,
-      receptions:      r.receptions,
-      recYards:        r.receiving_yards ?? r.rec_yards,
-      recTds:          r.receiving_tds ?? r.rec_tds,
-      targetShare:     r.target_share,
-      fantasyPtsStd:   r.fantasy_points,
-      fantasyPtsPpr:   r.fantasy_points_ppr,
-      fantasyPtsHalf:  r.fantasy_points_half_ppr,
+      passAttempts:    numOrNull(r.passing_attempts ?? r.attempts),
+      passCompletions: numOrNull(r.passing_completions ?? r.completions),
+      passYards:       numOrNull(r.passing_yards ?? r.pass_yards),
+      passTds:         numOrNull(r.passing_tds ?? r.pass_tds),
+      interceptions:   numOrNull(r.passing_interceptions ?? r.interceptions),
+      sacked:          numOrNull(r.sacks_suffered ?? r.sacks),
+      sackYards:       numOrNull(r.sack_yards_lost),
+      passerRating:    numOrNull(r.passer_rating),
+      rushAttempts:    numOrNull(r.carries ?? r.rush_attempts),
+      rushYards:       numOrNull(r.rushing_yards ?? r.rush_yards),
+      rushTds:         numOrNull(r.rushing_tds ?? r.rush_tds),
+      fumbles:         numOrNull(r.rushing_fumbles ?? r.fumbles),
+      fumblesLost:     numOrNull(r.rushing_fumbles_lost ?? r.fumbles_lost),
+      targets:         numOrNull(r.targets),
+      receptions:      numOrNull(r.receptions),
+      recYards:        numOrNull(r.receiving_yards ?? r.rec_yards),
+      recTds:          numOrNull(r.receiving_tds ?? r.rec_tds),
+      targetShare:     numOrNull(r.target_share),
+      fantasyPtsStd:   numOrNull(r.fantasy_points),
+      fantasyPtsPpr:   numOrNull(r.fantasy_points_ppr),
+      fantasyPtsHalf:  numOrNull(r.fantasy_points_half_ppr),
     })
   }
 
