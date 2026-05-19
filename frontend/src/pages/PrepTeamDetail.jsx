@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import api from '../services/api'
 import { TEAM_COLORS, hexToRgba } from '../utils/nflTeamColors'
 import PrepSectionNav from '../components/prep/PrepSectionNav'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 
 /**
  * Lab → Prep → Team Detail (DS-14, page 2 of 4).
@@ -175,7 +176,7 @@ function UnitTrendCard({ title, ranks, unitKey, color }) {
   )
 }
 
-function PositionGroup({ group, players, color }) {
+function PositionGroup({ group, players, color, onPlayerClick }) {
   if (!players || players.length === 0) return null
   const accentClass = ACCENT_TEXT_CLASS[group.accent] ?? 'text-text-muted'
   return (
@@ -199,8 +200,20 @@ function PositionGroup({ group, players, color }) {
       <div className="divide-y divide-[var(--color-border)]/40">
         {players.map((p) => {
           const proj = p.projection
+          const clickable = !!p.playerId && !!onPlayerClick
           return (
-            <div key={p.playerId} className="px-4 py-2 flex items-baseline justify-between gap-3">
+            <button
+              key={p.playerId}
+              type="button"
+              disabled={!clickable}
+              onClick={clickable ? () => onPlayerClick(p.playerId) : undefined}
+              className={classNames(
+                'w-full text-left px-4 py-2 flex items-baseline justify-between gap-3 transition-colors',
+                clickable
+                  ? 'hover:bg-[var(--glass)] focus:outline-none focus-visible:bg-[var(--glass)] focus-visible:ring-1 focus-visible:ring-blaze/40 cursor-pointer'
+                  : 'cursor-default',
+              )}
+            >
               <div className="flex items-baseline gap-3 min-w-0">
                 <span className="font-mono text-[11px] text-text-muted tabular-nums w-6 shrink-0">
                   {Number.isFinite(p.depthRank) ? p.depthRank : '—'}
@@ -225,7 +238,7 @@ function PositionGroup({ group, players, color }) {
                   )}
                 </div>
               )}
-            </div>
+            </button>
           )
         })}
       </div>
@@ -242,6 +255,7 @@ export default function PrepTeamDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [notFound, setNotFound] = useState(false)
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null)
 
   useEffect(() => {
     let cancel = false
@@ -480,25 +494,37 @@ export default function PrepTeamDetail() {
                           No new faces this offseason.
                         </div>
                       ) : (
-                        <ul className="space-y-2.5">
-                          {teamScopedChanges.arrivals.slice(0, 6).map((m) => (
-                            <li
-                              key={m.player?.id}
-                              className="flex items-baseline justify-between gap-2 font-body text-[15px]"
-                            >
-                              <span className="flex items-baseline gap-2 min-w-0">
-                                <span className="font-mono text-[10px] uppercase tracking-[0.18em] font-bold text-text-muted shrink-0 w-8">
-                                  {m.player?.position ?? '—'}
-                                </span>
-                                <span className="font-editorial italic text-[var(--text-1)] truncate">
-                                  {m.player?.name ?? '—'}
-                                </span>
-                              </span>
-                              <span className="font-mono text-[12px] font-bold whitespace-nowrap shrink-0 text-text-muted">
-                                from <span style={{ color: TEAM_COLORS[m.fromTeamAbbr] ?? '#1E2A3A' }}>{m.fromTeamAbbr}</span>
-                              </span>
-                            </li>
-                          ))}
+                        <ul className="space-y-1">
+                          {teamScopedChanges.arrivals.slice(0, 6).map((m) => {
+                            const clickable = !!m.player?.id
+                            return (
+                              <li key={m.player?.id}>
+                                <button
+                                  type="button"
+                                  disabled={!clickable}
+                                  onClick={clickable ? () => setSelectedPlayerId(m.player.id) : undefined}
+                                  className={classNames(
+                                    'w-full flex items-baseline justify-between gap-2 font-body text-[15px] py-1.5 px-1.5 -mx-1.5 rounded transition-colors',
+                                    clickable
+                                      ? 'hover:bg-[var(--glass)] focus:outline-none focus-visible:bg-[var(--glass)] cursor-pointer text-left'
+                                      : 'cursor-default text-left',
+                                  )}
+                                >
+                                  <span className="flex items-baseline gap-2 min-w-0">
+                                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] font-bold text-text-muted shrink-0 w-8">
+                                      {m.player?.position ?? '—'}
+                                    </span>
+                                    <span className="font-editorial italic text-[var(--text-1)] truncate">
+                                      {m.player?.name ?? '—'}
+                                    </span>
+                                  </span>
+                                  <span className="font-mono text-[12px] font-bold whitespace-nowrap shrink-0 text-text-muted">
+                                    from <span style={{ color: TEAM_COLORS[m.fromTeamAbbr] ?? '#1E2A3A' }}>{m.fromTeamAbbr}</span>
+                                  </span>
+                                </button>
+                              </li>
+                            )
+                          })}
                           {teamScopedChanges.arrivals.length > 6 && (
                             <li className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-muted pt-1">
                               + {teamScopedChanges.arrivals.length - 6} more
@@ -523,25 +549,37 @@ export default function PrepTeamDetail() {
                           No tracked departures.
                         </div>
                       ) : (
-                        <ul className="space-y-2.5">
-                          {teamScopedChanges.departures.slice(0, 6).map((m) => (
-                            <li
-                              key={m.player?.id}
-                              className="flex items-baseline justify-between gap-2 font-body text-[15px]"
-                            >
-                              <span className="flex items-baseline gap-2 min-w-0">
-                                <span className="font-mono text-[10px] uppercase tracking-[0.18em] font-bold text-text-muted shrink-0 w-8">
-                                  {m.player?.position ?? '—'}
-                                </span>
-                                <span className="font-editorial italic text-[var(--text-1)] truncate">
-                                  {m.player?.name ?? '—'}
-                                </span>
-                              </span>
-                              <span className="font-mono text-[12px] font-bold whitespace-nowrap shrink-0 text-text-muted">
-                                to <span style={{ color: TEAM_COLORS[m.toTeamAbbr] ?? '#1E2A3A' }}>{m.toTeamAbbr}</span>
-                              </span>
-                            </li>
-                          ))}
+                        <ul className="space-y-1">
+                          {teamScopedChanges.departures.slice(0, 6).map((m) => {
+                            const clickable = !!m.player?.id
+                            return (
+                              <li key={m.player?.id}>
+                                <button
+                                  type="button"
+                                  disabled={!clickable}
+                                  onClick={clickable ? () => setSelectedPlayerId(m.player.id) : undefined}
+                                  className={classNames(
+                                    'w-full flex items-baseline justify-between gap-2 font-body text-[15px] py-1.5 px-1.5 -mx-1.5 rounded transition-colors',
+                                    clickable
+                                      ? 'hover:bg-[var(--glass)] focus:outline-none focus-visible:bg-[var(--glass)] cursor-pointer text-left'
+                                      : 'cursor-default text-left',
+                                  )}
+                                >
+                                  <span className="flex items-baseline gap-2 min-w-0">
+                                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] font-bold text-text-muted shrink-0 w-8">
+                                      {m.player?.position ?? '—'}
+                                    </span>
+                                    <span className="font-editorial italic text-[var(--text-1)] truncate">
+                                      {m.player?.name ?? '—'}
+                                    </span>
+                                  </span>
+                                  <span className="font-mono text-[12px] font-bold whitespace-nowrap shrink-0 text-text-muted">
+                                    to <span style={{ color: TEAM_COLORS[m.toTeamAbbr] ?? '#1E2A3A' }}>{m.toTeamAbbr}</span>
+                                  </span>
+                                </button>
+                              </li>
+                            )
+                          })}
                           {teamScopedChanges.departures.length > 6 && (
                             <li className="font-mono text-[11px] uppercase tracking-[0.18em] text-text-muted pt-1">
                               + {teamScopedChanges.departures.length - 6} more
@@ -635,6 +673,7 @@ export default function PrepTeamDetail() {
                       group={g}
                       players={rosterByPosition.get(g.key)}
                       color={color}
+                      onPlayerClick={setSelectedPlayerId}
                     />
                   ))}
                 </div>
@@ -656,6 +695,13 @@ export default function PrepTeamDetail() {
           </>
         )}
       </div>
+
+      <PlayerDrawer
+        playerId={selectedPlayerId}
+        isOpen={!!selectedPlayerId}
+        onClose={() => setSelectedPlayerId(null)}
+        isNfl
+      />
     </div>
   )
 }

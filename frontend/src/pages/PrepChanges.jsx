@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 import PrepSectionNav from '../components/prep/PrepSectionNav'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 
 /**
  * Lab → Prep → What Changed (DS-15).
@@ -106,13 +107,20 @@ function CoachTile({ team }) {
   )
 }
 
-function MoveRow({ move, isLast }) {
+function MoveRow({ move, isLast, onPlayerClick }) {
   // Destination dominant: bigger, fully colored. Source small, muted.
   const toColor = TEAM_COLORS[move.toTeamAbbr] ?? '#1E2A3A'
+  const clickable = !!move.player?.id && !!onPlayerClick
   return (
-    <div
+    <button
+      type="button"
+      disabled={!clickable}
+      onClick={clickable ? () => onPlayerClick(move.player.id) : undefined}
       className={classNames(
-        'flex items-center justify-between gap-3 py-2.5 px-4 hover:bg-white/70 transition-colors',
+        'w-full text-left flex items-center justify-between gap-3 py-2.5 px-4 transition-colors',
+        clickable
+          ? 'hover:bg-white/70 focus:outline-none focus-visible:bg-white/70 cursor-pointer'
+          : 'cursor-default',
         !isLast && 'border-b border-[var(--color-border)]/50',
       )}
     >
@@ -136,7 +144,7 @@ function MoveRow({ move, isLast }) {
           {move.toTeamAbbr}
         </span>
       </div>
-    </div>
+    </button>
   )
 }
 
@@ -228,6 +236,7 @@ export default function PrepChanges() {
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedPlayerId, setSelectedPlayerId] = useState(null)
 
   useEffect(() => {
     let cancel = false
@@ -546,6 +555,7 @@ export default function PrepChanges() {
                       key={`${m.player?.id ?? i}-${i}`}
                       move={m}
                       isLast={i === displayMoves.length - 1}
+                      onPlayerClick={setSelectedPlayerId}
                     />
                   ))}
                 </div>
@@ -619,6 +629,13 @@ export default function PrepChanges() {
           </p>
         </footer>
       </div>
+
+      <PlayerDrawer
+        playerId={selectedPlayerId}
+        isOpen={!!selectedPlayerId}
+        onClose={() => setSelectedPlayerId(null)}
+        isNfl
+      />
     </div>
   )
 }
