@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import LabDraftMasthead from '../components/lab-draft/LabDraftMasthead'
+import FormatToggleGroup from '../components/lab-draft/FormatToggleGroup'
 import api from '../services/api'
 
 const GOLF_TEAM_NAMES = [
@@ -84,29 +86,23 @@ const MockDraft = () => {
     }
 
     sessionStorage.setItem('mockDraftConfig', JSON.stringify(mockConfig))
-    navigate('/mock-draft/room')
+    navigate('/lab/mock-draft/room')
   }
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <LabDraftMasthead title="Mock Draft" backHref="/lab" backLabel="← The Lab" />
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="inline-flex items-center text-text-secondary hover:text-text-primary transition-colors mb-4"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Dashboard
-            </button>
-            <h1 className="text-3xl font-bold font-display text-text-primary mb-2">Mock Draft</h1>
-            <p className="text-text-secondary">
-              Practice your draft strategy against AI opponents. Experiment with different picks and positions.
+          <header className="mb-6">
+            <h1 className="font-display font-extrabold text-3xl tracking-tight">
+              Practice your draft
+              <span className="font-editorial italic font-normal text-blaze"> in the lab.</span>
+            </h1>
+            <p className="font-body text-sm text-text-secondary mt-2">
+              Mock against AI opponents. Experiment with picks. Test board strategy before draft day.
             </p>
-          </div>
+          </header>
 
           {/* Settings */}
           <Card className="mb-6">
@@ -121,7 +117,7 @@ const MockDraft = () => {
                     onClick={() => handleSportChange('golf')}
                     className={`py-3 px-4 rounded-lg border-2 text-center font-semibold transition-all ${
                       sport === 'golf'
-                        ? 'border-gold bg-gold/10 text-gold'
+                        ? 'border-blaze bg-blaze/10 text-blaze'
                         : 'border-[var(--card-border)] bg-[var(--card-bg)] text-text-secondary hover:border-[var(--card-border)] hover:text-text-primary'
                     }`}
                   >
@@ -131,7 +127,7 @@ const MockDraft = () => {
                     onClick={() => handleSportChange('nfl')}
                     className={`py-3 px-4 rounded-lg border-2 text-center font-semibold transition-all ${
                       sport === 'nfl'
-                        ? 'border-gold bg-gold/10 text-gold'
+                        ? 'border-blaze bg-blaze/10 text-blaze'
                         : 'border-[var(--card-border)] bg-[var(--card-bg)] text-text-secondary hover:border-[var(--card-border)] hover:text-text-primary'
                     }`}
                   >
@@ -148,17 +144,17 @@ const MockDraft = () => {
                     onClick={() => setSettings(s => ({ ...s, draftType: 'snake' }))}
                     className={`p-4 rounded-lg border-2 text-left transition-all ${
                       settings.draftType === 'snake'
-                        ? 'border-gold bg-gold/10'
+                        ? 'border-blaze bg-blaze/10'
                         : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[var(--card-border)]'
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg ${
-                        settings.draftType === 'snake' ? 'bg-gold/20' : 'bg-[var(--bg)]'
+                        settings.draftType === 'snake' ? 'bg-blaze/20' : 'bg-[var(--bg)]'
                       }`}>
                         🐍
                       </div>
-                      <span className={`font-semibold ${settings.draftType === 'snake' ? 'text-gold' : 'text-text-primary'}`}>
+                      <span className={`font-semibold ${settings.draftType === 'snake' ? 'text-blaze' : 'text-text-primary'}`}>
                         Snake
                       </span>
                     </div>
@@ -168,17 +164,17 @@ const MockDraft = () => {
                     onClick={() => setSettings(s => ({ ...s, draftType: 'auction' }))}
                     className={`p-4 rounded-lg border-2 text-left transition-all ${
                       settings.draftType === 'auction'
-                        ? 'border-gold bg-gold/10'
+                        ? 'border-blaze bg-blaze/10'
                         : 'border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[var(--card-border)]'
                     }`}
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg ${
-                        settings.draftType === 'auction' ? 'bg-gold/20' : 'bg-[var(--bg)]'
+                        settings.draftType === 'auction' ? 'bg-blaze/20' : 'bg-[var(--bg)]'
                       }`}>
                         💰
                       </div>
-                      <span className={`font-semibold ${settings.draftType === 'auction' ? 'text-gold' : 'text-text-primary'}`}>
+                      <span className={`font-semibold ${settings.draftType === 'auction' ? 'text-blaze' : 'text-text-primary'}`}>
                         Auction
                       </span>
                     </div>
@@ -201,7 +197,7 @@ const MockDraft = () => {
                       }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.teamCount === count
-                          ? 'bg-gold text-text-primary'
+                          ? 'bg-blaze text-white'
                           : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
                       }`}
                     >
@@ -221,7 +217,7 @@ const MockDraft = () => {
                       onClick={() => setSettings(s => ({ ...s, rosterSize: size }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.rosterSize === size
-                          ? 'bg-gold text-text-primary'
+                          ? 'bg-blaze text-white'
                           : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
                       }`}
                     >
@@ -233,28 +229,10 @@ const MockDraft = () => {
 
               {/* Scoring Format (NFL only) */}
               {sport === 'nfl' && (
-                <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-3">Scoring Format</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { key: 'standard', label: 'Standard' },
-                      { key: 'half_ppr', label: 'Half PPR' },
-                      { key: 'ppr', label: 'PPR' },
-                    ].map(fmt => (
-                      <button
-                        key={fmt.key}
-                        onClick={() => setSettings(s => ({ ...s, scoring: fmt.key }))}
-                        className={`py-3 rounded-lg font-semibold transition-all ${
-                          settings.scoring === fmt.key
-                            ? 'bg-gold text-text-primary'
-                            : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
-                        }`}
-                      >
-                        {fmt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <FormatToggleGroup
+                  value={settings.scoring}
+                  onChange={(scoring) => setSettings(s => ({ ...s, scoring }))}
+                />
               )}
 
               {/* Draft Board (Cheat Sheet) */}
@@ -264,7 +242,7 @@ const MockDraft = () => {
                   <select
                     value={selectedBoardId || ''}
                     onChange={(e) => setSelectedBoardId(e.target.value || null)}
-                    className="w-full p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                    className="w-full p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-blaze focus:outline-none"
                   >
                     <option value="">None — use default rankings</option>
                     {boards.map(b => (
@@ -289,7 +267,7 @@ const MockDraft = () => {
                     <select
                       value={settings.userPosition}
                       onChange={(e) => setSettings(s => ({ ...s, userPosition: parseInt(e.target.value) }))}
-                      className="flex-1 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-gold focus:outline-none"
+                      className="flex-1 p-3 bg-[var(--card-bg)] border border-[var(--card-border)] rounded-lg text-text-primary focus:border-blaze focus:outline-none"
                     >
                       {Array.from({ length: settings.teamCount }, (_, i) => (
                         <option key={i + 1} value={i + 1}>
@@ -324,7 +302,7 @@ const MockDraft = () => {
                       onClick={() => setSettings(s => ({ ...s, pickTimer: time }))}
                       className={`py-3 rounded-lg font-semibold transition-all ${
                         settings.pickTimer === time
-                          ? 'bg-gold text-text-primary'
+                          ? 'bg-blaze text-white'
                           : 'bg-[var(--card-bg)] text-text-secondary hover:text-text-primary'
                       }`}
                     >
@@ -337,7 +315,7 @@ const MockDraft = () => {
           </Card>
 
           {/* Summary */}
-          <Card className="mb-6 border-gold/30">
+          <Card className="mb-6 border-blaze/30">
             <h3 className="text-sm font-medium text-text-muted mb-3">DRAFT SUMMARY</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -369,7 +347,7 @@ const MockDraft = () => {
               {settings.draftType === 'snake' && (
                 <div>
                   <p className="text-text-muted text-xs">Your Position</p>
-                  <p className="text-gold font-medium">
+                  <p className="text-blaze font-medium">
                     Pick #{settings.userPosition || 'Random'}
                   </p>
                 </div>
@@ -381,7 +359,7 @@ const MockDraft = () => {
               {selectedBoardId && (
                 <div>
                   <p className="text-text-muted text-xs">Board</p>
-                  <p className="text-gold font-medium truncate">{boards.find(b => b.id === selectedBoardId)?.name}</p>
+                  <p className="text-blaze font-medium truncate">{boards.find(b => b.id === selectedBoardId)?.name}</p>
                 </div>
               )}
             </div>
@@ -402,21 +380,21 @@ const MockDraft = () => {
             <h3 className="text-sm font-medium text-text-muted mb-3">DRAFT TIPS</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-3 p-3 bg-[var(--surface)] rounded-lg">
-                <span className="text-gold text-lg flex-shrink-0">1</span>
+                <span className="text-blaze text-lg flex-shrink-0">1</span>
                 <div>
                   <p className="text-text-primary text-sm font-medium">Pre-rank your players</p>
                   <p className="text-text-muted text-xs">Add players to your queue before the draft starts to plan ahead.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-[var(--surface)] rounded-lg">
-                <span className="text-gold text-lg flex-shrink-0">2</span>
+                <span className="text-blaze text-lg flex-shrink-0">2</span>
                 <div>
                   <p className="text-text-primary text-sm font-medium">Watch the board</p>
                   <p className="text-text-muted text-xs">Track which positions and tiers are being drafted to find value.</p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-[var(--surface)] rounded-lg">
-                <span className="text-gold text-lg flex-shrink-0">3</span>
+                <span className="text-blaze text-lg flex-shrink-0">3</span>
                 <div>
                   <p className="text-text-primary text-sm font-medium">Balance your roster</p>
                   <p className="text-text-muted text-xs">Mix elite players with high-upside sleepers for the best results.</p>
