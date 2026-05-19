@@ -64,6 +64,26 @@ async function teamAbbrsForFocusMode(focusMode, { db = prisma } = {}) {
  * @returns {Promise<Array>} list of PrepQuizCard rows, each augmented with
  *   `userReview` (the existing PrepQuizReview row, or null).
  */
+/**
+ * Interleave arrays round-robin so the result alternates between categories.
+ * Example: [[A1,A2,A3], [B1,B2], [C1]] → [A1,B1,C1,A2,B2,A3]
+ */
+function interleave(arrays) {
+  const out = []
+  const queues = arrays.map((a) => [...a])
+  let pulled = true
+  while (pulled) {
+    pulled = false
+    for (const q of queues) {
+      if (q.length > 0) {
+        out.push(q.shift())
+        pulled = true
+      }
+    }
+  }
+  return out
+}
+
 async function getDueCardsForUser(userId, { db = prisma } = {}) {
   const settings = await db.prepUserSettings.findUnique({ where: { userId } })
   const limit = settings?.cardsPerDay ?? DEFAULT_CARDS_PER_DAY
@@ -72,24 +92,41 @@ async function getDueCardsForUser(userId, { db = prisma } = {}) {
   const teamAbbrs = await teamAbbrsForFocusMode(focusMode, { db })
   const now = new Date()
 
-  // Two-phase fetch keeps the query simple and the result deterministic.
-  // Phase 1: candidates the user has never seen (no PrepQuizReview row).
-  const neverSeen = await db.prepQuizCard.findMany({
-    where: {
-      isActive: true,
-      ...(teamAbbrs ? { subject: { in: teamAbbrs } } : {}),
-      reviews: { none: { userId } },
-    },
-    take: limit,
-    orderBy: { generatedAt: 'asc' },
-  })
+  // Phase 1: never-seen cards. Pull them per-category so the daily deck is a
+  // mix (coaching + roster + ranks) instead of N cards from whichever
+  // category was generated first. Random sampling keeps tomorrow's deck
+  // different from today's.
+  const categories = ['roster', 'coaching', 'ranks']
+  const perCategory = await Promise.all(
+    categories.map((category) =>
+      db.$queryRawUnsafe(
+        `
+        SELECT c.*
+        FROM prep_quiz_cards c
+        WHERE c."isActive" = true
+          AND c.category = $1
+          AND NOT EXISTS (
+            SELECT 1 FROM prep_quiz_reviews r
+            WHERE r."cardId" = c.id AND r."userId" = $2
+          )
+          ${teamAbbrs ? `AND c.subject = ANY($3)` : ''}
+        ORDER BY random()
+        LIMIT ${limit}
+      `,
+        category,
+        userId,
+        ...(teamAbbrs ? [teamAbbrs] : []),
+      ),
+    ),
+  )
+  const neverSeenMixed = interleave(perCategory).slice(0, limit)
 
-  if (neverSeen.length >= limit) {
-    return neverSeen.slice(0, limit).map((c) => ({ ...c, userReview: null }))
+  if (neverSeenMixed.length >= limit) {
+    return neverSeenMixed.map((c) => ({ ...c, userReview: null }))
   }
 
   // Phase 2: cards with a review whose dueDate has passed.
-  const remaining = limit - neverSeen.length
+  const remaining = limit - neverSeenMixed.length
   const overdueReviews = await db.prepQuizReview.findMany({
     where: {
       userId,
@@ -105,7 +142,7 @@ async function getDueCardsForUser(userId, { db = prisma } = {}) {
   })
 
   const combined = [
-    ...neverSeen.map((c) => ({ ...c, userReview: null })),
+    ...neverSeenMixed.map((c) => ({ ...c, userReview: null })),
     ...overdueReviews.map((r) => ({ ...r.card, userReview: r })),
   ]
   return combined.slice(0, limit)

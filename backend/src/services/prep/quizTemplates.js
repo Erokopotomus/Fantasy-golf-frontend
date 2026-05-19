@@ -73,9 +73,16 @@ function pickRankDistractors(actualRank) {
   return chosen.map((r) => `#${r}`)
 }
 
-/** Friendly team name: "Buffalo Bills" */
+/** Friendly team name: "Buffalo Bills".
+ *  NflTeam.name in some data sources already includes the city ("New York
+ *  Jets"). Guard against double-printing the city.
+ */
 function teamFullName(team) {
-  return `${team.city} ${team.name}`
+  if (!team?.name) return team?.abbreviation ?? ''
+  if (team.city && team.name.toLowerCase().includes(team.city.toLowerCase())) {
+    return team.name
+  }
+  return `${team.city ?? ''} ${team.name}`.trim()
 }
 
 /**
