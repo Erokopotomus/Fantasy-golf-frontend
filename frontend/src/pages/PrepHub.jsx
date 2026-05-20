@@ -431,6 +431,27 @@ export default function PrepHub() {
           </div>
         </section>
 
+        <section className="mt-12 mb-8">
+          <Link
+            to="/lab/mock-draft"
+            className="block rounded-card border border-[var(--color-border)] bg-[var(--surface)] hover:border-blaze/40 transition-colors p-6"
+          >
+            <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted mb-2">
+              Ready to test it out?
+            </div>
+            <h3 className="font-display font-extrabold text-2xl tracking-tight">
+              Mock draft
+              <span className="font-editorial italic font-normal text-blaze"> against the field.</span>
+            </h3>
+            <p className="font-body text-sm text-text-secondary mt-2 max-w-2xl">
+              Take what you know about every roster, every staff change, every unit rank — and stress-test it in a live mock draft against AI opponents.
+            </p>
+            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-blaze mt-3">
+              Open the lab →
+            </div>
+          </Link>
+        </section>
+
         <footer className="border-t border-[var(--color-border)] pt-5 flex items-baseline justify-between gap-4 flex-wrap">
           <p className="font-body text-sm text-text-muted max-w-[52ch]">
             The annual rebuilds itself every morning. Tomorrow’s issue will be different from today’s.
