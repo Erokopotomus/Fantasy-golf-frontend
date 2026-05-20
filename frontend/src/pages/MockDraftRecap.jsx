@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Card from '../components/common/Card'
 import Button from '../components/common/Button'
+import LabDraftMasthead from '../components/lab-draft/LabDraftMasthead'
 import { useMockDraftRecap } from '../hooks/useDraftHistory'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
@@ -51,7 +52,7 @@ const MockDraftRecap = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-blaze/30 border-t-blaze rounded-full animate-spin" />
       </div>
     )
   }
@@ -85,7 +86,7 @@ const MockDraftRecap = () => {
       const data = await api.createDraftBoard({
         name: boardName,
         sport: boardSport,
-        scoringFormat: boardSport === 'nfl' ? 'ppr' : 'standard',
+        scoringFormat: boardSport === 'nfl' ? (result.scoring || 'half_ppr') : 'standard',
         boardType: 'overall',
       })
       const board = data.board
@@ -117,34 +118,24 @@ const MockDraftRecap = () => {
 
   return (
     <div className="min-h-screen">
+      <LabDraftMasthead
+        title="Mock Draft Recap"
+        subtitle={`${result.teamCount} teams · ${result.draftType} · ${new Date(result.completedAt).toLocaleDateString()}`}
+        format={sport === 'nfl' ? (result.scoring || 'half_ppr') : null}
+        backHref="/lab/mock-draft"
+        backLabel="← Mock Draft"
+      />
       <main className="pt-8 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <Link to="/draft/history" className="text-text-secondary hover:text-text-primary transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold font-display text-text-primary">Mock Draft Recap</h1>
-              <div className="flex items-center gap-3 text-sm text-text-muted mt-1">
-                <span className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
-                  sport === 'nfl' ? 'bg-blue-500/20 text-blue-400' : 'bg-field-bright/20 text-field'
-                }`}>{sport}</span>
-                <span className="px-2 py-0.5 bg-[var(--bg-alt)] rounded text-xs capitalize">{result.draftType}</span>
-                <span>{result.teamCount} teams</span>
-                <span>{result.rosterSize} rounds</span>
-                <span>{new Date(result.completedAt).toLocaleDateString()}</span>
-                {result.dataSource === 'api' && (
-                  <span className="px-1.5 py-0.5 bg-gold/15 text-gold text-[10px] font-semibold rounded">LIVE DATA</span>
-                )}
-              </div>
-            </div>
-          </div>
+          <header className="mb-6">
+            <h1 className="font-display font-extrabold text-3xl tracking-tight">
+              How the draft
+              <span className="font-editorial italic font-normal text-blaze"> graded out.</span>
+            </h1>
+          </header>
 
           {/* Grade Card */}
-          <Card className="mb-6 border-gold/30">
+          <Card className="mb-6 border-blaze/30">
             <div className="flex items-center gap-6">
               <div className={`w-24 h-24 rounded-2xl flex items-center justify-center ${gradeBgColors[result.overallGrade] || 'bg-[var(--surface)]'}`}>
                 <span className={`text-4xl font-bold ${gradeColors[result.overallGrade] || 'text-text-muted'}`}>
@@ -197,7 +188,7 @@ const MockDraftRecap = () => {
                             <span className={`ml-1.5 text-[9px] font-bold px-1 py-0.5 rounded ${
                               pick.pickTag === 'STEAL' ? 'bg-field-bright/20 text-field' :
                               pick.pickTag === 'PLAN' ? 'bg-blue-500/20 text-blue-400' :
-                              pick.pickTag === 'VALUE' ? 'bg-gold/20 text-gold' :
+                              pick.pickTag === 'VALUE' ? 'bg-blaze/20 text-blaze' :
                               pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-blaze' :
                               pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                               pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
@@ -246,7 +237,7 @@ const MockDraftRecap = () => {
                     <div
                       key={i}
                       className={`bg-[var(--surface)] p-2 text-xs font-medium truncate ${
-                        allPicks.some(p => p.teamIndex === i && p.isUser) ? 'text-gold border-b-2 border-gold' : 'text-text-secondary'
+                        allPicks.some(p => p.teamIndex === i && p.isUser) ? 'text-blaze border-b-2 border-blaze' : 'text-text-secondary'
                       }`}
                     >
                       {name}
@@ -264,7 +255,7 @@ const MockDraftRecap = () => {
                         return (
                           <div
                             key={`${round}-${teamIdx}`}
-                            className={`bg-[var(--bg-alt)] p-1.5 text-xs ${isUserTeam ? 'bg-gold/5' : ''}`}
+                            className={`bg-[var(--bg-alt)] p-1.5 text-xs ${isUserTeam ? 'bg-blaze/5' : ''}`}
                           >
                             {pick ? (
                               <div className="truncate">
@@ -328,7 +319,7 @@ const MockDraftRecap = () => {
             <Card className="mt-4">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold text-text-primary">Board vs. Reality</h3>
-                <span className="text-xs font-mono text-gold">
+                <span className="text-xs font-mono text-blaze">
                   {boardComparison.picksMatchingBoard}/{boardComparison.totalPicks} followed
                 </span>
               </div>
@@ -368,7 +359,7 @@ const MockDraftRecap = () => {
                         <span className={`text-[8px] font-bold px-1 py-0.5 rounded shrink-0 ${
                           pick.pickTag === 'STEAL' ? 'bg-field-bright/20 text-field' :
                           pick.pickTag === 'PLAN' ? 'bg-blue-500/20 text-blue-400' :
-                          pick.pickTag === 'VALUE' ? 'bg-gold/20 text-gold' :
+                          pick.pickTag === 'VALUE' ? 'bg-blaze/20 text-blaze' :
                           pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-blaze' :
                           pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
                           pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
@@ -429,7 +420,7 @@ const MockDraftRecap = () => {
                   <button
                     onClick={handleImportToBoard}
                     disabled={importing}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gold/30 rounded-lg text-gold text-sm font-semibold hover:bg-gold/10 transition-colors disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-blaze/30 rounded-lg text-blaze text-sm font-semibold hover:bg-blaze/10 transition-colors disabled:opacity-50"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
