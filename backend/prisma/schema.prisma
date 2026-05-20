@@ -186,6 +186,9 @@ model League {
   // Chopped format events
   chopEvents ChopEvent[]
 
+  // Chopped golf live Safe % snapshots
+  choppedLiveSnapshots ChoppedLiveSnapshot[]
+
   @@map("leagues")
 }
 
@@ -252,6 +255,9 @@ model Team {
 
   // Chopped format events
   chopEvents ChopEvent[]
+
+  // Chopped golf live Safe % snapshots
+  choppedLiveSnapshots ChoppedLiveSnapshot[]
 
   @@unique([userId, leagueId])
   @@map("teams")
@@ -585,6 +591,9 @@ model Tournament {
   clutchScores ClutchScore[]
   eventIdMap   ClutchEventIdMap?
   pools        Pool[]
+
+  // Chopped golf live Safe % snapshots
+  choppedLiveSnapshots ChoppedLiveSnapshot[]
 
   @@map("tournaments")
 }
@@ -1578,6 +1587,24 @@ model ChopEvent {
   team   Team   @relation(fields: [teamId], references: [id])
 
   @@index([leagueId, week])
+}
+
+model ChoppedLiveSnapshot {
+  id           String   @id @default(cuid())
+  leagueId     String
+  tournamentId String
+  teamId       String
+  safePct      Float
+  mean         Float
+  variance     Float
+  computedAt   DateTime @default(now())
+
+  league     League     @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([leagueId, tournamentId, teamId])
+  @@index([leagueId, tournamentId])
 }
 
 // ============ ANALYTICS (Phase 3) ============
