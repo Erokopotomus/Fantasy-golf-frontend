@@ -1,14 +1,22 @@
 import { TEAM_COLORS } from '../../utils/nflTeamColors'
 
-const KICKOFF_DAY_LABEL = {
-  0: 'Sun', 1: 'Mon', 2: 'Tue', 3: 'Wed',
-  4: 'Thu', 5: 'Fri', 6: 'Sat',
-}
-
+/**
+ * Returns the ET-local weekday short label (e.g. 'Thu', 'Sun', 'Mon').
+ * Uses Intl with timeZone='America/New_York' so DST and the UTC date-rollover
+ * for primetime games (TNF/SNF/MNF kick off past midnight UTC) don't shift
+ * the weekday label out of the ET-local frame the NFL schedules against.
+ * Matches the backend's detectPrimetime tz logic in backend/src/routes/prep.js.
+ */
 function kickoffDay(kickoff) {
   if (!kickoff) return null
-  const d = new Date(kickoff)
-  return KICKOFF_DAY_LABEL[d.getUTCDay()] ?? null
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      weekday: 'short',
+    }).format(new Date(kickoff))
+  } catch {
+    return null
+  }
 }
 
 function ScheduleRow({ game }) {
