@@ -175,7 +175,7 @@ function MoverRow({ team, isLast }) {
   const dlDelta = team.dlRankDelta
   const showDelta = Number.isFinite(olDelta) ? olDelta : dlDelta
   const unit = Number.isFinite(olDelta) ? 'OL' : 'DL'
-  const fromRank = Number.isFinite(olDelta) ? (team.olRank ?? 0) + olDelta : (team.dlRank ?? 0) + dlDelta
+  const fromRank = Number.isFinite(olDelta) ? (team.olRank ?? 0) - olDelta : (team.dlRank ?? 0) - dlDelta
   const toRank = Number.isFinite(olDelta) ? team.olRank : team.dlRank
   const improved = showDelta < 0
   const color = TEAM_COLORS[team.abbreviation] ?? '#1E2A3A'
