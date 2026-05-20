@@ -8261,6 +8261,30 @@ Discovered 2026-05-18 during volume capacity check. The Railway Postgres volume 
 
 ---
 
+### 216 — Wire NFL Chopped live-stats provider (currently returns zeros)  `HIGH`
+
+**Status:** TODO
+**Source:** Surfaced during golf Chopped brainstorming, 2026-05-20
+
+**The bug:**
+NFL Chopped's auto-chop cron (Tuesday after waiver close) uses `computeSafePercents` in `'live'` mode, which expects `provider.getPlayerStats(week, playerId)` and `provider.getProjections(week)` to return real numbers. The current `EspnStatsProvider` (`backend/src/services/liveStats/espnProvider.js:34-52`) returns **zero/empty stubs** for both methods.
+
+Result: when the cron fires Tuesday, `mean` is `0` for every team, the Safe % math is mathematically uniform, and the actual chop decision degrades to the tiebreaker chain (cumulative season points → point diff → deterministic coinflip). The lowest-scoring team this week does NOT necessarily get chopped — they only get chopped if they happen to also be tied or last on the tiebreaker chain.
+
+**Fix:**
+1. Wire `EspnStatsProvider.getPlayerStats(week, playerId)` to read from `NflPlayerGame` joined with `NflGame` where `season=currentSeason AND week=week AND playerId=playerId`. Return `{ points: r.fantasyPtsHalf, gameProgress: g.status === 'FINAL' ? 1 : g.status === 'IN_PROGRESS' ? (estimateProgress(g)) : 0, projectedPoints: <derived from NflPlayerProjection> }`.
+2. Wire `EspnStatsProvider.getProjections(week)` to read `NflPlayerProjection` for the current season + scoring format and return `[{playerId, projectedPoints}]`.
+3. By Tuesday, `NflPlayerGame` is populated by the Mon 2:30/3:00 AM cron with final scores. So `gameProgress=1` for everyone and `mean = sum(fantasyPtsHalf for each starter)` — actual final-score-based chop.
+
+**Verify:**
+- Seed a test CHOPPED league via `backend/scripts/chopped/seed-test-league.js`
+- Run `node scripts/chopped/test-safe-percent.js` (or equivalent) against a real-data week
+- Confirm the team with the lowest actual `WeeklyTeamResult.totalPoints` for that week is the team `computeSafePercents` returns at the bottom of the sort
+
+**Not blocking golf Chopped.** Golf has a cleaner data path (reads `WeeklyTeamResult.totalPoints` directly, no provider plumbing), so the golf build doesn't depend on this. But NFL Chopped is currently quietly broken — the format ships in production looking correct (commissioner sees a chop fire Tuesday), but the chop decision isn't following the actual weekly score the league sees on every other surface.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
