@@ -155,7 +155,7 @@ const getNflPositionConfig = (pos) => {
   return NFL_POSITION_STATS.QB
 }
 
-const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false, tournamentContext }) => {
+const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false, tournamentContext, draftContext }) => {
   const [player, setPlayer] = useState(null)
   const [projection, setProjection] = useState(null)
   const [upcoming, setUpcoming] = useState([])
@@ -646,6 +646,44 @@ const PlayerDrawer = ({ playerId, isOpen, onClose, rosterContext, isNfl = false,
             ))}
           </div>
         </div>
+
+        {/* Draft action bar — rendered when caller passes draftContext (Mock Draft Room). */}
+        {draftContext && !draftContext.isDrafted && player && (
+          <div className="flex-shrink-0 flex gap-2 p-3 bg-[var(--surface)] border-b border-[var(--card-border)]">
+            <button
+              type="button"
+              onClick={() => { draftContext.onQueue?.(player); onClose() }}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+                draftContext.inQueue
+                  ? 'bg-blaze/15 text-blaze border border-blaze/30'
+                  : 'bg-[var(--bg-alt)] text-text-primary hover:bg-[var(--bg-alt)]/80 border border-[var(--card-border)]'
+              }`}
+            >
+              {draftContext.inQueue ? 'Queued' : 'Add to Queue'}
+            </button>
+            {draftContext.isAuction ? (
+              draftContext.isUserNominator && (
+                <button
+                  type="button"
+                  onClick={() => { draftContext.onNominate?.(player); onClose() }}
+                  className="flex-1 py-2.5 bg-crown text-slate rounded-lg text-sm font-bold hover:bg-crown/90 transition-colors"
+                >
+                  Nominate
+                </button>
+              )
+            ) : (
+              draftContext.isUserTurn && (
+                <button
+                  type="button"
+                  onClick={() => { draftContext.onDraft?.(player); onClose() }}
+                  className="flex-1 py-2.5 bg-blaze text-white rounded-lg text-sm font-bold hover:bg-blaze/90 transition-colors"
+                >
+                  Draft Now
+                </button>
+              )
+            )}
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">

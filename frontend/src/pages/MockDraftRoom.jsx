@@ -9,6 +9,7 @@ import LabDraftMasthead from '../components/lab-draft/LabDraftMasthead'
 import PlayerRowAccent from '../components/lab-draft/PlayerRowAccent'
 import MyTeamPanel from '../components/lab-draft/MyTeamPanel'
 import SortToggle from '../components/lab-draft/SortToggle'
+import PlayerDrawer from '../components/players/PlayerDrawer'
 
 // Inline player data for mock drafts (no API dependency)
 const MOCK_PLAYERS = [
@@ -2817,21 +2818,24 @@ const MockDraftRoom = () => {
 
       {/* Player Popup */}
       {selectedPlayer && (
-        <PlayerPopup
-          player={selectedPlayer}
+        <PlayerDrawer
+          playerId={selectedPlayer.id}
+          isOpen={!!selectedPlayer}
           onClose={() => setSelectedPlayer(null)}
-          onDraft={handleMakePick}
-          onNominate={(p) => handleNominate(p, 1)}
-          onQueue={(p) => {
-            const inQ = queue.find(q => q.id === p.id)
-            inQ ? handleRemoveFromQueue(p.id) : handleAddToQueue(p)
+          isNfl={config?.sport === 'nfl'}
+          draftContext={{
+            isUserTurn,
+            isUserNominator,
+            isAuction,
+            inQueue: !!queue.find(q => q.id === selectedPlayer.id),
+            isDrafted: !!selectedPlayer._drafted,
+            onDraft: handleMakePick,
+            onNominate: (p) => handleNominate(p, 1),
+            onQueue: (p) => {
+              const inQ = queue.find(q => q.id === p.id)
+              inQ ? handleRemoveFromQueue(p.id) : handleAddToQueue(p)
+            },
           }}
-          isUserTurn={isUserTurn}
-          isUserNominator={isUserNominator}
-          isAuction={isAuction}
-          inQueue={!!queue.find(q => q.id === selectedPlayer.id)}
-          isDrafted={!!selectedPlayer._drafted}
-          sport={config?.sport}
         />
       )}
 
