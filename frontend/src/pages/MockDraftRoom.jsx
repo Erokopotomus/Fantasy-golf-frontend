@@ -5,6 +5,10 @@ import Button from '../components/common/Button'
 import api from '../services/api'
 import useDraftSounds from '../hooks/useDraftSounds'
 import { track, Events } from '../services/analytics'
+import LabDraftMasthead from '../components/lab-draft/LabDraftMasthead'
+import PlayerRowAccent from '../components/lab-draft/PlayerRowAccent'
+import MyTeamPanel from '../components/lab-draft/MyTeamPanel'
+import SortToggle from '../components/lab-draft/SortToggle'
 
 // Inline player data for mock drafts (no API dependency)
 const MOCK_PLAYERS = [
@@ -351,7 +355,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 bg-gold/20 text-gold text-xs font-bold rounded">#{player.rank}</span>
+            <span className="px-2 py-0.5 bg-blaze/20 text-blaze text-xs font-bold rounded">#{player.rank}</span>
             <button onClick={onClose} className="text-text-muted hover:text-text-primary transition-colors p-1">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -368,7 +372,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">PPG</p>
-                  <p className="text-gold text-base font-bold">{player.ppg?.toFixed(1) || '0.0'}</p>
+                  <p className="text-blaze text-base font-bold">{player.ppg?.toFixed(1) || '0.0'}</p>
                 </div>
                 <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5">Total Pts</p>
@@ -399,7 +403,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-[var(--bg-alt)] rounded-lg p-2 text-center">
                   <p className="text-text-muted text-[10px] uppercase tracking-wider mb-0.5" title="Strokes Gained: Total — overall performance vs. the field per round">SG Total</p>
-                  <p className={`text-base font-bold ${player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-text-primary' : 'text-live-red'}`}>
+                  <p className={`text-base font-bold ${player.sg >= 1 ? 'text-blaze' : player.sg > 0 ? 'text-text-primary' : 'text-live-red'}`}>
                     {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
                   </p>
                 </div>
@@ -431,11 +435,11 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                       <span className="text-text-muted text-xs w-8 text-right" title={title}>{label}</span>
                       <div className="flex-1 h-1.5 bg-[var(--bg-alt)] rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${value >= 0 ? 'bg-gold' : 'bg-live-red'}`}
+                          className={`h-full rounded-full ${value >= 0 ? 'bg-blaze' : 'bg-live-red'}`}
                           style={{ width: `${Math.min(100, Math.abs(value) / 1.0 * 100)}%` }}
                         />
                       </div>
-                      <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-gold' : value >= 0 ? 'text-text-primary' : 'text-live-red'}`}>
+                      <span className={`text-xs font-medium w-11 text-right tabular-nums ${value > 0.3 ? 'text-blaze' : value >= 0 ? 'text-text-primary' : 'text-live-red'}`}>
                         {value > 0 ? '+' : ''}{value?.toFixed(2)}
                       </span>
                     </div>
@@ -454,7 +458,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
                         <span key={i} className={`flex-1 text-center py-1.5 rounded text-xs font-medium ${
                           result === '1' ? 'bg-crown/20 text-crown' :
                           result === 'CUT' ? 'bg-live-red/15 text-live-red' :
-                          pos <= 5 ? 'bg-gold/20 text-gold' :
+                          pos <= 5 ? 'bg-blaze/20 text-blaze' :
                           pos <= 15 ? 'bg-field-bright/10 text-field/70' :
                           pos <= 30 ? 'bg-[var(--bg-alt)] text-text-secondary' :
                           'bg-[var(--bg-alt)] text-text-muted'
@@ -496,7 +500,7 @@ const PlayerPopup = ({ player, onClose, onDraft, onNominate, onQueue, isUserTurn
               isUserTurn && (
                 <button
                   onClick={() => { onDraft(player); onClose() }}
-                  className="flex-1 py-2.5 bg-gold text-text-primary rounded-lg text-sm font-bold hover:bg-gold/90 transition-colors"
+                  className="flex-1 py-2.5 bg-blaze text-text-primary rounded-lg text-sm font-bold hover:bg-blaze/90 transition-colors"
                 >
                   Draft Now
                 </button>
@@ -629,7 +633,7 @@ const MockDraftRoom = () => {
   useEffect(() => {
     const stored = sessionStorage.getItem('mockDraftConfig')
     if (!stored) {
-      navigate('/mock-draft')
+      navigate('/lab/mock-draft')
       return
     }
     setConfig(JSON.parse(stored))
@@ -652,28 +656,27 @@ const MockDraftRoom = () => {
     const fetchPlayers = async () => {
       try {
         if (config.sport === 'nfl') {
-          const data = await api.getNflPlayers({ limit: 300, sortBy: 'fantasyPts', sortOrder: 'desc', scoring: config.scoring || 'half_ppr' })
+          const data = await api.getDraftPlayers({ scoring: config.scoring || 'half_ppr' })
           const players = data?.players
+          if (players && players.length < 50) {
+            console.warn(`[mock-draft] only ${players.length} players for ${config.scoring} — projection data may not be loaded`)
+          }
           if (Array.isArray(players) && players.length > 0) {
             setApiPlayers(players.map((p, i) => ({
               id: p.id,
               name: p.name,
               rank: i + 1,
-              position: p.nflPosition || 'WR',
-              team: p.nflTeamAbbr || '',
-              ppg: p.fantasyPtsPerGame || 0,
-              totalPts: p.fantasyPts || 0,
-              gamesPlayed: p.season?.gamesPlayed || 0,
-              headshot: p.headshotUrl || null,
-              passYards: p.season?.passingYards || 0,
-              passTds: p.season?.passingTds || 0,
-              interceptions: p.season?.interceptions || 0,
-              rushYards: p.season?.rushingYards || 0,
-              rushTds: p.season?.rushingTds || 0,
-              receptions: p.season?.receptions || 0,
-              recYards: p.season?.receivingYards || 0,
-              recTds: p.season?.receivingTds || 0,
-              targets: p.season?.targets || 0,
+              position: p.position,           // was: p.nflPosition
+              team: p.teamAbbr,                // was: p.nflTeamAbbr
+              teamAbbr: p.teamAbbr,            // expose for PlayerRowAccent
+              teamPrimaryColor: p.teamPrimaryColor,
+              adp: p.adp,
+              projectedPoints: p.projectedPoints,
+              headshot: p.headshotUrl,
+              // Legacy fields the draft state machine reads — derived from projectedPoints:
+              ppg: p.projectedPoints ? p.projectedPoints / 17 : 0,
+              totalPts: p.projectedPoints || 0,
+              gamesPlayed: 0,
             })))
           }
         } else {
@@ -807,6 +810,9 @@ const MockDraftRoom = () => {
   // NFL position filter
   const [posFilter, setPosFilter] = useState('ALL')
 
+  // NFL Mock Draft sort mode (ADP vs Projected) — drives PlayerRowAccent display + SortToggle
+  const [sortMode, setSortMode] = useState('adp')
+
   // Sort and filter players
   const filteredPlayers = useMemo(() => {
     let result = showDrafted ? allPlayers.map(p => ({ ...p, isDrafted: draftedIds.includes(p.id) })) : availablePlayers.map(p => ({ ...p, isDrafted: false }))
@@ -841,6 +847,21 @@ const MockDraftRoom = () => {
     })
     return result
   }, [availablePlayers, allPlayers, draftedIds, showDrafted, searchQuery, sortBy, sortDir, isNfl, posFilter, getBoardRank])
+
+  // NFL-only: re-sort filteredPlayers by ADP or Projected for the new PlayerRowAccent list.
+  const sortedPlayers = useMemo(() => {
+    const list = [...filteredPlayers]
+    if (sortMode === 'projected') {
+      list.sort((a, b) => (b.projectedPoints || 0) - (a.projectedPoints || 0))
+    } else {
+      list.sort((a, b) => {
+        if (a.adp == null) return 1
+        if (b.adp == null) return -1
+        return a.adp - b.adp
+      })
+    }
+    return list
+  }, [filteredPlayers, sortMode])
 
   // Stable ref for makePick to avoid stale closures in timers
   const makePickRef = useRef(null)
@@ -1499,7 +1520,7 @@ const MockDraftRoom = () => {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-12 h-12 border-4 border-blaze/30 border-t-blaze rounded-full animate-spin mx-auto mb-3" />
           {loadingPlayers && <p className="text-text-muted text-sm">Loading player data...</p>}
         </div>
       </div>
@@ -1511,7 +1532,7 @@ const MockDraftRoom = () => {
     return (
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-gold/30 border-t-gold rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-blaze/30 border-t-blaze rounded-full animate-spin mx-auto mb-4" />
           <p className="text-text-secondary">Grading your draft...</p>
         </div>
       </div>
@@ -1531,46 +1552,24 @@ const MockDraftRoom = () => {
   return (
     <div className="h-[calc(100vh-64px)] bg-[var(--bg)] flex flex-col overflow-hidden">
       {/* ===== HEADER BAR ===== */}
-      <div className="bg-[var(--surface)] border-b border-[var(--card-border)] flex-shrink-0 z-30">
+      <LabDraftMasthead
+        title="Mock Draft"
+        subtitle={`${config.teamCount} teams · ${config.rosterSize} rds · ${isAuction ? 'Auction' : 'Snake'} · ${allPlayers.length} players`}
+        format={config.sport === 'nfl' ? config.scoring : null}
+        backHref="/lab/mock-draft"
+        backLabel="← Setup"
+        compact
+      />
+      <div className="bg-[var(--surface)] border-b border-[var(--color-border)] flex-shrink-0 z-30">
         <div className="px-3 sm:px-4 py-2">
           <div className="flex items-center justify-between gap-3">
-            {/* Left: Back + Title */}
-            <div className="flex items-center gap-3 min-w-0">
-              <button
-                onClick={() => {
-                  if (confirm('Leave mock draft? Progress will be lost.')) navigate('/mock-draft')
-                }}
-                className="text-text-secondary hover:text-text-primary transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-text-primary font-bold text-sm sm:text-base leading-tight">Mock Draft</h1>
-                  {apiPlayers && (
-                    <span className="px-1.5 py-0.5 bg-gold/15 text-gold text-[9px] font-semibold rounded">
-                      LIVE DATA
-                    </span>
-                  )}
-                </div>
-                <p className="text-text-muted text-xs hidden sm:block">
-                  {config.teamCount} teams · {config.rosterSize} rds · {isAuction ? 'Auction' : 'Snake'} · {allPlayers.length} players
-                  {isAuction && budgets[userTeamId] !== undefined && (
-                    <span className="text-crown ml-1">${budgets[userTeamId]}</span>
-                  )}
-                </p>
-              </div>
-            </div>
-
             {/* Center: Current Pick Status */}
             {isStarted && (isAuction || currentTeam) && (
               <div className={`hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold ${
                 isPaused
                   ? 'bg-crown/20 text-crown border border-crown/40'
                   : (isUserTurn || isUserNominator)
-                    ? 'bg-gold/20 text-gold border border-gold/40'
+                    ? 'bg-blaze/20 text-blaze border border-blaze/40'
                     : isAuction && auctionPhase === 'bidding'
                       ? 'bg-crown/20 text-crown border border-crown/40'
                       : 'bg-[var(--bg-alt)] text-text-secondary'
@@ -1626,7 +1625,7 @@ const MockDraftRoom = () => {
                         onClick={() => setDraftSpeed(s.key)}
                         className={`px-2 py-1 text-[10px] font-bold transition-colors ${
                           draftSpeed === s.key
-                            ? 'bg-gold/20 text-gold'
+                            ? 'bg-blaze/20 text-blaze'
                             : 'text-text-muted hover:text-text-primary'
                         }`}
                       >
@@ -1701,7 +1700,7 @@ const MockDraftRoom = () => {
                     <div className={`px-3 py-1.5 rounded-lg font-bold text-base tabular-nums ${
                       (isUserTurn || isUserNominator || (isAuction && auctionPhase === 'bidding')) && timer <= 5 ? 'bg-live-red/20 text-live-red' :
                       (isUserTurn || isUserNominator) && timer <= 15 ? 'bg-crown/20 text-crown' :
-                      (isUserTurn || isUserNominator) ? 'bg-gold/20 text-gold' :
+                      (isUserTurn || isUserNominator) ? 'bg-blaze/20 text-blaze' :
                       isAuction && auctionPhase === 'bidding' ? 'bg-crown/20 text-crown' :
                       'bg-[var(--bg-alt)] text-text-secondary border border-[var(--card-border)]'
                     }`}>
@@ -1719,7 +1718,7 @@ const MockDraftRoom = () => {
               isPaused
                 ? 'bg-crown/20 text-crown'
                 : (isUserTurn || isUserNominator)
-                  ? 'bg-gold/20 text-gold'
+                  ? 'bg-blaze/20 text-blaze'
                   : isAuction && auctionPhase === 'bidding'
                     ? 'bg-crown/20 text-crown'
                     : 'bg-[var(--bg-alt)] text-text-secondary'
@@ -1767,7 +1766,7 @@ const MockDraftRoom = () => {
                   onClick={() => setDraftSpeed(s.key)}
                   className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
                     draftSpeed === s.key
-                      ? 'bg-gold/20 text-gold'
+                      ? 'bg-blaze/20 text-blaze'
                       : 'text-text-muted'
                   }`}
                 >
@@ -1800,7 +1799,7 @@ const MockDraftRoom = () => {
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
           <div className={`px-5 py-2.5 rounded-lg shadow-lg flex items-center gap-2 ${
             recentPick.teamId === userTeam?.id
-              ? 'bg-gold text-text-primary'
+              ? 'bg-blaze text-text-primary'
               : 'bg-[var(--surface)] border border-[var(--card-border)] text-text-primary'
           }`}>
             {isNfl && recentPick.playerPosition ? (
@@ -1833,7 +1832,7 @@ const MockDraftRoom = () => {
                 {[
                   { tag: 'STEAL',    label: 'Steal',    color: 'bg-field-bright/20 text-field border-field-bright/30' },
                   { tag: 'PLAN',     label: 'The Plan',  color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-                  { tag: 'VALUE',    label: 'Value',    color: 'bg-gold/20 text-gold border-gold/30' },
+                  { tag: 'VALUE',    label: 'Value',    color: 'bg-blaze/20 text-blaze border-blaze/30' },
                   { tag: 'REACH',    label: 'Reach',    color: 'bg-orange-500/20 text-blaze border-orange-500/30' },
                   { tag: 'FALLBACK', label: 'Fallback', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
                   { tag: 'PANIC',    label: 'Panic',    color: 'bg-rose-500/20 text-rose-400 border-rose-500/30' },
@@ -1941,7 +1940,7 @@ const MockDraftRoom = () => {
               </div>
             )}
             {!isUserBidding && currentNom.highBidderTeamId === userTeamId && (
-              <span className="text-gold text-xs font-bold px-2 py-1 bg-gold/15 rounded-lg flex-shrink-0">WINNING</span>
+              <span className="text-blaze text-xs font-bold px-2 py-1 bg-blaze/15 rounded-lg flex-shrink-0">WINNING</span>
             )}
           </div>
 
@@ -1979,7 +1978,7 @@ const MockDraftRoom = () => {
                     ].map(stat => (
                       <div key={stat.label} className="text-center py-1">
                         <p className="text-text-muted text-[9px] uppercase tracking-wider mb-0.5" title={stat.title}>{stat.label}</p>
-                        <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-gold' : stat.value >= 0 ? 'text-text-primary' : 'text-live-red'}`}>
+                        <p className={`text-xs font-bold tabular-nums ${stat.value > 0.3 ? 'text-blaze' : stat.value >= 0 ? 'text-text-primary' : 'text-live-red'}`}>
                           {stat.value > 0 ? '+' : ''}{stat.value?.toFixed(2)}
                         </p>
                       </div>
@@ -1998,7 +1997,7 @@ const MockDraftRoom = () => {
                           <span key={i} className={`flex-1 text-center py-1 rounded text-xs font-medium ${
                             result === '1' ? 'bg-crown/20 text-crown' :
                             result === 'CUT' ? 'bg-live-red/15 text-live-red' :
-                            pos <= 5 ? 'bg-gold/20 text-gold' :
+                            pos <= 5 ? 'bg-blaze/20 text-blaze' :
                             pos <= 15 ? 'bg-field-bright/10 text-field/70' :
                             pos <= 30 ? 'bg-[var(--bg-alt)] text-text-secondary' :
                             'bg-[var(--bg-alt)] text-text-muted'
@@ -2031,7 +2030,7 @@ const MockDraftRoom = () => {
             onClick={() => setActiveTab(tab.key)}
             className={`flex-1 py-2.5 text-xs font-medium text-center transition-colors ${
               activeTab === tab.key
-                ? 'text-gold border-b-2 border-gold'
+                ? 'text-blaze border-b-2 border-blaze'
                 : 'text-text-secondary'
             }`}
           >
@@ -2044,7 +2043,7 @@ const MockDraftRoom = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* ===== TOP: DRAFT BOARD (full width, ~45% on desktop) ===== */}
-        <div className={`flex-col min-h-0 border-b-2 border-gold/30 ${
+        <div className={`flex-col min-h-0 border-b-2 border-blaze/30 ${
           activeTab === 'board' ? 'flex flex-1' : 'hidden'
         } lg:flex lg:flex-none lg:h-[45%]`}>
           {/* Board Column Headers */}
@@ -2058,7 +2057,7 @@ const MockDraftRoom = () => {
                     key={team.id}
                     className={`px-1 py-2.5 text-[10px] font-semibold text-center truncate ${
                       team.isUser
-                        ? 'bg-gold/30 text-gold border-b-2 border-b-gold'
+                        ? 'bg-blaze/30 text-blaze border-b-2 border-b-blaze'
                         : isAuction && nominatorTeam?.id === team.id
                           ? 'bg-crown/20 text-crown'
                           : !isAuction && pickInfo && config.teams[pickInfo.orderIndex]?.id === team.id
@@ -2096,7 +2095,7 @@ const MockDraftRoom = () => {
                     style={{ gridTemplateColumns: `44px repeat(${config.teamCount}, 1fr)` }}
                   >
                     <div className={`px-1 py-1 text-[10px] text-center flex flex-col items-center justify-center font-semibold ${
-                      isCurrentRound ? 'text-gold bg-[var(--surface)]' : 'text-text-muted bg-[var(--bg-alt)]/80'
+                      isCurrentRound ? 'text-blaze bg-[var(--surface)]' : 'text-text-muted bg-[var(--bg-alt)]/80'
                     }`}>
                       <span>{round}</span>
                       {!isAuction && <span className="text-[8px] opacity-50">{isReverse ? '←' : '→'}</span>}
@@ -2130,13 +2129,13 @@ const MockDraftRoom = () => {
                             pick ? 'cursor-pointer hover:brightness-125' : ''
                           } ${
                             isCurrent
-                              ? 'bg-gold/25 ring-2 ring-inset ring-gold'
+                              ? 'bg-blaze/25 ring-2 ring-inset ring-blaze'
                               : pick
                                 ? pick.playerRank <= 10
                                   ? isUserTeamCell ? 'bg-crown/20' : 'bg-crown/12'
                                   : pick.playerRank <= 25
-                                    ? isUserTeamCell ? 'bg-gold/18' : 'bg-gold/10'
-                                    : isUserTeamCell ? 'bg-gold/10' : roundIdx % 2 === 0 ? 'bg-[var(--bg-alt)]' : 'bg-[var(--surface)]/50'
+                                    ? isUserTeamCell ? 'bg-blaze/18' : 'bg-blaze/10'
+                                    : isUserTeamCell ? 'bg-blaze/10' : roundIdx % 2 === 0 ? 'bg-[var(--bg-alt)]' : 'bg-[var(--surface)]/50'
                                 : roundIdx % 2 === 0 ? 'bg-[var(--bg-alt)]/50' : 'bg-[var(--surface)]/25'
                           }`}
                         >
@@ -2151,7 +2150,7 @@ const MockDraftRoom = () => {
                                   <>
                                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                                       pick.playerRank <= 10 ? 'bg-crown' :
-                                      pick.playerRank <= 25 ? 'bg-gold' :
+                                      pick.playerRank <= 25 ? 'bg-blaze' :
                                       pick.playerRank <= 40 ? 'bg-blue-400' :
                                       'bg-[var(--card-border)]/40'
                                     }`} />
@@ -2160,7 +2159,7 @@ const MockDraftRoom = () => {
                                 )}
                               </div>
                               <p className={`text-[10px] leading-tight truncate ${
-                                isUserTeamCell ? 'text-gold font-medium' : 'text-text-secondary'
+                                isUserTeamCell ? 'text-blaze font-medium' : 'text-text-secondary'
                               }`}>
                                 {pick.playerName.split(' ').pop()}
                               </p>
@@ -2210,14 +2209,14 @@ const MockDraftRoom = () => {
                         placeholder="Search players..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                        className="w-full pl-9 pr-4 py-2 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-blaze focus:outline-none"
                       />
                     </div>
                     <button
                       onClick={() => setShowDrafted(!showDrafted)}
                       className={`flex-shrink-0 px-3 py-2 rounded-lg text-[11px] font-medium transition-colors border ${
                         showDrafted
-                          ? 'bg-gold/15 border-gold/30 text-gold'
+                          ? 'bg-blaze/15 border-blaze/30 text-blaze'
                           : 'bg-[var(--bg-alt)] border-[var(--card-border)] text-text-muted hover:text-text-primary hover:border-[var(--card-border)]'
                       }`}
                     >
@@ -2226,22 +2225,25 @@ const MockDraftRoom = () => {
                   </div>
                 </div>
 
-                {/* NFL position filter pills */}
+                {/* NFL position filter pills + sort toggle */}
                 {isNfl && (
-                  <div className="flex-shrink-0 px-3 pb-2 flex gap-1.5 overflow-x-auto">
+                  <div className="flex-shrink-0 px-3 pb-2 flex items-center gap-1.5 overflow-x-auto">
                     {['ALL', 'QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(pos => (
                       <button
                         key={pos}
                         onClick={() => setPosFilter(pos)}
                         className={`px-2.5 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap transition-colors ${
                           posFilter === pos
-                            ? pos === 'ALL' ? 'bg-gold/20 text-gold' : (NFL_POS_COLORS[pos] || 'bg-gold/20 text-gold')
+                            ? pos === 'ALL' ? 'bg-blaze/20 text-blaze' : (NFL_POS_COLORS[pos] || 'bg-blaze/20 text-blaze')
                             : 'bg-[var(--bg-alt)] text-text-muted hover:text-text-primary'
                         }`}
                       >
                         {pos}
                       </button>
                     ))}
+                    <div className="ml-auto pl-2 shrink-0">
+                      <SortToggle value={sortMode} onChange={setSortMode} />
+                    </div>
                   </div>
                 )}
 
@@ -2250,22 +2252,12 @@ const MockDraftRoom = () => {
                   {/* Table Header */}
                   <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
                     {isNfl ? (
-                      <div className="grid grid-cols-[30px_1fr_36px_36px_48px_44px_48px] px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide">
-                        <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors">
-                          Rk <SortIcon field="rank" />
-                        </button>
-                        <button onClick={() => handleSort('name')} className="text-left hover:text-text-primary transition-colors">
-                          Player <SortIcon field="name" />
-                        </button>
-                        <span className="text-center">Pos</span>
-                        <span className="text-center">Team</span>
-                        <button onClick={() => handleSort('ppg')} className="text-right hover:text-text-primary transition-colors">
-                          PPG <SortIcon field="ppg" />
-                        </button>
-                        <button onClick={() => handleSort('totalPts')} className="text-right hover:text-text-primary transition-colors">
-                          Pts <SortIcon field="totalPts" />
-                        </button>
-                        <div />
+                      <div className="grid grid-cols-[40px_40px_32px_1fr_50px] px-3 py-2 gap-3 text-[10px] font-semibold text-text-muted uppercase tracking-[0.22em] font-mono">
+                        <span>ADP</span>
+                        <span>Tm</span>
+                        <span>Pos</span>
+                        <span>Player</span>
+                        <span className="text-right">{sortMode === 'projected' ? 'Proj' : ''}</span>
                       </div>
                     ) : (
                       <div className={`grid ${boardEntries.length > 0 ? 'grid-cols-[26px_26px_1fr_40px_30px_30px_30px_46px_38px_44px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide`}>
@@ -2302,145 +2294,130 @@ const MockDraftRoom = () => {
                   </div>
 
                   {/* Player Rows */}
-                  {filteredPlayers.map(player => {
-                    const inQueue = queue.find(q => q.id === player.id)
-                    return (
-                      <div
+                  {isNfl ? (
+                    sortedPlayers.map(player => (
+                      <PlayerRowAccent
                         key={player.id}
-                        className={`grid ${isNfl ? 'grid-cols-[30px_1fr_36px_36px_48px_44px_48px]' : boardEntries.length > 0 ? 'grid-cols-[26px_26px_1fr_40px_30px_30px_30px_46px_38px_44px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
-                          player.isDrafted
-                            ? 'opacity-40 bg-[var(--bg-alt)]/50'
-                            : `cursor-pointer hover:bg-[var(--surface-alt)] ${inQueue ? 'bg-orange/5' : ''}`
-                        }`}
-                        onClick={() => !player.isDrafted && setSelectedPlayer(player)}
-                      >
-                        <span className="text-text-muted text-xs">{player.rank}</span>
-                        {!isNfl && boardEntries.length > 0 && (
-                          <span className="text-[9px] text-gold/50 font-mono text-center">
-                            {getBoardEntry(player) ? `B${getBoardEntry(player).rank}` : ''}
-                          </span>
-                        )}
-                        <div className="flex items-center gap-2 min-w-0">
-                          {isNfl ? (
-                            player.headshot ? (
-                              <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0" />
-                            ) : (
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${NFL_POS_COLORS[player.position] || 'bg-[var(--bg-alt)] text-text-muted'}`}>
-                                <span className="text-[8px] font-bold">{player.position}</span>
-                              </div>
-                            )
-                          ) : (
-                            player.headshot ? (
+                        player={player}
+                        onPick={(p) => !p.isDrafted && setSelectedPlayer(p)}
+                        disabled={player.isDrafted}
+                        showProjected={sortMode === 'projected'}
+                      />
+                    ))
+                  ) : (
+                    filteredPlayers.map(player => {
+                      const inQueue = queue.find(q => q.id === player.id)
+                      return (
+                        <div
+                          key={player.id}
+                          className={`grid ${boardEntries.length > 0 ? 'grid-cols-[26px_26px_1fr_40px_30px_30px_30px_46px_38px_44px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 border-b border-[var(--card-border)]/30 items-center transition-colors ${
+                            player.isDrafted
+                              ? 'opacity-40 bg-[var(--bg-alt)]/50'
+                              : `cursor-pointer hover:bg-[var(--surface-alt)] ${inQueue ? 'bg-orange/5' : ''}`
+                          }`}
+                          onClick={() => !player.isDrafted && setSelectedPlayer(player)}
+                        >
+                          <span className="text-text-muted text-xs">{player.rank}</span>
+                          {boardEntries.length > 0 && (
+                            <span className="text-[9px] text-blaze/50 font-mono text-center">
+                              {getBoardEntry(player) ? `B${getBoardEntry(player).rank}` : ''}
+                            </span>
+                          )}
+                          <div className="flex items-center gap-2 min-w-0">
+                            {player.headshot ? (
                               <img src={player.headshot} alt="" className="w-6 h-6 rounded-full object-cover bg-[var(--bg-alt)] flex-shrink-0" />
                             ) : (
                               <span className="text-sm flex-shrink-0">{player.flag}</span>
-                            )
-                          )}
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span className="text-text-primary text-sm truncate">{player.name}</span>
-                            {getBoardEntry(player)?.tags?.[0] && (
-                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                getBoardEntry(player).tags[0] === 'target' ? 'bg-field' :
-                                getBoardEntry(player).tags[0] === 'sleeper' ? 'bg-gold' : 'bg-live-red'
-                              }`} />
+                            )}
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="text-text-primary text-sm truncate">{player.name}</span>
+                              {getBoardEntry(player)?.tags?.[0] && (
+                                <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                  getBoardEntry(player).tags[0] === 'target' ? 'bg-field' :
+                                  getBoardEntry(player).tags[0] === 'sleeper' ? 'bg-blaze' : 'bg-live-red'
+                                }`} />
+                              )}
+                            </div>
+                          </div>
+                          <span className={`text-xs text-right font-medium tabular-nums ${
+                            player.sg >= 1 ? 'text-blaze' : player.sg > 0 ? 'text-text-primary' : 'text-live-red'
+                          }`}>
+                            {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
+                          </span>
+                          <span className="text-xs text-right text-text-secondary tabular-nums">
+                            {player.top5s || '—'}
+                          </span>
+                          <span className="text-xs text-right text-text-secondary tabular-nums">
+                            {player.top10s || '—'}
+                          </span>
+                          <span className="text-xs text-right text-text-secondary tabular-nums">
+                            {player.top25s || '—'}
+                          </span>
+                          <span className="text-xs text-center text-text-muted tabular-nums">
+                            {player.cutsMade || 0}/{player.tournaments || 0}
+                          </span>
+                          <div className="flex items-center justify-center gap-1">
+                            {player.form?.slice(0, 4).map((f, i) => {
+                              const pos = parseInt(f.replace('T', ''))
+                              return (
+                                <span key={i} className={`w-2 h-2 rounded-full ${
+                                  f === '1' ? 'bg-crown' :
+                                  f === 'CUT' ? 'bg-live-red' :
+                                  pos <= 5 ? 'bg-blaze' :
+                                  pos <= 15 ? 'bg-field/60' :
+                                  'bg-[var(--card-border)]/30'
+                                }`} title={f} />
+                              )
+                            })}
+                          </div>
+                          <div className="flex items-center justify-end gap-1">
+                            {player.isDrafted ? (
+                              <span className="px-1.5 py-0.5 bg-[var(--card-border)]/40 text-text-muted text-[9px] font-mono uppercase rounded">
+                                Drafted
+                              </span>
+                            ) : (
+                              <>
+                                {isAuction ? (
+                                  isUserNominator && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleNominate(player, 1) }}
+                                      className="px-2 py-1 bg-crown text-slate text-[10px] rounded font-semibold hover:bg-crown transition-colors"
+                                    >
+                                      Nom
+                                    </button>
+                                  )
+                                ) : (
+                                  isUserTurn && (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
+                                      className="px-2 py-1 bg-blaze text-text-primary text-[10px] rounded font-semibold hover:bg-blaze/80 transition-colors"
+                                    >
+                                      Draft
+                                    </button>
+                                  )
+                                )}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    inQueue ? handleRemoveFromQueue(player.id) : handleAddToQueue(player)
+                                  }}
+                                  className={`p-1 rounded transition-colors ${
+                                    inQueue ? 'text-orange' : 'text-text-muted hover:text-orange'
+                                  }`}
+                                >
+                                  <svg className="w-3.5 h-3.5" fill={inQueue ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                                  </svg>
+                                </button>
+                              </>
                             )}
                           </div>
                         </div>
-                        {isNfl ? (
-                          <>
-                            <span className={`text-[10px] text-center font-bold ${NFL_POS_COLORS[player.position]?.split(' ')[1] || 'text-text-muted'}`}>
-                              {player.position}
-                            </span>
-                            <span className="text-xs text-center text-text-secondary">{player.team}</span>
-                            <span className="text-xs text-right font-medium text-gold tabular-nums">
-                              {player.ppg?.toFixed(1)}
-                            </span>
-                            <span className="text-xs text-right text-text-secondary tabular-nums">
-                              {player.totalPts?.toFixed(0) || '—'}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className={`text-xs text-right font-medium tabular-nums ${
-                              player.sg >= 1 ? 'text-gold' : player.sg > 0 ? 'text-text-primary' : 'text-live-red'
-                            }`}>
-                              {player.sg > 0 ? '+' : ''}{player.sg?.toFixed(2)}
-                            </span>
-                            <span className="text-xs text-right text-text-secondary tabular-nums">
-                              {player.top5s || '—'}
-                            </span>
-                            <span className="text-xs text-right text-text-secondary tabular-nums">
-                              {player.top10s || '—'}
-                            </span>
-                            <span className="text-xs text-right text-text-secondary tabular-nums">
-                              {player.top25s || '—'}
-                            </span>
-                            <span className="text-xs text-center text-text-muted tabular-nums">
-                              {player.cutsMade || 0}/{player.tournaments || 0}
-                            </span>
-                            <div className="flex items-center justify-center gap-1">
-                              {player.form?.slice(0, 4).map((f, i) => {
-                                const pos = parseInt(f.replace('T', ''))
-                                return (
-                                  <span key={i} className={`w-2 h-2 rounded-full ${
-                                    f === '1' ? 'bg-crown' :
-                                    f === 'CUT' ? 'bg-live-red' :
-                                    pos <= 5 ? 'bg-gold' :
-                                    pos <= 15 ? 'bg-field/60' :
-                                    'bg-[var(--card-border)]/30'
-                                  }`} title={f} />
-                                )
-                              })}
-                            </div>
-                          </>
-                        )}
-                        <div className="flex items-center justify-end gap-1">
-                          {player.isDrafted ? (
-                            <span className="px-1.5 py-0.5 bg-[var(--card-border)]/40 text-text-muted text-[9px] font-mono uppercase rounded">
-                              Drafted
-                            </span>
-                          ) : (
-                            <>
-                              {isAuction ? (
-                                isUserNominator && (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleNominate(player, 1) }}
-                                    className="px-2 py-1 bg-crown text-slate text-[10px] rounded font-semibold hover:bg-crown transition-colors"
-                                  >
-                                    Nom
-                                  </button>
-                                )
-                              ) : (
-                                isUserTurn && (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleMakePick(player) }}
-                                    className="px-2 py-1 bg-gold text-text-primary text-[10px] rounded font-semibold hover:bg-gold/80 transition-colors"
-                                  >
-                                    Draft
-                                  </button>
-                                )
-                              )}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  inQueue ? handleRemoveFromQueue(player.id) : handleAddToQueue(player)
-                                }}
-                                className={`p-1 rounded transition-colors ${
-                                  inQueue ? 'text-orange' : 'text-text-muted hover:text-orange'
-                                }`}
-                              >
-                            <svg className="w-3.5 h-3.5" fill={inQueue ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                            </svg>
-                          </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })
+                  )}
 
-                  {filteredPlayers.length === 0 && (
+                  {((isNfl && sortedPlayers.length === 0) || (!isNfl && filteredPlayers.length === 0)) && (
                     <div className="text-center py-8 text-text-muted text-sm">
                       {searchQuery ? 'No players match your search' : 'All players have been drafted'}
                     </div>
@@ -2467,7 +2444,7 @@ const MockDraftRoom = () => {
                   onClick={() => setBottomTab(tab.key)}
                   className={`flex-1 px-3 py-2 text-xs font-mono font-medium uppercase tracking-wider transition-colors ${
                     bottomTab === tab.key
-                      ? 'text-gold border-b-2 border-gold'
+                      ? 'text-blaze border-b-2 border-blaze'
                       : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
@@ -2537,7 +2514,7 @@ const MockDraftRoom = () => {
                           }
                         }}
                         className={`relative inline-flex items-center w-9 h-5 rounded-full transition-colors flex-shrink-0 ${
-                          autoPick ? 'bg-gold' : autoPickCountdown > 0 ? 'bg-crown/50' : 'bg-[var(--bg-alt)] border border-[var(--card-border)]'
+                          autoPick ? 'bg-blaze' : autoPickCountdown > 0 ? 'bg-crown/50' : 'bg-[var(--bg-alt)] border border-[var(--card-border)]'
                         }`}
                       >
                         <span className={`inline-block w-3.5 h-3.5 rounded-full bg-[var(--bg-alt)] shadow-sm transition-transform ${
@@ -2592,7 +2569,7 @@ const MockDraftRoom = () => {
                               isUserTurn && (
                                 <button
                                   onClick={() => handleMakePick(player)}
-                                  className="px-2 py-1 bg-gold text-text-primary text-[10px] rounded font-semibold hover:bg-gold/80 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="px-2 py-1 bg-blaze text-text-primary text-[10px] rounded font-semibold hover:bg-blaze/80 opacity-0 group-hover:opacity-100 transition-opacity"
                                 >
                                   Draft
                                 </button>
@@ -2639,7 +2616,7 @@ const MockDraftRoom = () => {
                           <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-colors ${
                             isDrafted ? 'opacity-30' : 'hover:bg-[var(--surface-alt)]'
                           }`}>
-                            <span className="text-gold text-xs font-bold w-5 text-center">{entry.rank}</span>
+                            <span className="text-blaze text-xs font-bold w-5 text-center">{entry.rank}</span>
                             {isNfl && entry.player?.nflPosition && (
                               <span className={`text-[9px] font-bold px-1 py-0.5 rounded flex-shrink-0 ${NFL_POS_COLORS[entry.player.nflPosition] || ''}`}>
                                 {entry.player.nflPosition}
@@ -2651,7 +2628,7 @@ const MockDraftRoom = () => {
                             {tag && (
                               <span className={`text-[8px] font-bold uppercase px-1 py-0.5 rounded shrink-0 ${
                                 tag === 'target' ? 'bg-field-bright/20 text-field' :
-                                tag === 'sleeper' ? 'bg-gold/20 text-gold' :
+                                tag === 'sleeper' ? 'bg-blaze/20 text-blaze' :
                                 'bg-live-red/20 text-live-red'
                               }`}>
                                 {tag}
@@ -2675,51 +2652,47 @@ const MockDraftRoom = () => {
             {(activeTab === 'myteam' || (activeTab === 'board' && bottomTab === 'myteam')) && (
               <div className="h-full flex flex-col">
                 <div className="flex-1 overflow-y-auto min-h-0 p-3">
-                  {userPicks.length === 0 ? (
-                    <div className="text-center py-12">
-                      <svg className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <p className="text-text-muted text-sm font-medium mb-1">No Picks Yet</p>
-                      <p className="text-text-muted text-xs">Your drafted players will appear here</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {userPicks.map(pick => (
-                        <div key={pick.id} className="flex items-center justify-between p-2.5 bg-[var(--bg-alt)] rounded-lg">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <span className="text-gold text-xs font-bold w-5 text-center">R{pick.round}</span>
-                            {isNfl && pick.playerPosition ? (
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${NFL_POS_COLORS[pick.playerPosition] || ''}`}>
-                                {pick.playerPosition}
-                              </span>
-                            ) : (
-                              <span className="text-sm">{pick.playerFlag}</span>
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <p className="text-text-primary text-sm font-medium truncate">{pick.playerName}</p>
-                              <p className="text-text-muted text-xs">
-                                {isNfl && pick.playerTeam ? `${pick.playerTeam} · ` : ''}
-                                Pick #{pick.pickNumber} · Rank #{pick.playerRank}
-                              </p>
-                            </div>
-                            {pick.pickTag && (
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                                pick.pickTag === 'STEAL' ? 'bg-field-bright/20 text-field' :
-                                pick.pickTag === 'PLAN' ? 'bg-blue-500/20 text-blue-400' :
-                                pick.pickTag === 'VALUE' ? 'bg-gold/20 text-gold' :
-                                pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-blaze' :
-                                pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
-                                pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
-                                'bg-[var(--stone)] text-text-primary/40'
-                              }`}>
-                                {pick.pickTag}
-                              </span>
-                            )}
+                  <MyTeamPanel
+                    teamName={userTeam?.name || 'Your Team'}
+                    picks={userPicks.map(p => ({ ...p, teamAbbr: p.playerTeam }))}
+                    renderPick={(pick) => (
+                      <div key={pick.id} className="flex items-center justify-between p-2.5 border-b border-[var(--color-border)] last:border-0">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="text-blaze text-xs font-bold w-5 text-center">R{pick.round}</span>
+                          {isNfl && pick.playerPosition ? (
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded flex-shrink-0 ${NFL_POS_COLORS[pick.playerPosition] || ''}`}>
+                              {pick.playerPosition}
+                            </span>
+                          ) : (
+                            <span className="text-sm">{pick.playerFlag}</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-text-primary text-sm font-medium truncate">{pick.playerName}</p>
+                            <p className="text-text-muted text-xs">
+                              {isNfl && pick.playerTeam ? `${pick.playerTeam} · ` : ''}
+                              Pick #{pick.pickNumber} · Rank #{pick.playerRank}
+                            </p>
                           </div>
+                          {pick.pickTag && (
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                              pick.pickTag === 'STEAL' ? 'bg-field-bright/20 text-field' :
+                              pick.pickTag === 'PLAN' ? 'bg-blue-500/20 text-blue-400' :
+                              pick.pickTag === 'VALUE' ? 'bg-blaze/20 text-blaze' :
+                              pick.pickTag === 'REACH' ? 'bg-orange-500/20 text-blaze' :
+                              pick.pickTag === 'FALLBACK' ? 'bg-purple-500/20 text-purple-400' :
+                              pick.pickTag === 'PANIC' ? 'bg-rose-500/20 text-rose-400' :
+                              'bg-[var(--stone)] text-text-primary/40'
+                            }`}>
+                              {pick.pickTag}
+                            </span>
+                          )}
                         </div>
-                      ))}
-                      {/* Empty slots */}
+                      </div>
+                    )}
+                  />
+                  {/* Empty slots */}
+                  {userPicks.length > 0 && userPicks.length < config.rosterSize && (
+                    <div className="mt-1 space-y-1">
                       {Array.from({ length: config.rosterSize - userPicks.length }, (_, i) => (
                         <div key={`empty-${i}`} className="flex items-center p-2.5 rounded-lg border border-dashed border-[var(--card-border)]/50">
                           <span className="text-text-muted text-xs w-5 text-center">R{userPicks.length + i + 1}</span>
@@ -2744,7 +2717,7 @@ const MockDraftRoom = () => {
                     <div className="space-y-1">
                       {[...picks].reverse().map(pick => (
                         <div key={pick.id} className={`flex items-center justify-between p-2.5 rounded-lg ${
-                          pick.teamId === userTeam?.id ? 'bg-gold/10' : 'bg-[var(--bg-alt)]'
+                          pick.teamId === userTeam?.id ? 'bg-blaze/10' : 'bg-[var(--bg-alt)]'
                         }`}>
                           <div className="flex items-center gap-3 min-w-0">
                             <span className="text-text-muted text-xs font-bold w-6 text-right">#{pick.pickNumber}</span>
@@ -2791,7 +2764,7 @@ const MockDraftRoom = () => {
                               )}
                               <div className={`px-2.5 py-1.5 rounded-lg text-sm ${
                                 msg.isUser
-                                  ? 'bg-gold/20 text-text-primary rounded-br-sm'
+                                  ? 'bg-blaze/20 text-text-primary rounded-br-sm'
                                   : 'bg-[var(--bg-alt)] text-text-secondary rounded-bl-sm'
                               }`}>
                                 {msg.text}
@@ -2814,12 +2787,12 @@ const MockDraftRoom = () => {
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
                       placeholder="Type a message..."
-                      className="flex-1 px-3 py-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-gold focus:outline-none"
+                      className="flex-1 px-3 py-1.5 bg-[var(--bg-alt)] border border-[var(--card-border)] rounded-lg text-text-primary text-sm focus:border-blaze focus:outline-none"
                     />
                     <button
                       type="submit"
                       disabled={!chatInput.trim()}
-                      className="px-3 py-1.5 bg-gold text-text-primary rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-gold/80 transition-colors"
+                      className="px-3 py-1.5 bg-blaze text-text-primary rounded-lg text-sm font-medium disabled:opacity-30 hover:bg-blaze/80 transition-colors"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
