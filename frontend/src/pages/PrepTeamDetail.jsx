@@ -4,6 +4,7 @@ import api from '../services/api'
 import { TEAM_COLORS, hexToRgba } from '../utils/nflTeamColors'
 import PrepSectionNav from '../components/prep/PrepSectionNav'
 import KickoffCountdown from '../components/prep/KickoffCountdown'
+import TeamScheduleStrip from '../components/prep/TeamScheduleStrip'
 import PlayerDrawer from '../components/players/PlayerDrawer'
 
 /**
@@ -638,6 +639,27 @@ export default function PrepTeamDetail() {
                 </div>
               </section>
             )}
+
+            {/* 2026 Schedule */}
+            <section className="mb-8">
+              <div className="flex items-baseline justify-between gap-3 mb-3 flex-wrap">
+                <div className="flex items-baseline gap-3">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-text-muted">
+                    i·c
+                  </span>
+                  <h2 className="font-display font-extrabold text-2xl tracking-tight">
+                    2026 schedule
+                  </h2>
+                </div>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
+                  17 regular-season games · 1 bye
+                </span>
+              </div>
+              <TeamScheduleStrip
+                schedule={data.schedule}
+                teamAbbreviation={normalizedAbbr}
+              />
+            </section>
 
             {/* Depth chart */}
             <section className="mb-8">
