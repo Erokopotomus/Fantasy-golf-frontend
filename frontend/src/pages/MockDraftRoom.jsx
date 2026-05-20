@@ -1509,7 +1509,7 @@ const MockDraftRoom = () => {
       userPicks: userPicksData,
       teamNames: teamNamesList,
     }).then(saved => {
-      navigate(`/draft/history/mock/${saved.id}`, { replace: true })
+      navigate(`/lab/mock-draft/recap/${saved.id}`, { replace: true })
     }).catch(() => {
       // Fallback: stay on current completion screen
     })
