@@ -769,6 +769,13 @@ const MockDraftRoom = () => {
     return boardLookup.byId.get(player.id) || boardLookup.byName.get(player.name?.toLowerCase())
   }, [boardLookup])
 
+  // Needed by the filteredPlayers useMemo below — must be declared before it,
+  // otherwise the deps array hits a temporal dead zone on first render.
+  const getBoardRank = useCallback((player) => {
+    const entry = getBoardEntry(player)
+    return entry?.rank ?? 9999
+  }, [getBoardEntry])
+
   // Pre-populate queue from board entries (once)
   useEffect(() => {
     if (boardQueueInitRef.current || boardEntries.length === 0 || allPlayers.length === 0 || isStarted) return
@@ -1435,11 +1442,6 @@ const MockDraftRoom = () => {
       setSortDir(field === 'sg' || field === 'top5' || field === 'top10' || field === 'top25' || field === 'cuts' || field === 'ppg' || field === 'totalPts' ? 'desc' : 'asc')
     }
   }
-
-  const getBoardRank = useCallback((player) => {
-    const entry = getBoardEntry(player)
-    return entry?.rank ?? 9999
-  }, [getBoardEntry])
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
