@@ -656,7 +656,7 @@ const MockDraftRoom = () => {
     const fetchPlayers = async () => {
       try {
         if (config.sport === 'nfl') {
-          const data = await api.getDraftPlayers({ scoring: config.scoring || 'half_ppr' })
+          const data = await api.getNflDraftPlayers({ scoring: config.scoring || 'half_ppr' })
           const players = data?.players
           if (players && players.length < 50) {
             console.warn(`[mock-draft] only ${players.length} players for ${config.scoring} — projection data may not be loaded`)

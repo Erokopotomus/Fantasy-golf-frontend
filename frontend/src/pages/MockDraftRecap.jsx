@@ -113,7 +113,7 @@ const MockDraftRecap = () => {
       rosterSize: result.rosterSize,
       userPosition: result.userPosition,
     }))
-    navigate('/mock-draft')
+    navigate('/lab/mock-draft')
   }
 
   return (
