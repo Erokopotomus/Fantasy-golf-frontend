@@ -8204,6 +8204,45 @@ Discovered 2026-05-18 during volume capacity check. The Railway Postgres volume 
 
 ---
 
+### 214 — 2026 Strength of Schedule heatmap per position (Prep)  `HIGH`
+
+**Status:** TODO
+**Where:** New surface inside Lab → Prep. Likely route `/lab/prep/strength-of-schedule` (added to `PrepSectionNav`). Each team gets a row; weeks 1-18 across columns; cells color-coded by difficulty of that week's matchup for the target position. Position selector (QB / RB / WR / TE) toggles which heatmap is rendered. Inspiration: Fantasy Footballers' SoS heatmap.
+
+**Why:** Draft-prep tool. Lets users see at a glance which teams have favorable / brutal stretches for their fantasy-relevant positions. Pairs with the existing What Changed / Teams / Quiz surfaces in Prep.
+
+**Data source — derive from data we already own (no scraping, no paywall):**
+- `NflGame` — 2026 schedule (already synced)
+- `NflPlayerGame` — 2024 + 2025 weekly fantasy production (just backfilled May 19)
+- `NflTeamUnitRank` — 2023-2025 unit ranks (passing/rushing def already in DB)
+
+**Computation:**
+1. For each defense, compute avg fantasy points allowed to each position (QB / RB / WR / TE) over 2024-2025, with 2025 weighted 70/30 over 2024 for recency.
+2. Normalize to a 0-100 difficulty score per (defense × position) pair. Lower = easier matchup for the offense's player at that position.
+3. For each team's 2026 schedule, look up the opponent's per-position difficulty for each week. Render as a color-graded cell (green = easy, red = hard, gray = bye).
+4. Sort options: by team alphabetical, by overall hardest schedule (sum of difficulty), by playoff-weeks-only (weeks 14-17 hardest).
+
+**Backend:**
+- New service `backend/src/services/nfl/strengthOfSchedule.js` that produces the matrix on demand (or pre-computes once and caches).
+- New route `GET /api/prep/strength-of-schedule?position=QB` returning `{ teams: [{ abbr, weeks: [{ week, opponent, difficulty }] }], position }`.
+
+**Frontend:**
+- New page `frontend/src/pages/PrepStrengthOfSchedule.jsx`.
+- Position selector pill row (QB / RB / WR / TE).
+- Sortable team rows; color-graded week cells; legend.
+- Mobile: horizontal scroll on the matrix, position selector + sort sticky.
+
+**Aesthetic:** Same editorial × Topps annual as the rest of Prep. Bricolage display for the position selector, blaze accent on the active position, slate masthead, week numbers in font-mono. Color grade should be perceptually balanced (avoid red/green for color-blind users — consider blue-to-orange gradient).
+
+**Open questions for design pass:**
+- Should the heatmap default to weighted 2024-2025 historical, or also factor in projected 2026 unit ranks (which we'd need to source somewhere)?
+- Do we expose the underlying numbers on hover, or keep it clean color-grid only?
+- Per-position only, or also a composite "fantasy roster" view that blends QB/RB/WR/TE for a typical lineup?
+
+**Effort:** Probably 1-2 evenings — most of the data is already wired, this is mostly a new service + new page + a color-gradient utility.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
