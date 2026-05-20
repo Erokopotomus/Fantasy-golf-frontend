@@ -133,19 +133,21 @@ router.patch('/:id/resolve', authenticate, requireAdmin, async (req, res) => {
   }
 })
 
-// POST /resolve-bulk — admin: bulk resolve by type or endpoint
+// POST /resolve-bulk — admin: bulk resolve by type, endpoint, or message (exact match)
 router.post('/resolve-bulk', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { type, endpoint } = req.body
-    const where = { resolved: false }
-    if (type) where.type = type
+    const { type, endpoint, message } = req.body
     if (endpoint) {
+      // JSON metadata filter needs raw SQL
       const result = await prisma.$executeRaw`
         UPDATE "AppError" SET resolved = true, "resolvedAt" = NOW(), "resolvedBy" = ${req.user.id}
         WHERE resolved = false AND metadata->>'endpoint' = ${endpoint}
       `
       return res.json({ resolved: result })
     }
+    const where = { resolved: false }
+    if (type) where.type = type
+    if (message) where.message = message // exact match on stored message
     const result = await prisma.appError.updateMany({
       where,
       data: { resolved: true, resolvedAt: new Date(), resolvedBy: req.user.id },

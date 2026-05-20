@@ -196,6 +196,22 @@ const AdminDashboard = () => {
     }
   }
 
+  // Bulk-resolve every unresolved error that shares an exact message string.
+  // Useful for cleaning up after a fix ships — e.g., the Mock Draft TDZ bug
+  // produced ~10 identical entries that were all the same root cause.
+  const handleResolveMatching = async (message) => {
+    if (!message) return
+    const matchingCount = errors.filter(e => !e.resolved && e.message === message).length
+    if (!window.confirm(`Resolve ${matchingCount} matching error${matchingCount === 1 ? '' : 's'}? (Plus any unresolved beyond this page with the same message.)`)) return
+    try {
+      await api.resolveBulkErrors({ message })
+      loadErrors()
+      loadErrorSummary()
+    } catch (err) {
+      console.error('Failed to resolve matching:', err.message)
+    }
+  }
+
   const handleRoleChange = async (userId, newRole) => {
     if (userId === user.id) return
     try {
@@ -745,14 +761,28 @@ const AdminDashboard = () => {
                         <td className="py-2 px-3 text-text-muted font-mono text-xs max-w-[160px] truncate">{err.url || '—'}</td>
                         <td className="py-2 px-3 text-text-muted text-xs whitespace-nowrap">{timeAgo(err.createdAt)}</td>
                         <td className="py-2 px-3">
-                          {!err.resolved && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); handleResolveError(err.id) }}
-                              className="text-xs text-field hover:text-field-bright transition-colors"
-                            >
-                              resolve
-                            </button>
-                          )}
+                          {!err.resolved && (() => {
+                            const matchingCount = errors.filter(e => !e.resolved && e.message === err.message).length
+                            return (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleResolveError(err.id) }}
+                                  className="text-xs text-field hover:text-field-bright transition-colors"
+                                >
+                                  resolve
+                                </button>
+                                {matchingCount > 1 && (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleResolveMatching(err.message) }}
+                                    className="text-xs text-blaze hover:text-blaze-hot transition-colors whitespace-nowrap"
+                                    title="Resolve every unresolved error with this exact message"
+                                  >
+                                    resolve {matchingCount} matching
+                                  </button>
+                                )}
+                              </div>
+                            )
+                          })()}
                         </td>
                       </tr>
                       {expandedError === err.id && (
