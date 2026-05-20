@@ -26,6 +26,32 @@ const POSITION_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3, K: 4, DST: 5 }
 const positionRank = (pos) =>
   POSITION_ORDER[pos] !== undefined ? POSITION_ORDER[pos] : 99
 
+/**
+ * Returns 'TNF' | 'SNF' | 'MNF' | null based on the kickoff timestamp.
+ * Pure helper — used by the team-detail route to flag primetime games.
+ * Times are checked against US Eastern Time (the league's broadcast frame).
+ */
+function detectPrimetime(kickoff) {
+  if (!kickoff) return null
+  const d = new Date(kickoff)
+  // Get day-of-week + hour in US Eastern (the league frame). Use Intl to be
+  // DST-safe: in-season runs Sep→Feb so we cross the EST↔EDT boundary.
+  const tzOpts = { timeZone: 'America/New_York', hour12: false, weekday: 'short', hour: 'numeric', minute: 'numeric' }
+  const parts = new Intl.DateTimeFormat('en-US', tzOpts).formatToParts(d)
+  const weekday = parts.find(p => p.type === 'weekday')?.value // 'Mon' | 'Tue' | ...
+  const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10)
+  const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10)
+  const minutesSinceMidnight = hour * 60 + minute
+
+  // Thursday 8:15 PM ET or later
+  if (weekday === 'Thu' && minutesSinceMidnight >= 20 * 60 + 15) return 'TNF'
+  // Sunday 8:20 PM ET or later (note: London games at 9:30 AM are NOT primetime)
+  if (weekday === 'Sun' && minutesSinceMidnight >= 20 * 60 + 20) return 'SNF'
+  // Monday 8:15 PM ET or later
+  if (weekday === 'Mon' && minutesSinceMidnight >= 20 * 60 + 15) return 'MNF'
+  return null
+}
+
 router.use(authenticate)
 
 /**
@@ -126,7 +152,7 @@ router.get('/teams/:abbr', async (req, res) => {
       return res.status(404).json({ error: `Unknown team: ${abbr}` })
     }
 
-    const [staff, ranks, rosterSlots] = await Promise.all([
+    const [staff, ranks, rosterSlots, schedule2026] = await Promise.all([
       prisma.nflCoachingStaff.findMany({
         where: { teamId: team.id, season: 2026 },
       }),
@@ -136,6 +162,14 @@ router.get('/teams/:abbr', async (req, res) => {
       prisma.nflRosterSlot.findMany({
         where: { teamId: team.id, snapshotType: 'current' },
         include: { player: true },
+      }),
+      prisma.nflGame.findMany({
+        where: {
+          season: 2026,
+          gameType: 'REG',
+          OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
+        },
+        orderBy: { week: 'asc' },
       }),
     ])
 
@@ -200,6 +234,34 @@ router.get('/teams/:abbr', async (req, res) => {
         return (a.depthRank ?? 99) - (b.depthRank ?? 99)
       })
 
+    // Resolve opponent team abbreviations in one query
+    const opponentIds = schedule2026
+      .map(g => g.homeTeamId === team.id ? g.awayTeamId : g.homeTeamId)
+      .filter((id, i, arr) => arr.indexOf(id) === i)
+    const opponents = opponentIds.length
+      ? await prisma.nflTeam.findMany({
+          where: { id: { in: opponentIds } },
+          select: { id: true, abbreviation: true, name: true, city: true },
+        })
+      : []
+    const opponentById = new Map(opponents.map(t => [t.id, t]))
+
+    const schedule = schedule2026.map(g => {
+      const isHome = g.homeTeamId === team.id
+      const opponentId = isHome ? g.awayTeamId : g.homeTeamId
+      const opponent = opponentById.get(opponentId)
+      return {
+        week: g.week,
+        opponent: opponent
+          ? { abbreviation: opponent.abbreviation, name: opponent.name, city: opponent.city }
+          : null,
+        isHome,
+        kickoff: g.kickoff,
+        gameType: g.gameType,
+        isPrimetime: detectPrimetime(g.kickoff),
+      }
+    })
+
     res.json({
       team: {
         id: team.id,
@@ -212,6 +274,7 @@ router.get('/teams/:abbr', async (req, res) => {
       coaching,
       ranks: ranksOut,
       roster,
+      schedule,
     })
   } catch (e) {
     console.error(`[prep] GET /teams/${abbr} failed:`, e.message)
