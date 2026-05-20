@@ -190,6 +190,12 @@ function buildStarterTemplate({ name, position, label }) {
 /**
  * Build a unit-rank template. Used for OL, DL.
  * Pulls from season=2025 NflTeamUnitRank (most recent COMPLETED season).
+ *
+ * Phrasing is intentionally historical ("in 2025", not "entering 2026")
+ * because the rank we have is the actual 2025 yards-per-rush-attempt
+ * outcome from ESPN — NOT a forward-looking 2026 projection. Promising
+ * a projection here would be misleading; we don't have a 2026 projection
+ * source (PFF / Football Outsiders ALY etc. are paywalled).
  */
 function buildRankTemplate({ name, unit, label }) {
   return {
@@ -215,7 +221,7 @@ function buildRankTemplate({ name, unit, label }) {
         cards.push({
           templateName: name,
           subject: team.abbreviation,
-          question: `What is the ${teamFullName(team)}' ${label} rank entering 2026?`,
+          question: `Where did the ${teamFullName(team)}' ${label} rank in 2025?`,
           answer: `#${rank}`,
           distractors,
           difficulty: 3,
