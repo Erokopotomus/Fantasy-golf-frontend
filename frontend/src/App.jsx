@@ -133,6 +133,11 @@ function JoinRedirect() {
   const { code } = useParams()
   return <Navigate to={`/leagues/join?code=${code}`} replace />
 }
+
+function MockDraftRecapRedirect() {
+  const { id } = useParams()
+  return <Navigate to={`/lab/mock-draft/recap/${id}`} replace />
+}
 function AppShell({ children }) {
   const { theme } = useTheme()
   return (
@@ -621,9 +626,9 @@ function App() {
             }
           />
           <Route path="/leaderboard" element={<ManagerLeaderboard />} />
-          {/* Mock Draft routes */}
+          {/* Mock Draft routes (canonical: /lab/mock-draft) */}
           <Route
-            path="/mock-draft"
+            path="/lab/mock-draft"
             element={
               <ProtectedRoute>
                 <MockDraft />
@@ -631,13 +636,25 @@ function App() {
             }
           />
           <Route
-            path="/mock-draft/room"
+            path="/lab/mock-draft/room"
             element={
               <ProtectedRoute>
                 <MockDraftRoom />
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/lab/mock-draft/recap/:id"
+            element={
+              <ProtectedRoute>
+                <MockDraftRecap />
+              </ProtectedRoute>
+            }
+          />
+          {/* Legacy /mock-draft/* redirects to canonical /lab/mock-draft/* */}
+          <Route path="/mock-draft" element={<Navigate to="/lab/mock-draft" replace />} />
+          <Route path="/mock-draft/room" element={<Navigate to="/lab/mock-draft/room" replace />} />
+          <Route path="/mock-draft/recap/:id" element={<MockDraftRecapRedirect />} />
           {/* Draft History routes */}
           <Route
             path="/draft/history"
