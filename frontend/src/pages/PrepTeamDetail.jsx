@@ -655,10 +655,7 @@ export default function PrepTeamDetail() {
                   17 regular-season games · 1 bye
                 </span>
               </div>
-              <TeamScheduleStrip
-                schedule={data.schedule}
-                teamAbbreviation={normalizedAbbr}
-              />
+              <TeamScheduleStrip schedule={data.schedule} />
             </section>
 
             {/* Depth chart */}

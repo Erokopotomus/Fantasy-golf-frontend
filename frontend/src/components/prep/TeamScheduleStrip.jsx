@@ -73,7 +73,7 @@ function buildWeekSlots(schedule) {
   return slots
 }
 
-export default function TeamScheduleStrip({ schedule, teamAbbreviation }) {
+export default function TeamScheduleStrip({ schedule }) {
   if (!schedule || schedule.length === 0) {
     return (
       <div className="rounded-card border border-[var(--color-border)] bg-[var(--surface)] px-4 py-10 text-center font-mono text-xs text-text-muted">
