@@ -8243,6 +8243,24 @@ Discovered 2026-05-18 during volume capacity check. The Railway Postgres volume 
 
 ---
 
+### 215 — Persist scoring format on MockDraftResult  `LOW`
+
+**Status:** TODO
+**Where:** Backend schema + `saveMockDraft` + recap response
+**Why:** Mock Draft recap masthead displays `result.scoring || 'half_ppr'`, but `result.scoring` is currently always undefined (no column on the MockDraftResult model, not threaded through `saveMockDraft`). So a user drafting in PPR sees a Half PPR pill on the recap. Cosmetic / informational bug.
+
+**Fix:**
+1. Migration: add `scoring String?` to `MockDraftResult` model in `backend/prisma/schema.prisma`.
+2. `backend/src/routes/mockDrafts.js` (or wherever `saveMockDraft` lives): accept + persist `scoring` from request body.
+3. `frontend/src/pages/MockDraftRoom.jsx` line ~1501 in `api.saveMockDraft({...})` payload: include `scoring: config.scoring`.
+4. Ensure the recap GET endpoint includes the `scoring` field in the response.
+
+**Effort:** ~30 min. Pure data flow plumbing. Forward-compatible: the recap UI already reads `result.scoring`, this just lights it up.
+
+**Related:** Mock Draft Prep-aesthetic rebuild (May 19, 2026). Task 11 fixed the import-to-board hardcode bug (`'ppr'` → `result.scoring || 'half_ppr'`), which is forward-compatible — the moment this item ships, both the import and the masthead pill use the actual drafted format.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
