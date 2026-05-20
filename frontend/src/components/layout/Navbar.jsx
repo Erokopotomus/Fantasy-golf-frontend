@@ -746,6 +746,20 @@ const Navbar = () => {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-[var(--nav-bg)] border-t border-white/10 animate-slide-down">
+          {/* Sticky close bar — always reachable even when the menu content scrolls past
+              the navbar's hamburger toggle position. */}
+          <div className="sticky top-0 z-10 flex justify-end px-2 py-2 bg-[var(--nav-bg)] border-b border-white/5">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(false)}
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+              aria-label="Close navigation"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
           <div className="px-4 py-4 space-y-2">
             {user ? (
               <>
@@ -882,6 +896,16 @@ const Navbar = () => {
                   )}
                   Live
                 </Link>
+                {/* Admin (only for admin users) — same gate as the desktop profile dropdown */}
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className={mobileNavLinkStyles('/admin')}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Admin Dashboard
+                  </Link>
+                )}
               </>
             ) : (
               <>

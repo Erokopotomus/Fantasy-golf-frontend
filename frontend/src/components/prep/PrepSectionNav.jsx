@@ -12,6 +12,10 @@ const ROOMS = [
   { label: 'Teams', to: '/lab/prep/teams', end: false },
   { label: 'What Changed', to: '/lab/prep/changes', end: false },
   { label: "Today's Quiz", to: '/lab/prep/quiz', end: false },
+  // Mock Draft sits outside the /lab/prep tree (it's a sport-neutral Lab sibling at
+  // /lab/mock-draft), but surfacing it from the Prep nav is a useful conversion path
+  // — users reading scouting / what-changed content frequently want to test it in a mock.
+  { label: 'Mock Draft', to: '/lab/mock-draft', end: false },
 ]
 
 export default function PrepSectionNav() {
