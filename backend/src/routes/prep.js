@@ -152,7 +152,7 @@ router.get('/teams/:abbr', async (req, res) => {
       return res.status(404).json({ error: `Unknown team: ${abbr}` })
     }
 
-    const [staff, ranks, rosterSlots, schedule2026] = await Promise.all([
+    const [staff, ranks, rosterSlots, schedule2026, dstPlayer] = await Promise.all([
       prisma.nflCoachingStaff.findMany({
         where: { teamId: team.id, season: 2026 },
       }),
@@ -170,6 +170,13 @@ router.get('/teams/:abbr', async (req, res) => {
           OR: [{ homeTeamId: team.id }, { awayTeamId: team.id }],
         },
         orderBy: { week: 'asc' },
+      }),
+      // DST is stored as a single Player row per team (nflPosition='DST'), not
+      // in NflRosterSlot. Pull it separately so the depth chart can render the
+      // team's defense alongside QB/RB/WR/TE/K.
+      prisma.player.findFirst({
+        where: { nflPosition: 'DST', nflTeamAbbr: abbr },
+        select: { id: true, name: true, nflPosition: true },
       }),
     ])
 
@@ -196,8 +203,8 @@ router.get('/teams/:abbr', async (req, res) => {
       else if (row.unit === 'DL') bucket.dlRank = row.rank
     }
 
-    // Pull projections for this team's players in one query
-    const playerIds = rosterSlots.map((s) => s.playerId)
+    // Pull projections for this team's players in one query (including DST)
+    const playerIds = [...rosterSlots.map((s) => s.playerId), dstPlayer?.id].filter(Boolean)
     const projections = playerIds.length
       ? await prisma.nflPlayerProjection.findMany({
           where: {
@@ -228,11 +235,31 @@ router.get('/teams/:abbr', async (req, res) => {
             : null,
         }
       })
-      .sort((a, b) => {
-        const pr = positionRank(a.position) - positionRank(b.position)
-        if (pr !== 0) return pr
-        return (a.depthRank ?? 99) - (b.depthRank ?? 99)
+
+    // Append team DST as a single-slot entry so it renders in the depth chart.
+    if (dstPlayer) {
+      const dstProj = projByPlayer.get(dstPlayer.id)
+      roster.push({
+        playerId: dstPlayer.id,
+        name: dstPlayer.name,
+        position: 'DST',
+        depthRank: 1,
+        status: null,
+        projection: dstProj
+          ? {
+              projectedPoints: dstProj.projectedPoints,
+              adp: dstProj.adp,
+              positionRank: dstProj.positionRank,
+            }
+          : null,
       })
+    }
+
+    roster.sort((a, b) => {
+      const pr = positionRank(a.position) - positionRank(b.position)
+      if (pr !== 0) return pr
+      return (a.depthRank ?? 99) - (b.depthRank ?? 99)
+    })
 
     // Resolve opponent team abbreviations in one query
     const opponentIds = schedule2026
