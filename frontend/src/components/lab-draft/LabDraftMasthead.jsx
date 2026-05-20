@@ -13,13 +13,19 @@ export default function LabDraftMasthead({
   backLabel = '← The Lab',
   compact = false,
   rightSlot,
+  onBackClick,
 }) {
+  const handleBackClick = (e) => {
+    if (onBackClick && onBackClick() === false) {
+      e.preventDefault()
+    }
+  }
   return (
     <>
       <div className="h-0.5 bg-blaze" aria-hidden="true" />
       <div className={`bg-slate-mid text-white border-b border-black/20 ${compact ? 'py-1.5' : 'py-2.5'}`}>
         <div className="mx-auto max-w-6xl px-4 md:px-6 flex items-center justify-between gap-3 md:gap-6 font-mono text-[11px] uppercase tracking-[0.22em] flex-wrap">
-          <Link to={backHref} className="text-white/60 hover:text-white transition-colors shrink-0">
+          <Link to={backHref} onClick={handleBackClick} className="text-white/60 hover:text-white transition-colors shrink-0">
             {backLabel}
           </Link>
           <div className="flex items-center gap-3 min-w-0">

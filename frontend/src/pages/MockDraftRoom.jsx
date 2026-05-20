@@ -1559,6 +1559,10 @@ const MockDraftRoom = () => {
         backHref="/lab/mock-draft"
         backLabel="← Setup"
         compact
+        onBackClick={() => {
+          if (!isStarted) return true
+          return window.confirm('Leave mock draft? Progress will be lost.')
+        }}
       />
       <div className="bg-[var(--surface)] border-b border-[var(--color-border)] flex-shrink-0 z-30">
         <div className="px-3 sm:px-4 py-2">
