@@ -817,8 +817,10 @@ const MockDraftRoom = () => {
   // NFL position filter
   const [posFilter, setPosFilter] = useState('ALL')
 
-  // NFL Mock Draft sort mode (ADP vs Projected) — drives PlayerRowAccent display + SortToggle
-  const [sortMode, setSortMode] = useState('adp')
+  // NFL Mock Draft sort mode (ADP vs Projected) — drives PlayerRowAccent display + SortToggle.
+  // Default 'projected' since draftable-pool ADP is fairly tight at the top; projected pts
+  // gives users more decision signal late in drafts where players cluster on ADP.
+  const [sortMode, setSortMode] = useState('projected')
 
   // Sort and filter players
   const filteredPlayers = useMemo(() => {
@@ -2199,7 +2201,7 @@ const MockDraftRoom = () => {
         } lg:flex lg:flex-1 lg:flex-row`}>
 
           {/* LEFT: Player Table (always visible on desktop, 'players' tab on mobile) */}
-          <div className={`flex-col min-h-0 ${
+          <div className={`flex-col min-h-0 bg-[var(--surface)] ${
             activeTab === 'players' ? 'flex flex-1' : 'hidden'
           } lg:flex lg:flex-none lg:w-[60%] lg:border-r lg:border-[var(--card-border)]`}>
             <div className="h-full flex flex-col">
