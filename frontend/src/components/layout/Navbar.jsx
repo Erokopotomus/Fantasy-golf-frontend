@@ -743,11 +743,17 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — fixed overlay below the navbar with its own scroll container.
+          Why not just inline below the navbar: nesting a tall menu inside `sticky top-0`
+          causes janky touch-scroll on iOS (the sticky element's height changes with
+          content, and iOS's momentum scroll fights the nested scroll context). Fixed
+          overlay = clean scroll, no body-scroll competition.
+          The pb-28 at the bottom keeps the last item from being hidden behind the
+          bottom MobileNav tab bar. */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[var(--nav-bg)] border-t border-white/10 animate-slide-down">
-          {/* Sticky close bar — always reachable even when the menu content scrolls past
-              the navbar's hamburger toggle position. */}
+        <div className="md:hidden fixed top-14 inset-x-0 bottom-0 z-40 bg-[var(--nav-bg)] border-t border-white/10 animate-slide-down overflow-y-auto overscroll-contain">
+          {/* Sticky close bar at the top of the scrolling content so the X is always
+              reachable regardless of scroll position. */}
           <div className="sticky top-0 z-10 flex justify-end px-2 py-2 bg-[var(--nav-bg)] border-b border-white/5">
             <button
               type="button"
@@ -760,7 +766,7 @@ const Navbar = () => {
               </svg>
             </button>
           </div>
-          <div className="px-4 py-4 space-y-2">
+          <div className="px-4 py-4 pb-28 space-y-2">
             {user ? (
               <>
                 <Link
