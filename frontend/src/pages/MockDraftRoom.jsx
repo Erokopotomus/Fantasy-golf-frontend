@@ -239,6 +239,57 @@ const NFL_POS_COLORS = {
   DEF: 'bg-teal-500/20 text-teal-400',
 }
 
+/**
+ * Returns the prior-season stat columns to show in the draft player table for
+ * a given position filter. Each column is { key, label, accessor }:
+ *   - QB leads with passing stats, then 2 rushing columns (mobile QBs run a lot)
+ *   - RB leads with rushing, then receiving (PPR/Half PPR reception scoring)
+ *   - WR/TE lead with receiving, then trailing rushing columns for the gadget guys
+ *   - K and DEF get their own position-specific stats
+ *   - ALL filter shows just last-year fantasy points + games so the column
+ *     meanings don't mismatch across rows of different positions
+ */
+function getStatColumnsForFilter(posFilter) {
+  if (posFilter === 'QB') return [
+    { key: 'passYards', label: 'PaYd', accessor: p => p.priorSeason?.passYards },
+    { key: 'passTds', label: 'PaTD', accessor: p => p.priorSeason?.passTds },
+    { key: 'interceptions', label: 'INT', accessor: p => p.priorSeason?.interceptions },
+    { key: 'rushYards', label: 'RuYd', accessor: p => p.priorSeason?.rushYards },
+    { key: 'rushTds', label: 'RuTD', accessor: p => p.priorSeason?.rushTds },
+  ]
+  if (posFilter === 'RB') return [
+    { key: 'rushYards', label: 'RuYd', accessor: p => p.priorSeason?.rushYards },
+    { key: 'rushTds', label: 'RuTD', accessor: p => p.priorSeason?.rushTds },
+    { key: 'receptions', label: 'Rec', accessor: p => p.priorSeason?.receptions },
+    { key: 'recYards', label: 'RcYd', accessor: p => p.priorSeason?.recYards },
+    { key: 'recTds', label: 'RcTD', accessor: p => p.priorSeason?.recTds },
+  ]
+  if (posFilter === 'WR' || posFilter === 'TE') return [
+    { key: 'receptions', label: 'Rec', accessor: p => p.priorSeason?.receptions },
+    { key: 'recYards', label: 'RcYd', accessor: p => p.priorSeason?.recYards },
+    { key: 'recTds', label: 'RcTD', accessor: p => p.priorSeason?.recTds },
+    { key: 'rushYards', label: 'RuYd', accessor: p => p.priorSeason?.rushYards },
+    { key: 'rushTds', label: 'RuTD', accessor: p => p.priorSeason?.rushTds },
+  ]
+  if (posFilter === 'K') return [
+    { key: 'fgMade', label: 'FGM', accessor: p => p.priorSeason?.fgMade },
+    { key: 'fgAttempts', label: 'FGA', accessor: p => p.priorSeason?.fgAttempts },
+    { key: 'fgMade50Plus', label: '50+', accessor: p => p.priorSeason?.fgMade50Plus },
+    { key: 'xpMade', label: 'XP', accessor: p => p.priorSeason?.xpMade },
+  ]
+  if (posFilter === 'DEF') return [
+    { key: 'sacks', label: 'Sk', accessor: p => p.priorSeason?.sacks ? Math.round(p.priorSeason.sacks) : 0 },
+    { key: 'defInterceptions', label: 'INT', accessor: p => p.priorSeason?.defInterceptions },
+    { key: 'fumblesRecovered', label: 'FR', accessor: p => p.priorSeason?.fumblesRecovered },
+    { key: 'pointsAllowed', label: 'PA', accessor: p => p.priorSeason?.pointsAllowed },
+  ]
+  // ALL filter: universal columns
+  return [
+    { key: 'fantasyPoints', label: 'PTS', accessor: p => p.priorSeason?.fantasyPoints != null ? Math.round(p.priorSeason.fantasyPoints) : null },
+    { key: 'games', label: 'G', accessor: p => p.priorSeason?.games },
+  ]
+}
+
 // NFL position-aware AI drafting
 const NFL_POS_CAPS = { QB: 2, RB: 5, WR: 5, TE: 2, K: 1, DEF: 1 }
 
@@ -674,6 +725,7 @@ const MockDraftRoom = () => {
               adp: p.adp,
               projectedPoints: p.projectedPoints,
               headshot: p.headshotUrl,
+              priorSeason: p.priorSeason || null,
               // Legacy fields the draft state machine reads — derived from projectedPoints:
               ppg: p.projectedPoints ? p.projectedPoints / 17 : 0,
               totalPts: p.projectedPoints || 0,
@@ -2261,13 +2313,21 @@ const MockDraftRoom = () => {
                   {/* Table Header */}
                   <div className="sticky top-0 bg-[var(--surface)] z-10 border-b border-[var(--card-border)]">
                     {isNfl ? (
-                      <div className="grid grid-cols-[40px_40px_32px_1fr_50px] px-3 py-2 gap-3 text-[10px] font-semibold text-text-muted uppercase tracking-[0.22em] font-mono">
-                        <span>ADP</span>
-                        <span>Tm</span>
-                        <span>Pos</span>
-                        <span>Player</span>
-                        <span className="text-right">{sortMode === 'projected' ? 'Proj' : ''}</span>
-                      </div>
+                      (() => {
+                        const statCols = getStatColumnsForFilter(posFilter)
+                        return (
+                          <div className="px-3 py-2 flex items-center gap-3 text-[10px] font-semibold text-text-muted uppercase tracking-[0.22em] font-mono">
+                            <span className="w-10 shrink-0">ADP</span>
+                            <span className="w-10 shrink-0">Tm</span>
+                            <span className="w-8 shrink-0">Pos</span>
+                            <span className="flex-1 min-w-0">Player</span>
+                            {statCols.map(c => (
+                              <span key={c.key} className="w-10 shrink-0 text-right">{c.label}</span>
+                            ))}
+                            <span className="w-12 shrink-0 text-right">{sortMode === 'projected' ? 'Proj' : ''}</span>
+                          </div>
+                        )
+                      })()
                     ) : (
                       <div className={`grid ${boardEntries.length > 0 ? 'grid-cols-[26px_26px_1fr_40px_30px_30px_30px_46px_38px_44px]' : 'grid-cols-[26px_1fr_40px_30px_30px_30px_46px_38px_44px]'} px-3 py-2 text-[10px] font-semibold text-text-muted uppercase tracking-wide`}>
                         <button onClick={() => handleSort('rank')} className="text-left hover:text-text-primary transition-colors" title="Official World Golf Ranking">
@@ -2304,15 +2364,23 @@ const MockDraftRoom = () => {
 
                   {/* Player Rows */}
                   {isNfl ? (
-                    sortedPlayers.map(player => (
-                      <PlayerRowAccent
-                        key={player.id}
-                        player={player}
-                        onPick={(p) => !p.isDrafted && setSelectedPlayer(p)}
-                        disabled={player.isDrafted}
-                        showProjected={sortMode === 'projected'}
-                      />
-                    ))
+                    (() => {
+                      const statCols = getStatColumnsForFilter(posFilter)
+                      return sortedPlayers.map(player => (
+                        <PlayerRowAccent
+                          key={player.id}
+                          player={player}
+                          onPick={(p) => !p.isDrafted && setSelectedPlayer(p)}
+                          disabled={player.isDrafted}
+                          showProjected={sortMode === 'projected'}
+                          statsColumns={statCols.map(c => ({
+                            key: c.key,
+                            value: c.accessor(player),
+                            title: c.label,
+                          }))}
+                        />
+                      ))
+                    })()
                   ) : (
                     filteredPlayers.map(player => {
                       const inQueue = queue.find(q => q.id === player.id)

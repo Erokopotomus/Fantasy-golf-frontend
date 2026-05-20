@@ -3,8 +3,12 @@ import { teamPrimary } from './teamColorHelpers'
 
 /**
  * Single available-player row. Left-border accent in team primary color.
- * Designed to slot into the existing MockDraftRoom available-players list
- * without changing the surrounding layout grid.
+ *
+ * `statsColumns` lets callers inject position-specific stat values (e.g., for
+ * QB rows: passing yards, TDs; for RB: rushing yards, TDs, receptions). Each
+ * column is `{ key, value }` and the matching headers are rendered by the caller.
+ * When `statsColumns` is omitted, only ADP / team / position / name / projected
+ * are shown — matching the original simple layout.
  */
 export default function PlayerRowAccent({
   player,
@@ -12,6 +16,7 @@ export default function PlayerRowAccent({
   disabled,
   selected,
   showProjected,
+  statsColumns,
 }) {
   const accent = teamPrimary(player.teamAbbr)
   return (
@@ -33,10 +38,19 @@ export default function PlayerRowAccent({
       <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted w-8 shrink-0">
         {player.position}
       </span>
-      <span className="font-display font-bold text-sm text-text-primary truncate flex-1">
+      <span className="font-display font-bold text-sm text-text-primary truncate flex-1 min-w-0">
         {player.name}
       </span>
-      <span className="font-mono text-xs text-text-secondary tabular-nums shrink-0">
+      {statsColumns && statsColumns.map(s => (
+        <span
+          key={s.key}
+          className="font-mono text-[11px] text-text-secondary tabular-nums w-10 shrink-0 text-right"
+          title={s.title}
+        >
+          {s.value == null || s.value === 0 ? '—' : s.value}
+        </span>
+      ))}
+      <span className="font-mono text-xs text-text-secondary tabular-nums shrink-0 w-12 text-right">
         {showProjected ? (player.projectedPoints?.toFixed(0) ?? '—') : ''}
       </span>
     </button>

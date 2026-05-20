@@ -238,6 +238,69 @@ router.get('/draft-players', optionalAuth, async (req, res, next) => {
     })
     const colorByAbbr = new Map(teams.map(t => [t.abbreviation, t]))
 
+    // Aggregate prior-season (season - 1) stats per player so the draft table can
+    // surface "what did they actually do last year?" inline with the projections.
+    const priorSeason = season - 1
+    const playerIds = rows.map(r => r.playerId).filter(Boolean)
+    const priorAggregates = playerIds.length
+      ? await prisma.nflPlayerGame.groupBy({
+          by: ['playerId'],
+          where: { playerId: { in: playerIds }, game: { season: priorSeason } },
+          _sum: {
+            passYards: true,
+            passTds: true,
+            interceptions: true,
+            rushYards: true,
+            rushTds: true,
+            receptions: true,
+            recYards: true,
+            recTds: true,
+            fgMade: true,
+            fgAttempts: true,
+            xpMade: true,
+            fgMade50Plus: true,
+            sacks: true,
+            defInterceptions: true,
+            fumblesRecovered: true,
+            fumblesForced: true,
+            pointsAllowed: true,
+            yardsAllowed: true,
+            fantasyPtsHalf: true,
+            fantasyPtsPpr: true,
+            fantasyPtsStd: true,
+          },
+          _count: { _all: true },
+        })
+      : []
+    const ptsField = scoring === 'ppr' ? 'fantasyPtsPpr' : scoring === 'standard' ? 'fantasyPtsStd' : 'fantasyPtsHalf'
+    const priorByPlayer = new Map(
+      priorAggregates.map(a => [
+        a.playerId,
+        {
+          games: a._count._all || 0,
+          fantasyPoints: a._sum[ptsField] || 0,
+          passYards: a._sum.passYards || 0,
+          passTds: a._sum.passTds || 0,
+          interceptions: a._sum.interceptions || 0,
+          rushYards: a._sum.rushYards || 0,
+          rushTds: a._sum.rushTds || 0,
+          receptions: a._sum.receptions || 0,
+          recYards: a._sum.recYards || 0,
+          recTds: a._sum.recTds || 0,
+          fgMade: a._sum.fgMade || 0,
+          fgAttempts: a._sum.fgAttempts || 0,
+          xpMade: a._sum.xpMade || 0,
+          fgMade50Plus: a._sum.fgMade50Plus || 0,
+          sacks: a._sum.sacks || 0,
+          defInterceptions: a._sum.defInterceptions || 0,
+          fumblesRecovered: a._sum.fumblesRecovered || 0,
+          fumblesForced: a._sum.fumblesForced || 0,
+          pointsAllowed: a._sum.pointsAllowed || 0,
+          yardsAllowed: a._sum.yardsAllowed || 0,
+        },
+      ]),
+    )
+
     const players = rows
       .filter(r => r.player) // skip orphaned projections (defensive)
       .map(r => {
@@ -252,10 +315,11 @@ router.get('/draft-players', optionalAuth, async (req, res, next) => {
           teamSecondaryColor: team.secondaryColor || null,
           adp: r.adp,
           projectedPoints: r.projectedPoints,
+          priorSeason: priorByPlayer.get(r.player.id) || null,
         }
       })
 
-    res.json({ players, scoring, season, count: players.length })
+    res.json({ players, scoring, season, priorSeason, count: players.length })
   } catch (err) {
     next(err)
   }
