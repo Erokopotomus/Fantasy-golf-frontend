@@ -19,6 +19,25 @@ function kickoffDay(kickoff) {
   }
 }
 
+/**
+ * Returns kickoff time in Pacific Time (most of the league's user base is west coast).
+ * Returns format like '10:00 AM' or '5:15 PM'. Timezone label is rendered once in the
+ * section header instead of on every row to reduce repeated chrome.
+ */
+function kickoffTimePT(kickoff) {
+  if (!kickoff) return null
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).format(new Date(kickoff))
+  } catch {
+    return null
+  }
+}
+
 function ScheduleRow({ game }) {
   if (!game) {
     // Bye week row
@@ -46,8 +65,8 @@ function ScheduleRow({ game }) {
       <span className="font-editorial italic text-sm text-text-secondary truncate flex-1">
         {opponentName}
       </span>
-      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted shrink-0">
-        {kickoffDay(game.kickoff)}
+      <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted shrink-0 tabular-nums">
+        {kickoffDay(game.kickoff)} {kickoffTimePT(game.kickoff)}
       </span>
       {game.isPrimetime && (
         <span

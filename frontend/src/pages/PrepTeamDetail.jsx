@@ -652,7 +652,7 @@ export default function PrepTeamDetail() {
                   </h2>
                 </div>
                 <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-muted">
-                  17 regular-season games · 1 bye
+                  17 regular-season games · 1 bye · times PT
                 </span>
               </div>
               <TeamScheduleStrip schedule={data.schedule} />
