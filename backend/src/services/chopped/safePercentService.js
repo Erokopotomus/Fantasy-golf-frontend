@@ -23,7 +23,7 @@ function computeSafePercentsFromTeams(teams) {
       const z = (t.mean - j.mean) / Math.sqrt(t.variance + j.variance);
       safe *= normalCdf(z);
     }
-    return { teamId: t.teamId, mean: t.mean, variance: t.variance, safePct: safe };
+    return { teamId: t.teamId, teamName: t.teamName, mean: t.mean, variance: t.variance, safePct: safe };
   });
   results.sort((a, b) => b.safePct - a.safePct);
   results.forEach((r, i) => { r.rank = i + 1; });

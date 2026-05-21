@@ -54,9 +54,11 @@ router.get('/:leagueId/chopped/safe-percents', authenticate, async (req, res) =>
         return res.json({ leagueId, sport: 'GOLF', results: [], tournament: null })
       }
       // Prefer cached snapshots fresh within last 6 min (slightly wider than the
-      // 5-min cron cadence to absorb a missed tick)
+      // 5-min cron cadence to absorb a missed tick). Include team relation so the
+      // frontend can show team names instead of cuid prefixes.
       const snapshots = await prisma.choppedLiveSnapshot.findMany({
         where: { leagueId, tournamentId: tournament.id },
+        include: { team: { select: { id: true, name: true } } },
         orderBy: { safePercent: 'desc' },
       })
       const isFresh =
@@ -68,6 +70,7 @@ router.get('/:leagueId/chopped/safe-percents', authenticate, async (req, res) =>
           sport: 'GOLF',
           results: snapshots.map((s, i) => ({
             teamId: s.teamId,
+            teamName: s.team?.name ?? null,
             mean: s.mean,
             variance: s.variance,
             safePct: s.safePercent,

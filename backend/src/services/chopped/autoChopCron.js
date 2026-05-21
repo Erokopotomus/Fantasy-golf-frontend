@@ -50,7 +50,7 @@ async function runAutoChopCheck() {
   const leagues = await prisma.league.findMany({
     where: {
       format: 'CHOPPED',
-      isActive: true,
+      status: 'ACTIVE',
     },
     include: { teams: { where: { eliminatedAt: null } } },
   })
