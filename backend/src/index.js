@@ -1348,6 +1348,10 @@ httpServer.listen(PORT, () => {
   const { registerAutoChopCron } = require('./services/chopped/autoChopCron')
   registerAutoChopCron()
 
+  // Golf Chopped — Monday 4 AM ET auto-chop fallback (different timing from NFL)
+  const { registerGolfAutoChopCron } = require('./services/chopped/golfAutoChopCron')
+  registerGolfAutoChopCron()
+
   // Trade review processor — runs every 15 minutes
   const tradePrisma = require('./lib/prisma')
   const { processExpiredReviews } = require('./services/tradeReviewProcessor')
