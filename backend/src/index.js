@@ -515,6 +515,18 @@ httpServer.listen(PORT, () => {
         const alertResult = await checkRosterAlerts(cronPrisma)
         if (alertResult.alerts > 0) cronLog('live', `Sent ${alertResult.alerts} roster alerts`)
       } catch (alertErr) { cronLog('live', `Roster alerts error: ${alertErr.message}`) }
+      // Golf Chopped — refresh live Safe % snapshots for any in-progress
+      // tournaments. No-op when no golf CHOPPED leagues have an in-progress
+      // tournament (the common case Thu-Sun outside of major weeks).
+      try {
+        const { refreshActiveLeagues } = require('./services/chopped/golfSafePercent')
+        const result = await refreshActiveLeagues()
+        if (result.leagues > 0) {
+          console.log(`[chopped/golf-safe] refreshed ${result.snapshots} snapshots across ${result.leagues} leagues`)
+        }
+      } catch (e) {
+        console.error('[chopped/golf-safe] refresh failed:', e.message)
+      }
     }, { timezone: 'America/New_York' })
 
     // ─── Pool locking — every 2 min, all week ────────────────────────────
