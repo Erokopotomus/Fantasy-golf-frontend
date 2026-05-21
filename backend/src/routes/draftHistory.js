@@ -315,7 +315,7 @@ router.get('/mock-drafts/:id', async (req, res) => {
  */
 router.post('/mock-drafts', async (req, res) => {
   try {
-    const { draftType, teamCount, rosterSize, userPosition, dataSource, picks, userPicks, teamNames } = req.body
+    const { draftType, teamCount, rosterSize, userPosition, dataSource, picks, userPicks, teamNames, scoring } = req.body
 
     if (!picks || !userPicks || !teamCount || !rosterSize) {
       return res.status(400).json({ error: { message: 'Missing required fields' } })
@@ -346,6 +346,7 @@ router.post('/mock-drafts', async (req, res) => {
         rosterSize,
         userPosition: userPosition || null,
         dataSource: dataSource || 'api',
+        scoring: scoring || null,
         picks,
         userPicks,
         teamNames: teamNames || [],

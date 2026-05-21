@@ -1562,6 +1562,7 @@ const MockDraftRoom = () => {
       rosterSize: config.rosterSize || Math.max(...picks.map(p => p.round), 6),
       userPosition: config.teams.findIndex(t => t.isUser) + 1,
       dataSource: apiPlayers ? 'api' : 'mock',
+      scoring: config.scoring || null,
       picks: allPicksData,
       userPicks: userPicksData,
       teamNames: teamNamesList,

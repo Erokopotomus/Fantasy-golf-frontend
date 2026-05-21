@@ -2412,6 +2412,7 @@ model MockDraftResult {
   rosterSize   Int
   userPosition Int? // draft slot (snake)
   dataSource   String  @default("api") // "api" or "mock"
+  scoring      String? // NFL: 'ppr' | 'half_ppr' | 'standard'. Null for golf or legacy rows.
 
   picks     Json @default("[]") // ALL picks
   userPicks Json @default("[]") // User's picks only
