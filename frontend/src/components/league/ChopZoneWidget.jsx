@@ -35,7 +35,9 @@ export default function ChopZoneWidget({ leagueId, week, leagueFormat }) {
   return (
     <div className="rounded-lg bg-[var(--surface)] border border-[var(--card-border)] p-4">
       <div className="flex items-baseline justify-between mb-3">
-        <h3 className="font-display text-lg text-text-primary">{CHOPPED_VOCAB.zoneCallout(week)}</h3>
+        <h3 className="font-display text-lg text-text-primary">
+          {data.tournament?.name ? `Chop Zone — ${data.tournament.name}` : CHOPPED_VOCAB.zoneCallout(week)}
+        </h3>
         <Link to={`/leagues/${leagueId}/chop`} className="text-blaze text-sm font-mono">Open →</Link>
       </div>
       <div className="grid grid-cols-2 gap-4 text-sm">
