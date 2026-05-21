@@ -40,10 +40,16 @@ router.get('/:leagueId/chopped/safe-percents', authenticate, async (req, res) =>
       if (!seasonId) {
         return res.json({ leagueId, sport: 'GOLF', results: [], tournament: null })
       }
-      const tournament = await prisma.tournament.findFirst({
-        where: { seasonId, status: 'IN_PROGRESS' },
+      const fw = await prisma.fantasyWeek.findFirst({
+        where: {
+          seasonId,
+          tournamentId: { not: null },
+          tournament: { status: 'IN_PROGRESS' },
+        },
+        include: { tournament: true },
         orderBy: { startDate: 'desc' },
       })
+      const tournament = fw?.tournament || null
       if (!tournament) {
         return res.json({ leagueId, sport: 'GOLF', results: [], tournament: null })
       }
@@ -130,17 +136,17 @@ router.post('/:leagueId/chopped/chop', authenticate, async (req, res) => {
       if (!tournamentId) {
         return res.status(400).json({ error: 'tournamentId required for golf chop' })
       }
-      const tournament = await prisma.tournament.findUnique({
-        where: { id: tournamentId },
-        select: { weekNumber: true, endDate: true },
+      const fw = await prisma.fantasyWeek.findFirst({
+        where: { tournamentId },
+        select: { weekNumber: true, tournament: { select: { endDate: true } } },
       })
-      if (!tournament) {
+      if (!fw?.tournament) {
         return res.status(404).json({ error: 'Tournament not found' })
       }
       weekKey =
-        tournament.weekNumber != null
-          ? tournament.weekNumber
-          : Math.floor(new Date(tournament.endDate).getTime() / (1000 * 60 * 60 * 24 * 7))
+        fw.weekNumber != null
+          ? fw.weekNumber
+          : Math.floor(new Date(fw.tournament.endDate).getTime() / (1000 * 60 * 60 * 24 * 7))
     } else {
       if (!week) {
         return res.status(400).json({ error: 'week required for non-golf chop' })

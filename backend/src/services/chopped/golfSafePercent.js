@@ -50,10 +50,16 @@ function projectedRemaining(performance, player, progress) {
  * if no tournament is currently live.
  */
 async function getInProgressTournament(seasonId) {
-  return prisma.tournament.findFirst({
-    where: { seasonId, status: 'IN_PROGRESS' },
+  const fw = await prisma.fantasyWeek.findFirst({
+    where: {
+      seasonId,
+      tournamentId: { not: null },
+      tournament: { status: 'IN_PROGRESS' },
+    },
+    include: { tournament: true },
     orderBy: { startDate: 'desc' },
   })
+  return fw?.tournament || null
 }
 
 /**

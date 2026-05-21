@@ -57,16 +57,17 @@ async function checkLeagues() {
       if (results.length === 0) continue
 
       const tournamentId = results[0].tournamentId
-      const tournament = await prisma.tournament.findUnique({
-        where: { id: tournamentId },
-        select: { weekNumber: true, endDate: true, name: true },
+      // weekKey comes from FantasyWeek.weekNumber (Tournament has no weekNumber field).
+      // Fallback to ISO-week ordinal from endDate if no FantasyWeek joined.
+      const fw = await prisma.fantasyWeek.findFirst({
+        where: { tournamentId },
+        select: { weekNumber: true, tournament: { select: { endDate: true, name: true } } },
       })
-      // Map tournament → "week" integer for ChopEvent uniqueness.
-      // Prefer the tournament's seasonal week number; fall back to a derived
-      // ISO-week ordinal from endDate if weekNumber is missing.
+      const tournament = fw?.tournament || null
       const weekKey =
-        tournament?.weekNumber ||
-        Math.floor(new Date(tournament.endDate).getTime() / (1000 * 60 * 60 * 24 * 7))
+        fw?.weekNumber != null
+          ? fw.weekNumber
+          : Math.floor(new Date(tournament?.endDate || Date.now()).getTime() / (1000 * 60 * 60 * 24 * 7))
 
       const existing = await prisma.chopEvent.findFirst({
         where: { leagueId: league.id, week: weekKey },

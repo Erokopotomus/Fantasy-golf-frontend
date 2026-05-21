@@ -150,12 +150,12 @@ router.post('/', authenticate, async (req, res, next) => {
       budget: budget || null,
     }
 
-    // Chopped leagues default to TUESDAY 23:59 ET waiver close (matches the
-    // auto-chop cron default and the typical "chop Tuesday morning, waivers
-    // process Tuesday night" flow). Commish can override in League Settings.
     if (resolvedFormat === 'CHOPPED') {
-      combinedSettings.waiverCloseDay = combinedSettings.waiverCloseDay || 'TUESDAY'
-      combinedSettings.waiverCloseTime = combinedSettings.waiverCloseTime || '23:59'
+      // Golf chops Monday 4 AM ET (after Sunday tournament close); NFL chops
+      // Tuesday 23:59 ET (after MNF + waiver window).
+      const isGolf = (sport || 'GOLF').toUpperCase() === 'GOLF'
+      combinedSettings.waiverCloseDay = combinedSettings.waiverCloseDay || (isGolf ? 'MONDAY' : 'TUESDAY')
+      combinedSettings.waiverCloseTime = combinedSettings.waiverCloseTime || (isGolf ? '04:00' : '23:59')
       combinedSettings.waiverCloseTimezone = combinedSettings.waiverCloseTimezone || 'America/New_York'
     }
 
