@@ -95,7 +95,6 @@ const ClutchRatingPage = lazy(() => import('./pages/ClutchRatingPage'))
 // The Lab
 const DraftBoards = lazy(() => import('./pages/DraftBoards'))
 const DraftBoardEditor = lazy(() => import('./pages/DraftBoardEditor'))
-const WatchList = lazy(() => import('./pages/WatchList'))
 const DecisionJournal = lazy(() => import('./pages/DecisionJournal'))
 const LabCaptures = lazy(() => import('./pages/LabCaptures'))
 const LabCheatSheet = lazy(() => import('./pages/LabCheatSheet'))
@@ -464,14 +463,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <DraftBoards />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/lab/watch-list"
-            element={
-              <ProtectedRoute>
-                <WatchList />
               </ProtectedRoute>
             }
           />

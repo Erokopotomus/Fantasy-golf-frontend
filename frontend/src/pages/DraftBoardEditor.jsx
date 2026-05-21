@@ -3,7 +3,6 @@ import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import useDraftBoardEditor from '../hooks/useDraftBoardEditor'
-import useWatchList from '../hooks/useWatchList'
 import useBoardReadiness from '../hooks/useBoardReadiness'
 import usePlayerComparison from '../hooks/usePlayerComparison'
 import api from '../services/api'
@@ -219,7 +218,6 @@ export default function DraftBoardEditor() {
     movedEntry, clearMovedEntry,
   } = useDraftBoardEditor(boardId)
 
-  const { isWatched, toggleWatch } = useWatchList()
   const { readiness } = useBoardReadiness(boardId)
   const {
     selectedPlayers: comparePlayers,
@@ -792,8 +790,6 @@ export default function DraftBoardEditor() {
                         onUpdateTags={updateTags}
                         onClickPlayer={(pid) => setDrawerPlayerId(pid)}
                         onUpdateAuctionValue={updateAuctionValue}
-                        isWatched={isWatched(entry.playerId)}
-                        onToggleWatch={toggleWatch}
                         isNewlyAdded={newlyAddedId === entry.playerId}
                         compareMode={compareMode}
                         isCompareSelected={isCompareSelected(entry.playerId)}

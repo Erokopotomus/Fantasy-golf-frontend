@@ -121,7 +121,6 @@ export default function DraftBoards() {
 
   // Hub data
   const [leagues, setLeagues] = useState([])
-  const [watchListEntries, setWatchListEntries] = useState([])
   const [recentCaptures, setRecentCaptures] = useState([])
   const [hubLoading, setHubLoading] = useState(true)
   const [showCaptureModal, setShowCaptureModal] = useState(false)
@@ -186,12 +185,10 @@ export default function DraftBoards() {
     if (boards.length === 0) { setHubLoading(false); return }
     let cancelled = false
     Promise.all([
-      api.getWatchList().catch(() => ({ entries: [] })),
       api.getRecentCaptures(5).catch(() => ({ captures: [] })),
       api.getLabWeekly().catch(() => ({ week: null })),
-    ]).then(([watchList, capturesRes, weeklyRes]) => {
+    ]).then(([capturesRes, weeklyRes]) => {
       if (cancelled) return
-      setWatchListEntries(watchList.entries || [])
       setRecentCaptures(capturesRes.captures || [])
       if (weeklyRes.week) setWeeklyIntel(weeklyRes.week)
       setHubLoading(false)
@@ -429,37 +426,6 @@ export default function DraftBoards() {
     </div>
   )
 
-  const renderWatchList = () => (
-    !hubLoading && watchListEntries.length > 0 && (
-      <div className="mb-6 p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary/30">Watch List</h3>
-          <Link to="/lab/watch-list" className="text-[10px] text-gold hover:underline">View All</Link>
-        </div>
-        <div className="flex gap-3">
-          {watchListEntries.slice(0, 3).map((e, i) => (
-            <div key={i} className="flex items-center gap-2 px-3 py-2 bg-[var(--bg-alt)] rounded-lg">
-              {e.player?.headshotUrl && (
-                <img src={e.player.headshotUrl} alt="" className="w-6 h-6 rounded-full bg-[var(--stone)]" />
-              )}
-              <span className="text-xs text-text-primary/70">{e.player?.name || 'Unknown'}</span>
-              <span className={`px-1 py-0.5 rounded text-[9px] font-bold uppercase ${
-                e.sport === 'nfl' ? 'bg-orange/20 text-orange' : 'bg-field-bright/20 text-field'
-              }`}>
-                {e.sport}
-              </span>
-            </div>
-          ))}
-          {watchListEntries.length > 3 && (
-            <Link to="/lab/watch-list" className="flex items-center px-3 py-2 text-xs text-text-primary/30 hover:text-gold transition-colors">
-              +{watchListEntries.length - 3} more
-            </Link>
-          )}
-        </div>
-      </div>
-    )
-  )
-
   const renderCaptures = () => (
     <div className="mb-6 p-4 bg-[var(--surface)] shadow-card border border-[var(--card-border)] rounded-xl">
       <div className="flex items-center justify-between mb-3">
@@ -575,10 +541,9 @@ export default function DraftBoards() {
               {renderMyBoards()}
             </div>
 
-            {/* Right: Notes + Watch List (2/5 width) */}
+            {/* Right: Notes (2/5 width) */}
             <div className="lg:col-span-2 space-y-6">
               {renderCaptures()}
-              {renderWatchList()}
             </div>
           </div>
 
