@@ -8265,7 +8265,8 @@ Discovered 2026-05-18 during volume capacity check. The Railway Postgres volume 
 
 ### 216 — Wire NFL Chopped live-stats provider (currently returns zeros)  `HIGH`
 
-**Status:** TODO
+**Status:** DONE
+**Completed:** 2026-05-20 — `EspnStatsProvider` now reads real data: `getPlayerStats(week, playerId)` joins `NflPlayerGame` + `NflGame` for current season, returning `fantasyPtsHalf` with game-status-derived `gameProgress` (FINAL=1, IN_PROGRESS=clamped time-elapsed, UPCOMING=0). `getProjections` reads `NflPlayerProjection` for half-PPR and returns per-week projections (season total / 17). Per-instance promise caching for season detection + projection map keeps provider thrash low. Current season auto-derived as `MAX(NflGame.season)` (2026 today). Verified end-to-end: 2025 W1 FINAL game returned `points=16.4, status=post, progress=1`; preweek mode against a populated 8-team test league returned correctly-ordered safe%s (highest projection → 9.0%, lowest → 0.0%).
 **Source:** Surfaced during golf Chopped brainstorming, 2026-05-20
 
 **The bug:**

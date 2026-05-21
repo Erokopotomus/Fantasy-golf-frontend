@@ -1,9 +1,19 @@
 const axios = require('axios');
 const BaseLiveStatsProvider = require('./baseProvider');
+const prisma = require('../../lib/prisma');
 
 const ESPN_NFL_SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard';
+const NFL_GAME_MS = 3 * 60 * 60 * 1000;
+const REG_SEASON_GAMES = 17;
+const DEFAULT_SCORING = 'half_ppr';
 
 class EspnStatsProvider extends BaseLiveStatsProvider {
+  constructor() {
+    super();
+    this._seasonPromise = null;
+    this._projectionsPromise = null;
+  }
+
   async getWeekScoreboard(week) {
     const url = `${ESPN_NFL_SCOREBOARD}?week=${week}&seasontype=2`;
     const { data } = await axios.get(url, { timeout: 10000 });
@@ -32,23 +42,82 @@ class EspnStatsProvider extends BaseLiveStatsProvider {
   }
 
   async getPlayerStats(week, playerId) {
-    // v1: stub. Player-level live stats will be wired to existing
-    // nflFantasyTracker in a later phase. Returns zero so safe-percent
-    // service can fall back to projections-only mode.
+    const season = await this._currentSeason();
+    const projections = await this._projectionsBySeason();
+    const seasonProj = projections.get(playerId) || 0;
+    const projectedPoints = seasonProj / REG_SEASON_GAMES;
+
+    const row = await prisma.nflPlayerGame.findFirst({
+      where: { playerId, game: { season, week } },
+      select: {
+        fantasyPtsHalf: true,
+        game: { select: { status: true, kickoff: true } },
+      },
+    });
+
+    if (!row) {
+      return {
+        points: 0,
+        projectedPoints,
+        gameStatus: 'pre',
+        gameProgress: 0,
+        statsBreakdown: {},
+      };
+    }
+
+    const dbStatus = row.game.status;
+    let gameProgress;
+    let gameStatus;
+    if (dbStatus === 'FINAL') {
+      gameProgress = 1;
+      gameStatus = 'post';
+    } else if (dbStatus === 'IN_PROGRESS') {
+      const elapsed = Date.now() - new Date(row.game.kickoff).getTime();
+      gameProgress = Math.max(0.01, Math.min(0.99, elapsed / NFL_GAME_MS));
+      gameStatus = 'in';
+    } else {
+      gameProgress = 0;
+      gameStatus = 'pre';
+    }
+
     return {
-      points: 0,
-      projectedPoints: 0,
-      gameStatus: 'pre',
-      gameProgress: 0,
+      points: row.fantasyPtsHalf || 0,
+      projectedPoints,
+      gameStatus,
+      gameProgress,
       statsBreakdown: {},
     };
   }
 
-  async getProjections(week) {
-    // v1: stub. Projection source (nflverse or Sleeper) wired in a
-    // later task. Returns empty so safe-percent service falls back to
-    // position-variance defaults uniformly.
-    return [];
+  async getProjections(_week) {
+    const projections = await this._projectionsBySeason();
+    return Array.from(projections.entries()).map(([playerId, seasonProj]) => ({
+      playerId,
+      projectedPoints: seasonProj / REG_SEASON_GAMES,
+    }));
+  }
+
+  async _currentSeason() {
+    if (!this._seasonPromise) {
+      this._seasonPromise = prisma.nflGame
+        .findFirst({ orderBy: { season: 'desc' }, select: { season: true } })
+        .then(row => row?.season || new Date().getFullYear());
+    }
+    return this._seasonPromise;
+  }
+
+  async _projectionsBySeason() {
+    if (!this._projectionsPromise) {
+      this._projectionsPromise = (async () => {
+        const season = await this._currentSeason();
+        const rows = await prisma.nflPlayerProjection.findMany({
+          where: { season, scoringType: DEFAULT_SCORING },
+          select: { playerId: true, projectedPoints: true },
+        });
+        return new Map(rows.map(r => [r.playerId, r.projectedPoints]));
+      })();
+    }
+    return this._projectionsPromise;
   }
 }
 
