@@ -1594,7 +1594,7 @@ model ChoppedLiveSnapshot {
   leagueId     String
   tournamentId String
   teamId       String
-  safePct      Float
+  safePercent  Float
   mean         Float
   variance     Float
   computedAt   DateTime @default(now())

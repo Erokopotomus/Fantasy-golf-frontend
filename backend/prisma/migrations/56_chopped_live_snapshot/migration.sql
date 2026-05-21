@@ -4,7 +4,7 @@ CREATE TABLE "ChoppedLiveSnapshot" (
     "leagueId" TEXT NOT NULL,
     "tournamentId" TEXT NOT NULL,
     "teamId" TEXT NOT NULL,
-    "safePct" DOUBLE PRECISION NOT NULL,
+    "safePercent" DOUBLE PRECISION NOT NULL,
     "mean" DOUBLE PRECISION NOT NULL,
     "variance" DOUBLE PRECISION NOT NULL,
     "computedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
