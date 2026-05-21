@@ -68,6 +68,40 @@ function PoolCard({ pool, kind }) {
   )
 }
 
+function PreviousPoolsSection({ pools, kind }) {
+  const [open, setOpen] = useState(false)
+  if (pools.length === 0) return null
+  return (
+    <div className="pt-3 mt-3 border-t border-text-2/10">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-2 py-1.5 text-left group"
+      >
+        <span className="flex items-baseline gap-2">
+          <span className="font-mono text-[11px] uppercase tracking-wider text-text-2 group-hover:text-text-primary transition-colors">
+            Previous pools
+          </span>
+          <span className="font-mono text-[11px] text-text-2/60">{pools.length}</span>
+        </span>
+        <svg
+          className={`w-3.5 h-3.5 text-text-2 transition-transform ${open ? 'rotate-90' : ''}`}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="space-y-3 mt-2">
+          {pools.map(p => (
+            <PoolCard key={kind === 'commish' ? p.slug : `${p.slug}-${p.teamName}`} pool={p} kind={kind} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function PoolsLanding() {
   const { user } = useAuth()
   const [commish, setCommish] = useState([])
@@ -116,6 +150,12 @@ export default function PoolsLanding() {
     )
   }
 
+  const isCompleted = p => p._status === 'COMPLETED'
+  const commishActive   = commish.filter(p => !isCompleted(p))
+  const commishPrevious = commish.filter(isCompleted)
+  const enteredActive   = entered.filter(p => !isCompleted(p))
+  const enteredPrevious = entered.filter(isCompleted)
+
   const isEmpty = !loading && commish.length === 0 && entered.length === 0
 
   return (
@@ -160,38 +200,40 @@ export default function PoolsLanding() {
           <section className="space-y-4">
             <div className="flex items-baseline justify-between">
               <h2 className="font-display font-bold text-xl text-text-primary">Pools you commish</h2>
-              <span className="font-mono text-xs uppercase tracking-wider text-text-2">{commish.length}</span>
+              <span className="font-mono text-xs uppercase tracking-wider text-text-2">{commishActive.length}</span>
             </div>
-            {commish.length === 0 ? (
+            {commishActive.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-text-2/30 p-6 text-sm text-text-2">
                 You haven't created a pool yet. <Link to="/pools/new" className="text-blaze font-medium">Start one →</Link>
               </div>
             ) : (
               <div className="space-y-3">
-                {commish.map(p => (
+                {commishActive.map(p => (
                   <PoolCard key={p.slug} pool={p} kind="commish" />
                 ))}
               </div>
             )}
+            <PreviousPoolsSection pools={commishPrevious} kind="commish" />
           </section>
 
           {/* Entered */}
           <section className="space-y-4">
             <div className="flex items-baseline justify-between">
               <h2 className="font-display font-bold text-xl text-text-primary">Pools you're in</h2>
-              <span className="font-mono text-xs uppercase tracking-wider text-text-2">{entered.length}</span>
+              <span className="font-mono text-xs uppercase tracking-wider text-text-2">{enteredActive.length}</span>
             </div>
-            {entered.length === 0 ? (
+            {enteredActive.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-text-2/30 p-6 text-sm text-text-2">
                 No pool entries yet. When you submit picks they'll show up here.
               </div>
             ) : (
               <div className="space-y-3">
-                {entered.map(p => (
+                {enteredActive.map(p => (
                   <PoolCard key={`${p.slug}-${p.teamName}`} pool={p} kind="entered" />
                 ))}
               </div>
             )}
+            <PreviousPoolsSection pools={enteredPrevious} kind="entered" />
           </section>
         </div>
       )}

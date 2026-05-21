@@ -543,11 +543,12 @@ httpServer.listen(PORT, () => {
     })
 
     // ─── Pool scoring — every 5 min Thu-Sun, riding alongside live ───────
+    // Only LOCKED pools — once a pool is COMPLETED its scores are frozen.
     const poolService = require('./services/poolService')
     cron.schedule('*/5 * * * 4,5,6,0', async () => {
       try {
         const active = await cronPrisma.pool.findMany({
-          where: { status: { in: ['LOCKED', 'COMPLETED'] } },
+          where: { status: 'LOCKED' },
           select: { id: true, slug: true },
         })
         for (const p of active) {
@@ -556,6 +557,27 @@ httpServer.listen(PORT, () => {
         }
       } catch (e) { cronLog('pool-score', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
+
+    // ─── Pool completion — Monday 4:00 AM ET + once at startup ────────────
+    // Flip LOCKED pools whose tournament has finished to COMPLETED. Waiting
+    // until Monday preserves the Sunday-night basking window — folks can
+    // still share screenshots / compare scores Sunday evening before the
+    // pool gets archived into the "Previous pools" section. Startup run
+    // ensures deploys self-heal any pools already stuck at LOCKED.
+    async function completeFinishedPools() {
+      try {
+        const ready = await cronPrisma.pool.findMany({
+          where: { status: 'LOCKED', tournament: { status: 'COMPLETED' } },
+          select: { id: true, slug: true, name: true },
+        })
+        for (const p of ready) {
+          await cronPrisma.pool.update({ where: { id: p.id }, data: { status: 'COMPLETED' } })
+          cronLog('pool-complete', `Completed pool ${p.slug} (${p.name})`)
+        }
+      } catch (e) { cronLog('pool-complete', `Error: ${e.message}`) }
+    }
+    cron.schedule('0 4 * * 1', completeFinishedPools, { timezone: 'America/New_York' })
+    completeFinishedPools().catch(e => cronLog('pool-complete', `Startup error: ${e.message}`))
 
     // Every 5 min Thu-Sun (offset by 2 min from DataGolf live sync to avoid Prisma pool exhaustion)
     // DataGolf runs at :00, :05, :10 ... — ESPN runs at :02, :07, :12 ...

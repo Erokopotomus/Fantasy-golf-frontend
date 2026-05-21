@@ -174,9 +174,10 @@ export default function PoolView() {
     })()
   }, [slug])
 
-  // Auto-refresh pool + tournament leaderboards every 60s for any active pool
+  // Auto-refresh pool + tournament leaderboards every 60s for any active pool.
+  // Skip COMPLETED pools — their data is frozen, no need to keep polling.
   useEffect(() => {
-    if (!pool || pool.status === 'DRAFT') return
+    if (!pool || pool.status === 'DRAFT' || pool.status === 'COMPLETED') return
     const i = setInterval(() => {
       api.getPoolLeaderboard(slug).then(setLeaderboard).catch(() => {})
       if (pool.tournamentId) {
