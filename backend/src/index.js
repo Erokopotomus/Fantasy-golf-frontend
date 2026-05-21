@@ -674,6 +674,19 @@ httpServer.listen(PORT, () => {
             cronLog('fantasy', `${r.weekName}: ${r.scored} scores, ${r.snapped} snapshots, ${r.computed} results`)
           }
         }
+        // Golf Chopped — try the auto-chop check now in case any league's
+        // waiver-close has already passed. Most leagues default to MONDAY
+        // 04:00 ET, so this Sunday-night call is usually a no-op; the
+        // Monday 4 AM cron does the real work.
+        try {
+          const { checkLeagues } = require('./services/chopped/golfAutoChopCron')
+          const chopResult = await checkLeagues()
+          if (chopResult.fired > 0) {
+            console.log(`[chopped/golf-auto] Sunday post-finalization fired ${chopResult.fired} chops`)
+          }
+        } catch (e) {
+          console.error('[chopped/golf-auto] Sunday post-finalization failed:', e.message)
+        }
       } catch (e) { cronLog('fantasy', `Error: ${e.message}`) }
     }, { timezone: 'America/New_York' })
 
