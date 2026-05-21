@@ -8153,7 +8153,8 @@ MI-18 wired the promotion path so that admin-flipped characteristics flow into `
 ---
 
 ### 212 — Race-safety fix for coach promotion cron  `LOW`
-**Status:** `TODO`
+**Status:** `DONE`
+**Completed:** 2026-05-20 — Snapshot promotedTypes once at start of runMemoryWriter, thread through writeVaultForUser → promoteCharacteristicsToVault via opts.promotedTypes. Standalone invocations still re-query. Commit f2dfcf6.
 **Priority:** LOW — observed by reviewer during MI-18 build. Self-heals next week's run; worth fixing for determinism.
 **Owner:** Code
 
@@ -8245,7 +8246,8 @@ Discovered 2026-05-18 during volume capacity check. The Railway Postgres volume 
 
 ### 215 — Persist scoring format on MockDraftResult  `LOW`
 
-**Status:** TODO
+**Status:** DONE
+**Completed:** 2026-05-20 — Migration 57 adds scoring TEXT column. routes/draftHistory.js POST /mock-drafts accepts + persists scoring. MockDraftRoom save call sends config.scoring. The May 19 hardcode-fix in MockDraftRecap.jsx was forward-compat with this; it lights up immediately. Commit bf99149.
 **Where:** Backend schema + `saveMockDraft` + recap response
 **Why:** Mock Draft recap masthead displays `result.scoring || 'half_ppr'`, but `result.scoring` is currently always undefined (no column on the MockDraftResult model, not threaded through `saveMockDraft`). So a user drafting in PPR sees a Half PPR pill on the recap. Cosmetic / informational bug.
 
@@ -8287,7 +8289,8 @@ Result: when the cron fires Tuesday, `mean` is `0` for every team, the Safe % ma
 
 ### 217 — Fix NFL autoChopCron League query — uses non-existent `isActive` field  `HIGH`
 
-**Status:** TODO
+**Status:** DONE
+**Completed:** 2026-05-20 — Changed `isActive: true` to `status: 'ACTIVE'` in autoChopCron.js. NFL Chopped auto-chop cron will now actually find leagues. (NOTE: #216 still TODO — without that the chop decision still gets zero-score inputs and falls back to tiebreakers.) Commit a8f7be6.
 **Source:** Surfaced during golf Chopped Task 4 review, 2026-05-20
 
 **The bug:**
