@@ -21,19 +21,25 @@ async function getMostRecentTournamentResults(leagueId) {
   const league = await prisma.league.findUnique({
     where: { id: leagueId },
     include: {
-      season: { include: { sport: true } },
+      leagueSeasons: {
+        where: { status: 'ACTIVE' },
+        include: { season: true },
+        take: 1,
+      },
       teams: { where: { eliminatedAt: null } },
     },
   })
   if (!league) return []
-  if (league.season?.sport?.slug !== 'golf') return []
-  if (!league.seasonId) return []
+  if (league.sport !== 'GOLF') return []
+  const activeLeagueSeason = league.leagueSeasons[0]
+  if (!activeLeagueSeason) return []
+  const seasonId = activeLeagueSeason.seasonId
 
   // Most recently finalized tournament for this league's season,
   // joined through the FantasyWeek that links to it.
   const fantasyWeek = await prisma.fantasyWeek.findFirst({
     where: {
-      seasonId: league.seasonId,
+      seasonId: seasonId,
       tournamentId: { not: null },
       tournament: { status: 'COMPLETED' },
     },

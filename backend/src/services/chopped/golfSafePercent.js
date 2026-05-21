@@ -3,7 +3,8 @@ const { computeSafePercentsFromTeams } = require('./safePercentService')
 
 const TOTAL_HOLES_PER_TOURNAMENT = 72 // standard 4-round PGA event
 const DEFAULT_PLAYER_VARIANCE = 4 // σ²=4 fallback when no SG history (σ ≈ 2 pts/round)
-const FALLBACK_POINTS_PER_HOLE = 1.5 // fallback baseline when player has no SG data
+const BASELINE_PTS_PER_ROUND = 6 // average tour-pro round projection (no SG data)
+const SG_TO_PTS_PER_ROUND = 3 // marginal pts/round per stroke of SG above field average
 const MISSED_OR_OUT_STATUSES = new Set(['CUT', 'WD', 'DQ'])
 
 /**
@@ -35,13 +36,13 @@ function projectedRemaining(performance, player, progress) {
   if (!performance) return 0
   if (MISSED_OR_OUT_STATUSES.has(performance.status)) return 0
   const holesRemaining = TOTAL_HOLES_PER_TOURNAMENT * (1 - progress)
-  // Map SG-Total to expected fantasy points per round. Players with SG +1 ≈ 6 pts/round above baseline.
-  const sgBaseline = player?.sgTotal != null
-    ? (player.sgTotal + 1) * FALLBACK_POINTS_PER_HOLE
-    : null
-  const perRoundBaseline = sgBaseline || (FALLBACK_POINTS_PER_HOLE * 4)
-  // perRoundBaseline is pts/round (~18 holes); scale by remaining-holes fraction
-  return (holesRemaining / TOTAL_HOLES_PER_TOURNAMENT) * perRoundBaseline * 4
+  const remainingRounds = holesRemaining / 18
+  // Baseline 6 pts/round for an SG=0 player, +3 pts/round per stroke of SG
+  const perRoundBaseline = Math.max(
+    0,
+    BASELINE_PTS_PER_ROUND + (player?.sgTotal != null ? player.sgTotal * SG_TO_PTS_PER_ROUND : 0),
+  )
+  return remainingRounds * perRoundBaseline
 }
 
 /**
@@ -69,7 +70,7 @@ async function computeSafePercentsForLeague(leagueId, tournamentId) {
         where: { eliminatedAt: null },
         include: {
           roster: {
-            where: { isActive: true },
+            where: { isActive: true, rosterStatus: 'ACTIVE' },
             include: { player: true },
           },
         },
@@ -121,15 +122,23 @@ async function refreshActiveLeagues() {
   const leagues = await prisma.league.findMany({
     where: {
       format: 'CHOPPED',
-      isActive: true,
-      season: { sport: { slug: 'golf' } },
+      status: 'ACTIVE',
+      sport: 'GOLF',
     },
-    select: { id: true, seasonId: true },
+    include: {
+      leagueSeasons: {
+        where: { status: 'ACTIVE' },
+        select: { seasonId: true },
+        take: 1,
+      },
+    },
   })
   let updated = 0
   for (const league of leagues) {
     try {
-      const tournament = await getInProgressTournament(league.seasonId)
+      const seasonId = league.leagueSeasons[0]?.seasonId
+      if (!seasonId) continue
+      const tournament = await getInProgressTournament(seasonId)
       if (!tournament) continue
       const results = await computeSafePercentsForLeague(league.id, tournament.id)
       for (const r of results) {
