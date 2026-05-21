@@ -8285,6 +8285,25 @@ Result: when the cron fires Tuesday, `mean` is `0` for every team, the Safe % ma
 
 ---
 
+### 217 — Fix NFL autoChopCron League query — uses non-existent `isActive` field  `HIGH`
+
+**Status:** TODO
+**Source:** Surfaced during golf Chopped Task 4 review, 2026-05-20
+
+**The bug:**
+`backend/src/services/chopped/autoChopCron.js:54` queries `prisma.league.findMany({ where: { isActive: true, ... } })`. The `League` model has no `isActive` field — it has `status: LeagueStatus` (enum DRAFT_PENDING | DRAFTING | ACTIVE | COMPLETED). Prisma throws a validation error at runtime → the cron silently catches and logs, no NFL chops fire.
+
+**Fix:**
+1. Edit `backend/src/services/chopped/autoChopCron.js:54` — change `isActive: true` to `status: 'ACTIVE'`.
+2. Test by re-running the cron handler against a seeded NFL CHOPPED league.
+
+**Related items:**
+- Queue #216 (NFL Chopped live-stats provider returns zeros) — both items must be fixed for NFL Chopped auto-chop to actually work in prod. #216 fixes the score data feed; #217 fixes the league query that gates the cron.
+
+**Effort:** 5-minute fix + verify with the existing `test-safe-percent.js` script.
+
+---
+
 ## DONE
 
 *(Items move here after completion)*
