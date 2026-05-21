@@ -137,7 +137,7 @@ async function getMostRecentTournamentResults(leagueId) {
   const tournament = await prisma.tournament.findFirst({
     where: {
       seasonId: league.seasonId,
-      status: 'FINAL',
+      status: 'COMPLETED',
     },
     orderBy: { endDate: 'desc' },
   })
@@ -204,7 +204,7 @@ const FALLBACK_POINTS_PER_HOLE = 1.5 // fallback when DataGolf skill estimate mi
  */
 function tournamentProgress(tournament) {
   if (!tournament) return 0
-  if (tournament.status === 'FINAL') return 1
+  if (tournament.status === 'COMPLETED') return 1
   if (tournament.status !== 'IN_PROGRESS') return 0
   // Round-based estimate. Conservative — if the tournament service
   // doesn't expose a roundsCompleted field, we estimate from elapsed days.

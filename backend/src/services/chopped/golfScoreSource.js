@@ -27,6 +27,7 @@ async function getMostRecentTournamentResults(leagueId) {
   })
   if (!league) return []
   if (league.season?.sport?.slug !== 'golf') return []
+  if (!league.seasonId) return []
 
   // Most recently finalized tournament for this league's season,
   // joined through the FantasyWeek that links to it.
@@ -34,7 +35,7 @@ async function getMostRecentTournamentResults(leagueId) {
     where: {
       seasonId: league.seasonId,
       tournamentId: { not: null },
-      tournament: { status: 'FINAL' },
+      tournament: { status: 'COMPLETED' },
     },
     include: { tournament: true },
     orderBy: { endDate: 'desc' },
