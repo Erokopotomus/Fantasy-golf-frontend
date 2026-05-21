@@ -33,12 +33,22 @@ async function runMemoryWriter() {
   const activeUserIds = await getActiveUsers()
   console.log(`[MemoryWriter] Found ${activeUserIds.length} active users`)
 
+  // Snapshot admin-promoted Manager Intelligence characteristic types ONCE
+  // at start of run, so an admin flipping promoteToCoach mid-cron doesn't
+  // cause some users to see the new state while others don't.
+  const promotedAggregates = await prisma.characteristicAggregate.findMany({
+    where: { promoteToCoach: true, suppressed: false },
+    select: { characteristicType: true },
+  })
+  const promotedTypes = promotedAggregates.map((p) => p.characteristicType)
+  console.log(`[MemoryWriter] Snapshot ${promotedTypes.length} promoted characteristic types for this run`)
+
   let successCount = 0
   let errorCount = 0
 
   for (const userId of activeUserIds) {
     try {
-      await writeVaultForUser(userId)
+      await writeVaultForUser(userId, { promotedTypes })
       successCount++
     } catch (err) {
       errorCount++
@@ -113,7 +123,7 @@ async function getActiveUsers() {
  * Gets user's sports from league memberships, runs Pattern Engine
  * for each sport, writes all vault documents.
  */
-async function writeVaultForUser(userId) {
+async function writeVaultForUser(userId, opts = {}) {
   // Get distinct sports from the user's league memberships
   const memberships = await prisma.leagueMember.findMany({
     where: { userId },
@@ -164,7 +174,14 @@ async function writeVaultForUser(userId) {
   // characteristics into the cross-sport vault. Cross-sport, so runs once
   // per user, not per sport. No-op if nothing is promoted.
   try {
-    const miResult = await promoteCharacteristicsToVault(userId, { db: prisma })
+    const miResult = await promoteCharacteristicsToVault(userId, {
+      db: prisma,
+      // Pass the snapshot from runMemoryWriter so all users in a single
+      // cron tick see the same promotion state regardless of admin activity
+      // mid-run. If called standalone (one-off invocation), opts.promotedTypes
+      // is undefined and promoteCharacteristicsToVault re-queries.
+      promotedTypes: opts.promotedTypes,
+    })
     if (miResult.docsTouched > 0) {
       console.log(
         `[MemoryWriter] MI promotion for user ${userId}: ` +

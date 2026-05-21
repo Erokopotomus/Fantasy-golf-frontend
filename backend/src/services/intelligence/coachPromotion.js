@@ -42,11 +42,17 @@ async function promoteCharacteristicsToVault(userId, opts = {}) {
   const db = opts.db || defaultPrisma
 
   // 1. Find every characteristic type the admin has flipped ON.
-  const promoted = await db.characteristicAggregate.findMany({
-    where: { promoteToCoach: true, suppressed: false },
-    select: { characteristicType: true },
-  })
-  const promotedTypes = promoted.map((p) => p.characteristicType)
+  //    Callers running a multi-user cron should pass `opts.promotedTypes`
+  //    pre-fetched ONCE at the start of the run so the per-user loop is
+  //    deterministic against admin activity mid-cron.
+  let promotedTypes = opts.promotedTypes
+  if (!promotedTypes) {
+    const promoted = await db.characteristicAggregate.findMany({
+      where: { promoteToCoach: true, suppressed: false },
+      select: { characteristicType: true },
+    })
+    promotedTypes = promoted.map((p) => p.characteristicType)
+  }
 
   if (promotedTypes.length === 0) {
     return { promotedTypes: 0, docsTouched: 0, factsWritten: 0 }
